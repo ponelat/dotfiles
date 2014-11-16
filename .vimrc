@@ -11,22 +11,22 @@ call vundle#begin()
 " let Vundle manage Vundle, required
 Plugin 'gmarik/Vundle.vim'
 Plugin 'tomasr/molokai'
-Plugin 'scrooloose/nerdtree'
+" Plugin 'scrooloose/nerdtree'
 Plugin 'tpope/vim-commentary'
 Plugin 'tpope/vim-surround'
 Plugin 'kien/ctrlp.vim'
 Plugin 'mattn/emmet-vim'
 Plugin 'pangloss/vim-javascript'
 Plugin 'editorconfig/editorconfig-vim'
-Plugin 'L9'
-Plugin 'FuzzyFinder'
+" Plugin 'L9'
+" Plugin 'FuzzyFinder'
 Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-repeat'
 Plugin 'tpope/vim-dispatch'
 Plugin 'Markdown-syntax'
 Plugin 'SirVer/ultisnips'
 Plugin 'honza/vim-snippets'
-Plugin 'mbadran/headlights'
+" Plugin 'mbadran/headlights'
 Plugin 'vim-airline'
 "Plugin 'mklabs/grunt.vim'
 "Plugin 'Lokaltog/powerline' ,{'rtp': '~/.vim/bundle/powerline/powerline/bindings/vim'}
@@ -38,6 +38,7 @@ Plugin 'godlygeek/tabular'
 Plugin 'terryma/vim-expand-region'
 Plugin 'jaxbot/selective-undo.vim'
 Plugin 'Valloric/YouCompleteMe'
+Plugin 'tacahiroy/ctrlp-funky'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -56,6 +57,9 @@ filetype plugin indent on    " required
 
 " Josh starts here...
 
+" Leader key
+let mapleader = "\<Space>"
+
 " Ctrl-P
 "See: https://github.com/kien/ctrlp.vim
 let g:ctrlp_map = '<c-p>'
@@ -64,8 +68,20 @@ let g:ctrlp_working_path_mode = 'ra'
 let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|git'
 let g:ctrlp_show_hidden = 1
 
-" Expand region
+" map ctrl-p
+nnoremap <Leader>t :CtrlP<CR>
+nnoremap si :CtrlPBookmarkDir<CR>
+nnoremap s<c-i> :CtrlPBookmarkDirAdd<CR>
 
+
+" CtrlP extension 'ctrlp-funky' allows lookup of function definition, without
+" ...ctags
+let g:ctrlp_extensions = ['funky']
+nnoremap <Leader>fu :CtrlPFunky<Cr> 
+" narrow the list down with a word under cursor 
+nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr> 
+
+"  Expand region vim-expand-region
 let g:expand_region_text_objects = {
       \ 'iw'  :0,
       \ 'iW'  :0,
@@ -77,47 +93,24 @@ let g:expand_region_text_objects = {
       \ 'ip'  :1,
       \ }
 
-" expand region mappings
-vmap v <Plug>(expand_region_expand)
-vmap <C-v> <Plug>(expand_region_shrink)
-
-
-
 " Aswesome 80-character limiter
-execute "set colorcolumn=" . join(range(81,335), ',')
-hi ColorColumn guibg=#262626 ctermbg=235
+" execute "set colorcolumn=" . join(range(81,335), ',')
+" hi ColorColumn guibg=#262626 ctermbg=235
 
-" The Silver Searcher
+" Ag - The Silver Searcher
 if executable('ag')
   " Use ag over grep
   set grepprg=ag\ --nogroup\ --nocolor
 
   " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
-  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+  let g:ctrlp_user_command = 'ag %s -l --hidden --ignore ".git" --nocolor -g ""'
 
   " ag is fast enough that CtrlP doesn't need to cache
   let g:ctrlp_use_caching = 0
 
 endif
 
-" Colours
-syntax on
-colorscheme molokai
-"Compensate for my '9' key not working
-"Left bracket...
-"map! <S-F11> <char-40>
-"Right-bracket...
-"map! <S-F12> <char-41>
-
-" vim-surround
-autocmd FileType js let b:surround_45 = "function(){ \r }" " 45 = '-'. You can use `:echo char2nr('-')
-
-" Shortcut to rapidly toggle `set list`
-nmap <Leader>l :set list!<CR>
-" Use the same symbols as TextMate for tabstops and EOLs
-set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
-
-
+" UltiSnips, a wonderfull snippet manager with python interpolation
 " UltiSnip Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
 let g:UltiSnipsExpandTrigger="<c-l>"
 let g:UltiSnipsJumpForwardTrigger="<c-j>"
@@ -126,60 +119,22 @@ let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 let g:UltiSnipsEditSplit="vertical"
 
 
-" FuzzFinder (FuF)
-let g:fuf_modesDisable = []
-let g:fuf_mrufile_maxItem = 400
-let g:fuf_mrucmd_maxItem = 400
-"nnoremap <silent> sj     :FufBuffer<CR>
-"nnoremap <silent> sk     :FufFileWithCurrentBufferDir<CR>
-"nnoremap <silent> sK     :FufFileWithFullCwd<CR>
-"nnoremap <silent> s<C-k> :FufFile<CR>
-"nnoremap <silent> sl     :FufCoverageFileChange<CR>
-"nnoremap <silent> sL     :FufCoverageFileChange<CR>
-"nnoremap <silent> s<C-l> :FufCoverageFileRegister<CR>
-"nnoremap <silent> sd     :FufDirWithCurrentBufferDir<CR>
-"nnoremap <silent> sD     :FufDirWithFullCwd<CR>
-"nnoremap <silent> s<C-d> :FufDir<CR>
-"nnoremap <silent> sn     :FufMruFile<CR>
-"nnoremap <silent> sN     :FufMruFileInCwd<CR>
-"nnoremap <silent> sm     :FufMruCmd<CR>
-"nnoremap <silent> su     :FufBookmarkFile<CR>
-"nnoremap <silent> s<C-u> :FufBookmarkFileAdd<CR>
-"vnoremap <silent> s<C-u> :FufBookmarkFileAddAsSelectedText<CR>
-nnoremap <silent> si     :FufBookmarkDir<CR>
-nnoremap <silent> s<C-i> :FufBookmarkDirAdd<CR>
-"nnoremap <silent> st     :FufTag<CR>
-"nnoremap <silent> sT     :FufTag!<CR>
-"nnoremap <silent> s<C-]> :FufTagWithCursorWord!<CR>
-"nnoremap <silent> s,     :FufBufferTag<CR>
-"nnoremap <silent> s<     :FufBufferTag!<CR>
-"vnoremap <silent> s,     :FufBufferTagWithSelectedText!<CR>
-"vnoremap <silent> s<     :FufBufferTagWithSelectedText<CR>
-"nnoremap <silent> s}     :FufBufferTagWithCursorWord!<CR>
-"nnoremap <silent> s.     :FufBufferTagAll<CR>
-"nnoremap <silent> s>     :FufBufferTagAll!<CR>
-"vnoremap <silent> s.     :FufBufferTagAllWithSelectedText!<CR>
-"vnoremap <silent> s>     :FufBufferTagAllWithSelectedText<CR>
-"nnoremap <silent> s]     :FufBufferTagAllWithCursorWord!<CR>
-"nnoremap <silent> sg     :FufTaggedFile<CR>
-"nnoremap <silent> sG     :FufTaggedFile!<CR>
-"nnoremap <silent> so     :FufJumpList<CR>
-"nnoremap <silent> sp     :FufChangeList<CR>
-"nnoremap <silent> sq     :FufQuickfix<CR>
-"nnoremap <silent> sy     :FufLine<CR>
-"nnoremap <silent> sh     :FufHelp<CR>
-"nnoremap <silent> se     :FufEditDataFile<CR>
-"nnoremap <silent> sr     :FufRenewCache<CR>
-
-
-" ------------------------------ Key maps...
+" ------------------------------ Key maps, Mappings...
 " Remap _,_ to _'_  .......... used jumping to marks
-nnoremap , '
+" nnoremap , '
+
+" expand region mappings
+vmap v <Plug>(expand_region_expand)
+vmap <C-v> <Plug>(expand_region_shrink)
+
+" insert-mode mappings
+inoremap jk <esc>
+
+" Shortcut to rapidly toggle `set list`
+nmap <Leader>l :set list!<CR>
 
 " Some useful tips...
 " http://sheerun.net/2014/03/21/how-to-boost-your-vim-productivity/
-" Leader key
-let mapleader = "\<Space>"
 
 " Map <leader>y and p for clipboard copy/paste
 vmap <Leader>y "+y
@@ -193,7 +148,7 @@ vmap <Leader>P "+P
 nnoremap <Leader>c :Commentary<CR>
 vnoremap <Leader>c :Commentary<CR>
 
-" Map 'K' to search for word under cursor, find in files
+" Map 'K' to search for word under cursor, ie: `find in files`
 nnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 vnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 
@@ -201,20 +156,28 @@ vnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 vnoremap < <gv
 vnoremap > >gv
 
-" insert-mode mappings
-inoremap jk <esc>
+" "Map NERDTree
+" nmap <leader>ne :NERDTreeToggle<cr>
 
-"Map NERDTree
-nmap <leader>ne :NERDTreeToggle<cr>
+" "Map ctrl-w
+nnoremap <c-w><c-w> :tabnext<cr>
+" nnoremap <leader>wl <C-W>v
 
 "Map ctrl-q to close window...
-nnoremap <silent><C-q> <C-w>c 
+" ...doesn't seem to work in console??
+" nnoremap <c-q> <c-w>q
 
-"Map leader q to quit without saving
+"Map leader Q to quit without saving
+nnoremap <leader>Q :q!<CR>
+
+"Map leader q to quit with saving
 nnoremap <leader>q :q<CR>
 
 "Map leader s to save file...
 nnoremap <leader>w :w<CR>
+
+" " Map wq to write and quit
+" nnoremap <leader>wq :wq<CR>
 
 "Map ctrl-shift-s to source current file...
 nnoremap <leader>so :source %<CR>
@@ -226,30 +189,9 @@ nnoremap <silent><C-l> :nohl<CR><C-l>
 nnoremap <silent><C-CR> o<ESC>
 nnoremap <silent><S-CR> O<ESC>
 
-" Git Gutter
-let g:gitgutter_map_keys = 0
-nmap [h <Plug>GitGutterPrevHunk
-nmap ]h <Plug>GitGutterNextHunk
-nmap <Leader>hs <Plug>GitGutterStageHunk
-nmap <Leader>hr <Plug>GitGutterRevertHunk
-
-" ConqueTerm
-"let g:ConqueTerm_ColorMode = ''
-let g:ConqueTerm_ReadUnfocused = 1
-" Convenenience shortcut to run tests (js)
-nnoremap <silent><C-F6> :ConqueTermSplit Cmd.exe /c npm test<CR><ESC>
-
-
-" Autocomplete in command line...
-set wildmode=longest,list,full
-set wildmenu
-
-" Relative/Absolute lines numbers...
-" set relativenumber
-" autocmd InsertEnter * :set number
-" autocmd InsertLeave * :set relativenumber
-" autocmd FocusLost * :set number
-" autocmd FocusGained * :set relativenumber
+" Map semi-colon to colon....
+" ... no more shift :)
+nnoremap ; :
 
 " Highlight word under cursor (uses search highlighting)
 nmap <leader>* *N
@@ -267,12 +209,15 @@ nnoremap <silent><F10> :UltiSnipsEdit<CR>
 "nnoremap <silent><F11> :vsp ~/.vimrc<CR>
 nnoremap <silent><leader>vrc :vsp ~/.vimrc<CR>
 
+" Edit bashrc
+nnoremap <silent><leader>brc :vsp ~/.bashrc<CR>
+
 " Edit gvimrc, shortcut...
 "nnoremap <silent><F12> :vsp ~/.gvimrc<CR>
 nnoremap <silent><leader>grc :vsp ~/.gvimrc<CR>
 
 " Replace inner word with 0 register...
-nnoremap <leader>rw viw"0p
+nnoremap <leader>r diw"0Pb
 
 " Git status mapping
 nnoremap <silent><leader>gs :Gstatus<CR>
@@ -292,13 +237,24 @@ nnoremap <leader>dd :Dispatch<SPACE>
 " Spelling on/off
 nnoremap <leader>sp :set spell!<CR>
 
-" Map semi-colon to colon....
-" ... no more shift :)
-nnoremap ; :
-
 " Local .vimrc files...
 "set exrc            " enable per-directory .vimrc files
 "set secure          " disable unsafe commands in local .vimrc files
+
+" Git Gutter
+let g:gitgutter_map_keys = 0
+nmap [h <Plug>GitGutterPrevHunk
+nmap ]h <Plug>GitGutterNextHunk
+nmap <Leader>hs <Plug>GitGutterStageHunk
+nmap <Leader>hr <Plug>GitGutterRevertHunk
+
+" line numbers - advanced
+" Relative/Absolute lines numbers...
+" set relativenumber
+" autocmd InsertEnter * :set number
+" autocmd InsertLeave * :set relativenumber
+" autocmd FocusLost * :set number
+" autocmd FocusGained * :set relativenumber
 
 " my filetype syntax definitions
 augroup filetypedetect 
@@ -307,11 +263,29 @@ augroup filetypedetect
   " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
 
+" vim-surround, with a function!  Ed: not really used
+autocmd FileType js let b:surround_45 = "function(){ \r }" " 45 = '-'. You can use `:echo char2nr('-')
+
 " Regex breaks syntax highlighting, workaround...
 " ...mostly for the haroogon (can't remember spelling) Windows compiled bin
   "set regexpengine=1 
 
 " --------------------------------------- Oneliners
+
+" Use the same symbols as TextMate for tabstops and EOLs
+set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
+
+" fixed line numbers
+" set number
+
+" Colours
+syntax on
+colorscheme molokai
+
+" Autocomplete in command line...
+set wildmode=longest,list,full
+set wildmenu
+
 " Backspace, goes over everything
 set backspace=indent,eol,start
 "set backspace=2
