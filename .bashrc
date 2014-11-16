@@ -1,3 +1,6 @@
+# Setup colors
+source .256-color-terminal.sh
+
 function subl(){ "/c/Program Files/Sublime Text 2/sublime_text" "$@" & }
 alias ls='ls -A --color=always'
 alias gl='git log --oneline --decorate '"$@"
@@ -13,24 +16,6 @@ alias gbm='git branch -v --merge'"$@"
 export DEV=true
 alias npm-exec='PATH=$(npm bin):$PATH'
 
-# non-printable characters must be enclosed inside \[ and \]
-PS1='\[\033]0;$MSYSTEM:${PWD//[^[:ascii:]]/?}\007\]' # set window title
-PS1="$PS1"'\n'                 # new line
-PS1="$PS1""\[\e[0;36m\]"            # change color
-PS1="$PS1"'dir: \w'                 # current working directory
-
-PS1="$PS1"'\n'                 # new line
-
-# \e[38;5;ColorNumberm
-INFINITY="∞"   # my fancy unicode prompt
-PS1="$PS1""\[\e[0;33m\]"        # change color
-PS1="$PS1""$INFINITY "            # prompt: always {lambda}
-
-if test -z "$WINELOADERNOEXEC"
-then
-    PS1="$PS1"'$(__git_ps1) '   # bash function
-fi
-PS1="$PS1""\[\e[0m\]"            # change color
 
 # Run git status if in git repo, else ls -la
 # see: https://gist.github.com/andrewberls/6119868#file-cs-sh
@@ -110,3 +95,28 @@ export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
 # added by travis gem
 [ -f /home/josh/.travis/travis.sh ] && source /home/josh/.travis/travis.sh
+
+
+# Set vi mode by default, probably should be the last line
+# ...I've made it the second last 'section' so that I can add a VI mode in the prompt
+set -o vi
+set show-mode-in-prompt on
+
+# non-printable characters must be enclosed inside \[ and \]
+PS1='\[\033]0;$MSYSTEM:${PWD//[^[:ascii:]]/?}\007\]' # set window title
+PS1="$PS1"'\n'                 # new line
+PS1="$PS1""\[\e[0;36m\]"            # change color
+PS1="$PS1"'dir: \w'                 # current working directory
+
+PS1="$PS1"'\n'                 # new line
+
+# \e[38;5;ColorNumberm
+INFINITY="VI: ∞"   # my fancy unicode prompt
+PS1="$PS1""\[\e[0;33m\]"        # change color
+PS1="$PS1""$INFINITY "            # prompt: always {lambda}
+
+if test -z "$WINELOADERNOEXEC"
+then
+    PS1="$PS1"'$(__git_ps1) '   # bash function
+fi
+PS1="$PS1""\[\e[0m\]"            # change color
