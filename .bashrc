@@ -1,17 +1,42 @@
-# Setup colors
-source .256-color-terminal.sh
+# Add Python installed bins to path
+export PATH+=:"$HOME/.local/bin"
 
-function subl(){ "/c/Program Files/Sublime Text 2/sublime_text" "$@" & }
+# Setup color support
+# source "$HOME/.256-color-terminal.sh"
+export TERM=xterm-256color
+
+# Base16 Shell
+BASE16_SHELL="/home/josh/.config/base16-shell/base16-solarized.dark.sh"
+[[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
+
+eval `dircolors ~/.dircolors`
+
+# git flow autocompletion
+source "$HOME/git-flow-completion.bash"
+
+# LiquidPrompt
+source "$HOME/liquidprompt/liquidprompt"
+# config will be in ~/.config/liquidprompt.sh
+
+# Autojump (easier file jumping)
+source /usr/share/autojump/autojump.sh
+
+# Powerline
+# powerline-daemon -q # this should be hiding in ~/.local/bin
+# POWERLINE_BASH_CONTINUATION=1
+# POWERLINE_BASH_SELECT=1
+# source "$HOME/.local/lib/python2.7/site-packages/powerline/bindings/shell/powerline.sh"
+
 alias ls='ls -A --color=always'
 alias gl='git log --oneline --decorate '"$@"
-alias gs='git status'"$@"
+alias glu='git log --oneline --decorate HEAD...'"$@"
+alias gds='git diff --stat '"$@"
+alias gd='git diff '"$@"
 alias gb='git branch -v'"$@"
 alias gc='git checkout '"$@"
 alias gcb='git checkout -b'"$@"
 alias gbm='git branch -v --merge'"$@"
-# alias subl='"/c/Program Files/Sublime Text 2/sublime_text" &'
 
-#export NODE_PATH="/c/Program Files/nodejs/node_modules"
 
 export DEV=true
 alias npm-exec='PATH=$(npm bin):$PATH'
@@ -85,7 +110,7 @@ fi
 unset env
 
 # NVM ----------------------------------------------------
-export NVM_DIR="/home/josh/.nvm"
+export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 # Sauce Credentials -------------------------------------       
   export SAUCE_USERNAME="ponelat"
@@ -94,29 +119,60 @@ export NVM_DIR="/home/josh/.nvm"
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
 # added by travis gem
-[ -f /home/josh/.travis/travis.sh ] && source /home/josh/.travis/travis.sh
+[ -f "$HOME/.travis/travis.sh" ] && source "$HOME/.travis/travis.sh"
 
 
 # Set vi mode by default, probably should be the last line
 # ...I've made it the second last 'section' so that I can add a VI mode in the prompt
 set -o vi
-set show-mode-in-prompt on
+# set show-mode-in-prompt on
 
-# non-printable characters must be enclosed inside \[ and \]
-PS1='\[\033]0;$MSYSTEM:${PWD//[^[:ascii:]]/?}\007\]' # set window title
-PS1="$PS1"'\n'                 # new line
-PS1="$PS1""\[\e[0;36m\]"            # change color
-PS1="$PS1"'dir: \w'                 # current working directory
+# Prompt
+get_root_git_dir() {
+    printf "%s" $(pwd | sed "s:$HOME:~:")
+}
 
-PS1="$PS1"'\n'                 # new line
+get_dir() {
+    printf "%s" $(pwd | sed "s:$HOME:~:")
+}
 
-# \e[38;5;ColorNumberm
-INFINITY="VI: ∞"   # my fancy unicode prompt
-PS1="$PS1""\[\e[0;33m\]"        # change color
-PS1="$PS1""$INFINITY "            # prompt: always {lambda}
+get_sha() {
+    git rev-parse --short HEAD 2>/dev/null
+}
+# GIT PROMPT_COMMAND
 
-if test -z "$WINELOADERNOEXEC"
-then
-    PS1="$PS1"'$(__git_ps1) '   # bash function
-fi
-PS1="$PS1""\[\e[0m\]"            # change color
+# source ~/git-completion.bash
+
+# GIT_PS1_SHOWDIRTYSTATE=1
+# GIT_PS1_SHOWSTASHSTATE=1
+# GIT_PS1_SHOWUNTRACKEDFILES=1
+# # Explicitly unset color (default anyhow). Use 1 to set it.
+# GIT_PS1_SHOWCOLORHINTS=1
+# GIT_PS1_DESCRIBE_STYLE="branch"
+# GIT_PS1_SHOWUPSTREAM="auto git"
+
+
+# ------------------
+# ------ PROMPT COMMAND
+# ------------------
+# PROMPT_COMMAND='__git_ps1 "\u \W" "\\\$ " " [%s $(get_sha)] "'
+
+# PS1 Prompt
+# # non-printable characters must be enclosed inside \[ and \]
+# PS1='\[\033]0;$MSYSTEM:${PWD//[^[:ascii:]]/?}\007\]' # set window title
+# PS1="$PS1"'\n'                 # new line
+# PS1="$PS1""\[\e[0;36m\]"            # change color
+# PS1="$PS1"'dir: \w'                 # current working directory
+
+# PS1="$PS1"'\n'                 # new line
+
+# # \e[38;5;ColorNumberm
+# INFINITY="VI: ∞"   # my fancy unicode prompt
+# PS1="$PS1""\[\e[0;33m\]"        # change color
+# PS1="$PS1""$INFINITY "            # prompt: always {lambda}
+
+# if test -z "$WINELOADERNOEXEC"
+# then
+#     PS1="$PS1"'$(__git_ps1) '   # bash function
+# fi
+# PS1="$PS1""\[\e[0m\]"            # change color

@@ -5,12 +5,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo  Link all homefiles
 
+# Each file on a separate line.
 for _dotfile in $homefiles
 do
-  echo  ...Linking $_dotfile  # Each planet on a separate line.
-  ln -i $DIR/$_dotfile ~/$_dotfile # interactive, hard links
+  echo  ...Linking $_dotfile  
+  ln -i "$DIR/$_dotfile" "$HOME/$_dotfile" # interactive, hard links
 done
 
-# doneln .bashrc ~/.bashrc
-# ln .tmux.conf ~/.tmux.conf
-# ln .vimrc ~/.vimrc
+# echo Install gnome-terminal theme
+# see: https://github.com/chriskempson/base16-builder

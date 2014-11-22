@@ -39,6 +39,15 @@ Plugin 'terryma/vim-expand-region'
 Plugin 'jaxbot/selective-undo.vim'
 Plugin 'Valloric/YouCompleteMe'
 Plugin 'tacahiroy/ctrlp-funky'
+Plugin 'elzr/vim-json'
+Plugin 'scrooloose/syntastic'
+" Plugin 'wookiehangover/jshint.vim'
+Plugin 'tpope/vim-unimpaired'
+Plugin 'lfilho/cosco.vim'
+" Plugin 'summerfruit256.vim'
+Plugin 'marijnh/tern_for_vim'
+" Plugin 'altercation/vim-colors-solarized'
+Plugin 'chriskempson/base16-vim'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -70,9 +79,14 @@ let g:ctrlp_show_hidden = 1
 
 " map ctrl-p
 nnoremap <Leader>t :CtrlP<CR>
+nnoremap <Leader>y :CtrlPLine<CR>
 nnoremap si :CtrlPBookmarkDir<CR>
 nnoremap s<c-i> :CtrlPBookmarkDirAdd<CR>
 
+
+" Syntastic styntax checker
+let g:syntastic_javascript_checkers = ["jshint"]
+let g:syntastic_mode_map = { "mode": "passive"}
 
 " CtrlP extension 'ctrlp-funky' allows lookup of function definition, without
 " ...ctags
@@ -118,6 +132,11 @@ let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 " If you want :UltiSnipsEdit to split your window.
 let g:UltiSnipsEditSplit="vertical"
 
+let g:tern_show_argument_hints = "on_hold"
+
+" Unmappings
+" Make sure nothing conflicts with tmux
+map <c-a> <nop>
 
 " ------------------------------ Key maps, Mappings...
 " Remap _,_ to _'_  .......... used jumping to marks
@@ -129,6 +148,15 @@ vmap <C-v> <Plug>(expand_region_shrink)
 
 " insert-mode mappings
 inoremap jk <esc>
+
+" insert-mode mappings
+inoremap )) (
+
+" Shortcut to toggle `set number`
+nmap <Leader>n :set number!<CR>
+
+" Shortcut to toggle `:SyntasticToggleMode`
+nmap <Leader>sn :SyntasticToggleMode<CR>
 
 " Shortcut to rapidly toggle `set list`
 nmap <Leader>l :set list!<CR>
@@ -144,6 +172,12 @@ nmap <Leader>P "+P
 vmap <Leader>p "+p
 vmap <Leader>P "+P
 
+" Change mappings
+nnoremap <Leader>0 ct)
+nnoremap <Leader>- ct,
+nnoremap <Leader>' ct'
+nnoremap <Leader>" ct"
+
 " Commentary map
 nnoremap <Leader>c :Commentary<CR>
 vnoremap <Leader>c :Commentary<CR>
@@ -153,14 +187,16 @@ nnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 vnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 
 " Map visual indent > to keep selection
-vnoremap < <gv
-vnoremap > >gv
+" vnoremap < <gv
+" vnoremap > >gv
 
 " "Map NERDTree
 " nmap <leader>ne :NERDTreeToggle<cr>
 
-" "Map ctrl-w
+" Mapping Tabs
+" Map ctrl-w
 nnoremap <c-w><c-w> :tabnext<cr>
+nnoremap <Leader>T :tabnew<cr>
 " nnoremap <leader>wl <C-W>v
 
 "Map ctrl-q to close window...
@@ -191,7 +227,7 @@ nnoremap <silent><S-CR> O<ESC>
 
 " Map semi-colon to colon....
 " ... no more shift :)
-nnoremap ; :
+" nnoremap ; :
 
 " Highlight word under cursor (uses search highlighting)
 nmap <leader>* *N
@@ -258,17 +294,31 @@ nmap <Leader>hr <Plug>GitGutterRevertHunk
 
 " my filetype syntax definitions
 augroup filetypedetect 
-  au! BufRead,BufNewFile *.hbs		setfiletype html
-  au! BufRead,BufNewFile *.md  		setfiletype markdown
+  au! BufRead,BufNewFile *.hbs		set filetype=html
+  au! BufRead,BufNewFile *.md  		set filetype=markdown
+  au BufRead,BufNewFile *.json          set filetype=json
   " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
 
 " vim-surround, with a function!  Ed: not really used
+
 autocmd FileType js let b:surround_45 = "function(){ \r }" " 45 = '-'. You can use `:echo char2nr('-')
+autocmd FileType javascript,css noremap <silent>;; :call cosco#commaOrSemiColon()<CR>
+" autocmd FileType javascript,css inoremap <silent>;; <c-o>:call cosco#commaOrSemiColon()<CR>
 
 " Regex breaks syntax highlighting, workaround...
 " ...mostly for the haroogon (can't remember spelling) Windows compiled bin
   "set regexpengine=1 
+
+" Colours, colors
+syntax on
+" colorscheme molokai
+" colorscheme summerfruit256
+set background=light
+" let g:solarized_termcolors=256
+let base16colorspace=256  " Access colors present in 256 colorspace
+colorscheme base16-solarized
+" hi MatchParen ctermbg=3 cterm=underline term=NONE
 
 " --------------------------------------- Oneliners
 
@@ -277,10 +327,6 @@ set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
 
 " fixed line numbers
 " set number
-
-" Colours
-syntax on
-colorscheme molokai
 
 " Autocomplete in command line...
 set wildmode=longest,list,full
@@ -303,7 +349,8 @@ set autoindent
 
 " Colours
 set visualbell
-set t_Co=256
+" set t_Co=256
+set t_Co=16
 
 " Search
 set hlsearch
@@ -316,6 +363,9 @@ set smartcase     " ignore case if search pattern is all lowercase,
 set encoding=utf-8
 set laststatus=2
 
+" The column where your cursor is, is highlighted. It's warming to me
+set cursorline
+
 " Status line with vim-airline
 " Dfine if doesn't exist...
 let g:airline#extensions#hunks#enabled = 1
@@ -325,10 +375,13 @@ if !exists('g:airline_symbols')
 	let g:airline_symbols = {}
 endif
 
-let g:airline_theme='tomorrow' " looks better than my normal molokai, but only for status bar
+" let g:airline_theme='tomorrow' " looks better than my normal molokai, but only for status bar
 let g:airline_powerline_fonts=1
 
 " Should be plugins, but have included them here...
+
+" My Search strings, yank them into register then search...
+" "\(.\{-}\)"/'\1'/g 
 
 " ------------------------------ Another function
 " .vim/plugin/qfdo.vim
