@@ -46,7 +46,7 @@ Plugin 'tpope/vim-unimpaired'
 Plugin 'lfilho/cosco.vim'
 " Plugin 'summerfruit256.vim'
 Plugin 'marijnh/tern_for_vim'
-" Plugin 'altercation/vim-colors-solarized'
+Plugin 'altercation/vim-colors-solarized'
 Plugin 'chriskempson/base16-vim'
 
 " All of your Plugins must be added before the following line
@@ -140,7 +140,6 @@ map <c-a> <nop>
 
 " ------------------------------ Key maps, Mappings...
 " Remap _,_ to _'_  .......... used jumping to marks
-" nnoremap , '
 
 " expand region mappings
 vmap v <Plug>(expand_region_expand)
@@ -314,10 +313,11 @@ autocmd FileType javascript,css noremap <silent>;; :call cosco#commaOrSemiColon(
 syntax on
 " colorscheme molokai
 " colorscheme summerfruit256
-set background=light
-" let g:solarized_termcolors=256
+colorscheme base16-default
 let base16colorspace=256  " Access colors present in 256 colorspace
-colorscheme base16-solarized
+set background=light
+" colorscheme solarized
+" let g:solarized_termcolors=256
 " hi MatchParen ctermbg=3 cterm=underline term=NONE
 
 " --------------------------------------- Oneliners
@@ -350,7 +350,7 @@ set autoindent
 " Colours
 set visualbell
 " set t_Co=256
-set t_Co=16
+" set t_ut=
 
 " Search
 set hlsearch

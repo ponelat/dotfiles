@@ -2,8 +2,10 @@
 export PATH+=:"$HOME/.local/bin"
 
 # Setup color support
-# source "$HOME/.256-color-terminal.sh"
-export TERM=xterm-256color
+# export TERM=xterm-256color
+case "$TERM" in
+       xterm*) TERM=xterm-256color
+esac
 
 # Base16 Shell
 BASE16_SHELL="/home/josh/.config/base16-shell/base16-solarized.dark.sh"
