@@ -8,13 +8,16 @@ case "$TERM" in
 esac
 
 # Base16 Shell
-BASE16_SHELL="/home/josh/.config/base16-shell/base16-solarized.dark.sh"
+BASE16_SHELL="/home/josh/.config/base16-shell/base16-bright.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
 
 eval `dircolors ~/.dircolors`
 
 # git flow autocompletion
 source "$HOME/git-flow-completion.bash"
+
+# Gulp task autocompletion
+eval "$(gulp --completion=bash)"
 
 # LiquidPrompt
 source "$HOME/liquidprompt/liquidprompt"
