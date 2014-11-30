@@ -46,7 +46,7 @@ Plugin 'tpope/vim-unimpaired'
 Plugin 'lfilho/cosco.vim'
 " Plugin 'summerfruit256.vim'
 Plugin 'marijnh/tern_for_vim'
-Plugin 'altercation/vim-colors-solarized'
+" Plugin 'altercation/vim-colors-solarized'
 Plugin 'chriskempson/base16-vim'
 
 " All of your Plugins must be added before the following line
@@ -65,6 +65,14 @@ filetype plugin indent on    " required
 " Put your non-Plugin stuff after this line
 
 " Josh starts here...
+
+" Windows only lines (legacy)
+if has("win32")
+" Regex breaks syntax highlighting, workaround...
+" ...mostly for the haroogon (can't remember spelling) Windows compiled bin
+ "Windows options here
+  set regexpengine=1 
+endif
 
 " Leader key
 let mapleader = "\<Space>"
@@ -87,6 +95,12 @@ nnoremap s<c-i> :CtrlPBookmarkDirAdd<CR>
 " Syntastic styntax checker
 let g:syntastic_javascript_checkers = ["jshint"]
 let g:syntastic_mode_map = { "mode": "passive"}
+
+" tabular patterns
+" ...Issue: must load after Tabular has initialized...not sure how to do this
+" ...nicely
+ " call AddTabularPattern("first_equal /^[^=]*\zs=/l2", 0)
+
 
 " CtrlP extension 'ctrlp-funky' allows lookup of function definition, without
 " ...ctags
@@ -132,7 +146,7 @@ let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 " If you want :UltiSnipsEdit to split your window.
 let g:UltiSnipsEditSplit="vertical"
 
-let g:tern_show_argument_hints = "on_hold"
+let g:tern_show_argument_hints = "no"
 
 " Unmappings
 " Make sure nothing conflicts with tmux
@@ -140,6 +154,9 @@ map <c-a> <nop>
 
 " ------------------------------ Key maps, Mappings...
 " Remap _,_ to _'_  .......... used jumping to marks
+
+" map find
+nmap <leader><leader> /
 
 " expand region mappings
 vmap v <Plug>(expand_region_expand)
@@ -176,6 +193,7 @@ nnoremap <Leader>0 ct)
 nnoremap <Leader>- ct,
 nnoremap <Leader>' ct'
 nnoremap <Leader>" ct"
+nnoremap <Leader>] ct]
 
 " Commentary map
 nnoremap <Leader>c :Commentary<CR>
@@ -220,16 +238,16 @@ nnoremap <leader>so :source %<CR>
 " <Ctrl-l> redraws the screen and removes any search highlighting.
 nnoremap <silent><C-l> :nohl<CR><C-l>
 
-" Josh. Add newlines without leaving normal mode
-nnoremap <silent><C-CR> o<ESC>
-nnoremap <silent><S-CR> O<ESC>
-
 " Map semi-colon to colon....
 " ... no more shift :)
 " nnoremap ; :
+" I now use semi-colon, so this isn't useful any more
 
 " Highlight word under cursor (uses search highlighting)
 nmap <leader>* *N
+
+" javascript
+nmap <leader>jp /proto.*
 
 " Vundle PluginInstall
 nmap <leader>pi :PluginInstall<CR>
@@ -240,12 +258,16 @@ nnoremap <leader>sv :source .vimrc<CR>
 " UltiSnipEdit, shortcut...
 nnoremap <silent><F10> :UltiSnipsEdit<CR>
 
+" Show errors, 'syntastic'
+nnoremap <leader>er :Errors<CR>
+" Show errors and move into window
+nnoremap <leader>err :w<CR>:Errors<CR><C-W>j<CR>
+
 " Edit this file, shortcut...
-"nnoremap <silent><F11> :vsp ~/.vimrc<CR>
-nnoremap <silent><leader>vrc :vsp ~/.vimrc<CR>
+nnoremap <silent><leader>ev :tabnew ~/.vimrc<CR>
 
 " Edit bashrc
-nnoremap <silent><leader>brc :vsp ~/.bashrc<CR>
+nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
 
 " Edit gvimrc, shortcut...
 "nnoremap <silent><F12> :vsp ~/.gvimrc<CR>
@@ -265,6 +287,9 @@ nnoremap <silent><leader>dni :Dispatch npm install<CR>
 
 " Dispatch: npm test mapping
 nnoremap <silent><leader>dnt :Dispatch npm test<CR>
+
+" open with xdg-open
+nnoremap <leader>o :!xdg-open %<CR>
 
 " Dispatch: in ex mode
 nnoremap <leader>dd :Dispatch<SPACE>
@@ -299,15 +324,6 @@ augroup filetypedetect
   " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
 
-" vim-surround, with a function!  Ed: not really used
-
-autocmd FileType js let b:surround_45 = "function(){ \r }" " 45 = '-'. You can use `:echo char2nr('-')
-autocmd FileType javascript,css noremap <silent>;; :call cosco#commaOrSemiColon()<CR>
-" autocmd FileType javascript,css inoremap <silent>;; <c-o>:call cosco#commaOrSemiColon()<CR>
-
-" Regex breaks syntax highlighting, workaround...
-" ...mostly for the haroogon (can't remember spelling) Windows compiled bin
-  "set regexpengine=1 
 
 " Colours, colors
 syntax on
@@ -315,12 +331,15 @@ syntax on
 " colorscheme summerfruit256
 colorscheme base16-default
 let base16colorspace=256  " Access colors present in 256 colorspace
-set background=light
+set background=dark
 " colorscheme solarized
 " let g:solarized_termcolors=256
 " hi MatchParen ctermbg=3 cterm=underline term=NONE
 
 " --------------------------------------- Oneliners
+
+" Remove the scratch/preview window that pops up when I use Tern/Omnicomplete
+set completeopt-=preview
 
 " Use the same symbols as TextMate for tabstops and EOLs
 set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
@@ -363,19 +382,33 @@ set smartcase     " ignore case if search pattern is all lowercase,
 set encoding=utf-8
 set laststatus=2
 
-" The column where your cursor is, is highlighted. It's warming to me
+" The row where your cursor is, is highlighted. It's warming to me
 set cursorline
 
+
+" Custom syntax highlighting
+" hlsearch 
+highlight Search term=underline cterm=underline ctermfg=18 gui=underline guifg=#ab4642
+
 " Status line with vim-airline
-" Dfine if doesn't exist...
+" Define if doesn't exist...
 let g:airline#extensions#hunks#enabled = 1
 let g:airline#extensions#branch#enabled = 1
+
 
 if !exists('g:airline_symbols')
 	let g:airline_symbols = {}
 endif
 
-" let g:airline_theme='tomorrow' " looks better than my normal molokai, but only for status bar
+let g:airline_left_sep = ' '
+let g:airline_left_alt_sep = ' '
+let g:airline_right_sep = ' '
+let g:airline_right_alt_sep = ' '
+let g:airline_symbols.branch = ''
+let g:airline_symbols.readonly = ''
+let g:airline_symbols.linenr = ''
+
+"" let g:airline_theme='tomorrow' " looks better than my normal molokai, but only for status bar
 let g:airline_powerline_fonts=1
 
 " Should be plugins, but have included them here...
