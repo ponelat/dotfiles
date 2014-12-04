@@ -1,0 +1,10 @@
+[user]
+  name = josh
+  email = josh@ponelat.com
+[alias]
+  co = checkout
+  ci = commit
+  di = diff
+  aa = add --all
+[push]
+  default = simple
