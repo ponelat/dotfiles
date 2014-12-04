@@ -6,5 +6,6 @@
   ci = commit
   di = diff
   aa = add --all
+  l = "!. ~/.githelpers && pretty_git_log"
 [push]
   default = simple
