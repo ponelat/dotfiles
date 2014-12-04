@@ -16,9 +16,6 @@ eval `dircolors ~/.dircolors`
 # git flow autocompletion
 source "$HOME/git-flow-completion.bash"
 
-# Gulp task autocompletion
-eval "$(gulp --completion=bash)"
-
 # LiquidPrompt
 source "$HOME/liquidprompt/liquidprompt"
 # config will be in ~/.config/liquidprompt.sh
@@ -58,6 +55,18 @@ function cs {
     git status
   fi
 }
+
+# NVM ----------------------------------------------------
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+# Sauce Credentials -------------------------------------       
+  export SAUCE_USERNAME="ponelat"
+  export SAUCE_ACCESS_KEY="2b212c69-8a63-4846-b0af-32a7fc68950e"
+
+export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+# Gulp task autocompletion
+eval "$(gulp --completion=bash)"
 
 
 ###############################################################################
@@ -114,14 +123,6 @@ fi
 
 unset env
 
-# NVM ----------------------------------------------------
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-# Sauce Credentials -------------------------------------       
-  export SAUCE_USERNAME="ponelat"
-  export SAUCE_ACCESS_KEY="2b212c69-8a63-4846-b0af-32a7fc68950e"
-
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
 # added by travis gem
 [ -f "$HOME/.travis/travis.sh" ] && source "$HOME/.travis/travis.sh"
