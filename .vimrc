@@ -17,6 +17,8 @@ Plugin 'tpope/vim-surround'
 Plugin 'kien/ctrlp.vim'
 Plugin 'mattn/emmet-vim'
 Plugin 'pangloss/vim-javascript'
+Plugin 'jelera/vim-javascript-syntax'
+Plugin 'nathanaelkane/vim-indent-guides'
 Plugin 'editorconfig/editorconfig-vim'
 " Plugin 'L9'
 " Plugin 'FuzzyFinder'
@@ -87,7 +89,7 @@ let g:ctrlp_show_hidden = 1
 
 " map ctrl-p
 nnoremap <Leader>t :CtrlP<CR>
-nnoremap <Leader>y :CtrlPLine<CR>
+nnoremap <Leader>y :CtrlPLine <C-R>=expand("%")<CR><CR>
 nnoremap si :CtrlPBookmarkDir<CR>
 nnoremap s<c-i> :CtrlPBookmarkDirAdd<CR>
 
@@ -156,7 +158,7 @@ map <c-a> <nop>
 " Remap _,_ to _'_  .......... used jumping to marks
 
 " map find
-nmap <leader><leader> /
+" nmap <leader><leader> /
 
 " expand region mappings
 vmap v <Plug>(expand_region_expand)
@@ -165,8 +167,10 @@ vmap <C-v> <Plug>(expand_region_shrink)
 " insert-mode mappings
 inoremap jk <esc>
 
-" insert-mode mappings
-inoremap )) (
+" Normal mode mappings
+
+" Select inside function
+nmap <leader>v <esc>/}<cr>v%<s-v>
 
 " Shortcut to toggle `set number`
 nmap <Leader>n :set number!<CR>
@@ -247,7 +251,7 @@ nnoremap <silent><C-l> :nohl<CR><C-l>
 nmap <leader>* *N
 
 " javascript
-nmap <leader>jp /proto.*
+nmap <leader><leader> /proto.*
 
 " Vundle PluginInstall
 nmap <leader>pi :PluginInstall<CR>
@@ -344,6 +348,10 @@ set completeopt-=preview
 " Use the same symbols as TextMate for tabstops and EOLs
 set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
 
+" For saving sane sessions...
+set ssop-=options    " do not store global and local values in a session
+set ssop-=folds      " do not store folds
+
 " fixed line numbers
 " set number
 
@@ -415,6 +423,7 @@ let g:airline_powerline_fonts=1
 
 " My Search strings, yank them into register then search...
 " "\(.\{-}\)"/'\1'/g 
+nmap <leader>c" :%s/"\(.\{-}\)"/'\1'/g<cr>
 
 " ------------------------------ Another function
 " .vim/plugin/qfdo.vim
