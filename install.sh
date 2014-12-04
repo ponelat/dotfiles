@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-homefiles=".gitconfig .bashrc .vimrc .tmux.conf .Xresources"
+homefiles=".gitconfig .bashrc .vimrc .tmux.conf"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo  Link all homefiles
