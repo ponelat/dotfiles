@@ -13,6 +13,9 @@ BASE16_SHELL="/home/josh/.config/base16-shell/base16-default.dark.sh"
 
 eval `dircolors ~/.dircolors`
 
+# git  helpers aliases and functions
+source "/home/josh/.githelpers"
+
 # git flow autocompletion
 source "$HOME/git-flow-completion.bash"
 
@@ -29,16 +32,8 @@ source /usr/share/autojump/autojump.sh
 # POWERLINE_BASH_SELECT=1
 # source "$HOME/.local/lib/python2.7/site-packages/powerline/bindings/shell/powerline.sh"
 
+# Aliases 
 alias ls='ls -A --color=always'
-alias gl='git log --oneline --decorate '"$@"
-alias glu='git log --oneline --decorate HEAD...'"$@"
-alias gds='git diff --stat '"$@"
-alias gd='git diff '"$@"
-alias gb='git branch -v'"$@"
-alias gc='git checkout '"$@"
-alias gcb='git checkout -b'"$@"
-alias gbm='git branch -v --merge'"$@"
-
 
 export DEV=true
 alias npm-exec='PATH=$(npm bin):$PATH'

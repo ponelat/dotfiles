@@ -1,11 +1,17 @@
 [user]
-  name = josh
+  name = Josh Ponelat
   email = josh@ponelat.com
 [alias]
   co = checkout
+  cb = checkout -b
   ci = commit
   di = diff
+  ds = diff --staged
+  stat = diff --stat
   aa = add --all
+  br = branch
+  bm = branch --merge
+  lr = log --oneline --left-right
   l = "!. ~/.githelpers && pretty_git_log"
 [push]
   default = simple
