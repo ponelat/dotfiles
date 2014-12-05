@@ -192,6 +192,15 @@ nmap <Leader>P "+P
 vmap <Leader>p "+p
 vmap <Leader>P "+P
 
+" Paste inside mappings
+nmap <leader>i' di'h"0p
+nmap <leader>i" di"h"0p
+nmap <leader>i0 di)h"0p
+nmap <leader>ii V"0p
+" These are used so often, they've been shortened to 'r'
+nmap <leader>r diw"0Pb
+nmap <leader>R diW"0Pb
+
 " Change mappings
 nnoremap <Leader>0 ct)
 nnoremap <Leader>- ct,
@@ -276,9 +285,6 @@ nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
 " Edit gvimrc, shortcut...
 "nnoremap <silent><F12> :vsp ~/.gvimrc<CR>
 nnoremap <silent><leader>grc :vsp ~/.gvimrc<CR>
-
-" Replace inner word with 0 register...
-nnoremap <leader>r diw"0Pb
 
 " Git status mapping
 nnoremap <silent><leader>gs :Gstatus<CR>
