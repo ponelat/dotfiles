@@ -4,7 +4,7 @@
 [alias]
   co = checkout
   cb = checkout -b
-  ci = commit
+  ci = commit --verbose
   di = diff
   ds = diff --staged
   stat = diff --stat
