@@ -42,6 +42,17 @@ ANSI_RESET='\033[0m'
 # some aliases  
 alias gl='pretty_git_log -n 12'"$@"
 alias glu='git l HEAD...'"$@"
+alias gd='echo "What is not in develop..." && pretty_git_log "'"develop..HEAD "'"'"$@"
+
+
+# current_branch(){
+#   if branch=$(git symbolic-ref --short -q HEAD)
+#   then
+#     echo on branch $branch
+#   else
+#     echo not on any branch
+#   fi
+# }
 
 show_git_head() {
   pretty_git_log -1
