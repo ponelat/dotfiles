@@ -50,7 +50,14 @@ Plugin 'lfilho/cosco.vim'
 Plugin 'marijnh/tern_for_vim'
 " Plugin 'altercation/vim-colors-solarized'
 Plugin 'chriskempson/base16-vim'
+Plugin 'majutsushi/tagbar'
+Plugin 'jceb/vim-orgmode'
+Plugin 'tpope/vim-speeddating'
+Plugin 'jgdavey/tslime.vim'
 Plugin 'christoomey/vim-tmux-navigator'
+Plugin 'mustache/vim-mustache-handlebars'
+Plugin 'ervandew/supertab'
+
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -79,6 +86,7 @@ endif
 
 " Leader key
 let mapleader = "\<Space>"
+let maplocalleader = ","
 
 " Ctrl-P
 "See: https://github.com/kien/ctrlp.vim
@@ -89,15 +97,19 @@ let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|git'
 let g:ctrlp_show_hidden = 1
 
 " map ctrl-p
-nnoremap <Leader>t :CtrlP<CR>
+nnoremap <Leader>j :CtrlP<CR>
+nnoremap <Leader><c-j> :cd %:p:h<CR>
+nnoremap <Leader>b :CtrlPBuffer<CR>
+" nnoremap <Leader><leader> :CtrlP<CR>
 nnoremap <Leader>y :CtrlPLine <C-R>=expand("%")<CR><CR>
-nnoremap si :CtrlPBookmarkDir<CR>
-nnoremap s<c-i> :CtrlPBookmarkDirAdd<CR>
+nnoremap <Leader>k :CtrlPBookmarkDir<CR>
+nnoremap <Leader><c-k> :CtrlPBookmarkDirAdd<CR>
 
 
 " Syntastic styntax checker
 let g:syntastic_javascript_checkers = ["jshint"]
 let g:syntastic_mode_map = { "mode": "passive"}
+" let g:syntastic_mode_map = { "mode": "active"}
 
 " tabular patterns
 " ...Issue: must load after Tabular has initialized...not sure how to do this
@@ -112,6 +124,9 @@ nnoremap <Leader>fu :CtrlPFunky<Cr>
 " narrow the list down with a word under cursor 
 nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr> 
 
+" Map to proto search
+nnoremap <Leader>fp /prototype\.
+
 "  Expand region vim-expand-region
 let g:expand_region_text_objects = {
       \ 'iw'  :0,
@@ -124,6 +139,11 @@ let g:expand_region_text_objects = {
       \ 'ip'  :1,
       \ }
 
+
+" Surround mappings
+" To determine the ASCII code to use, :echo char2nr("CHARACTER")
+let g:surround_48 = "'+ \r +'"
+let g:surround_56 = "**\r**"
 " Aswesome 80-character limiter
 " execute "set colorcolumn=" . join(range(81,335), ',')
 " hi ColorColumn guibg=#262626 ctermbg=235
@@ -167,12 +187,16 @@ vmap v <Plug>(expand_region_expand)
 vmap <C-v> <Plug>(expand_region_shrink)
 
 " insert-mode mappings
-inoremap jk <esc>
+" inoremap jk <esc>
 
 " Normal mode mappings
 
 " Select inside function
-nmap <leader>v <esc>/}<cr>v%<s-v>
+nmap <leader>z :set foldmethod=syntax<cr>
+nmap <leader>Z :set foldmethod=manual<cr>
+
+" Select inside function
+nmap <leader>v <esc>/{<cr>%v%<s-v>
 
 " Shortcut to toggle `set number`
 nmap <Leader>n :set number!<CR>
@@ -183,10 +207,17 @@ nmap <Leader>sn :SyntasticToggleMode<CR>
 " Shortcut to rapidly toggle `set list`
 nmap <Leader>l :set list!<CR>
 
+" Shortcut to close the location window
+nmap <Leader>cl :lclose<cr>
+
 " Some useful tips...
 " http://sheerun.net/2014/03/21/how-to-boost-your-vim-productivity/
 
-" Map <leader>y and p for clipboard copy/paste
+" Map <leader>y and p for clipboard copy/paste (yank/put)
+
+" For consistant behaviour with s-D and s-C
+nnoremap Y y$
+
 vmap <Leader>y "+y
 vmap <Leader>d "+d
 nmap <Leader>p "+p
@@ -205,6 +236,7 @@ nmap <leader>R diW"0Pb
 
 " Change mappings
 nnoremap <Leader>0 ct)
+nnoremap <Leader>9 ct(
 nnoremap <Leader>- ct,
 nnoremap <Leader>' ct'
 nnoremap <Leader>" ct"
@@ -218,16 +250,15 @@ vnoremap <Leader>c :Commentary<CR>
 nnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 vnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 
-" Map visual indent > to keep selection
-" vnoremap < <gv
-" vnoremap > >gv
+" Search with selection
+vnoremap * y/<c-r>0<cr>
 
 " "Map NERDTree
 " nmap <leader>ne :NERDTreeToggle<cr>
 
 " Mapping Tabs
 " Map ctrl-w
-nnoremap <c-w><c-w> :tabnext<cr>
+" nnoremap <c-w><c-w> :tabnext<cr>
 nnoremap <Leader>T :tabnew<cr>
 " nnoremap <leader>wl <C-W>v
 
@@ -249,6 +280,7 @@ nnoremap <leader>w :w<CR>
 
 "Map ctrl-shift-s to source current file...
 nnoremap <leader>so :source %<CR>
+nnoremap <leader>s. :! . %<CR>
 
 " <Ctrl-l> redraws the screen and removes any search highlighting.
 nnoremap <leader>/ :nohl \| :redraw!<cr>
@@ -262,7 +294,8 @@ nnoremap <leader>/ :nohl \| :redraw!<cr>
 nmap <leader>* *N
 
 " javascript
-nmap <leader><leader> /proto.*
+" nmap <leader><leader> /proto.*
+nmap <leader>1 /proto.*
 
 " Vundle PluginInstall
 nmap <leader>pi :PluginInstall<CR>
@@ -290,6 +323,7 @@ nnoremap <silent><leader>grc :vsp ~/.gvimrc<CR>
 
 " Git status mapping
 nnoremap <silent><leader>gs :Gstatus<CR>
+nnoremap <silent><leader>gd :Gvdiff<CR>
 
 " Dispatch: npm start mapping
 nnoremap <silent><leader>dns :Dispatch npm start<CR>
@@ -347,6 +381,10 @@ set background=dark
 " colorscheme solarized
 " let g:solarized_termcolors=256
 " hi MatchParen ctermbg=3 cterm=underline term=NONE
+
+
+" Emmet mapping
+" let g:user_emmet_leader_key = '<leader>,'
 
 " --------------------------------------- Oneliners
 
