@@ -39,6 +39,58 @@ export DEV=true
 alias npm-exec='PATH=$(npm bin):$PATH'
 
 
+# Some powerful fuzzyfinder shortcuts to help me move around
+function s () {
+  # see https://github.com/garybernhardt/selecta
+  selecta
+}
+
+function ss() {
+  cd $(find ~/projects -maxdepth 2 -type d | s) 
+}
+
+function cds() {
+  limit=5
+  # here we have a default value for our arg, go bash!
+  # note: the hyphen is part of the syntax ....${var:-default}
+  arg=${1:-.}
+  echo Limited to $limit
+  cd $(find "$arg" -maxdepth $limit -type d | s) 
+}
+
+function sp() {
+  cd `print_parent_paths | s`
+}
+
+function count_parent_folders() {
+ all=`tr '/' '\n' | wc -l `
+ echo $[$all-1]
+}
+
+function print_parent_paths() {
+  p=`pwd`
+  PARENTS=`echo $p | count_parent_folders`
+  COUNTER=0
+  NUM=2
+
+  while [[ $COUNTER -lt $PARENTS ]]; do
+    echo `expr $p : '\(\([^/]*/\)\{'$[$PARENTS-$COUNTER]'\}\)'`
+    COUNTER=$[$COUNTER+1]
+  done
+
+# expr /hello/bob/and/mary : '\(\([^/]*/\)\{4\}\)'
+}
+
+function cps() {
+  # IGNORE='\( -not -name "node_modules" -not -name ".git" -not -name "bower_components" \)'
+  limit=3
+  src=$1
+  dest=$2
+  echo Limited to 4 depth
+  cp $(find "$src" -maxdepth $limit | s) $(find "$dest" -maxdepth $limit -type d | s)
+}
+
+
 # Run git status if in git repo, else ls -la
 # see: https://gist.github.com/andrewberls/6119868#file-cs-sh
 function cs {
