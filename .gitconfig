@@ -2,16 +2,27 @@
   name = Josh Ponelat
   email = josh@ponelat.com
 [alias]
+  re = reset
+  ref= reflog
+  rf= reflog -n 10
   co = checkout
   cb = checkout -b
   ci = commit --verbose
+  ca = commit --all --verbose
+  cm = commit -m
+  amend = commit --amend --verbose
   di = diff
-  ds = diff --staged
-  stat = diff --stat
+  dc = diff --staged
+  ds = diff --stat
   aa = add --all
+  ap = add --all -p
   br = branch
-  bm = branch --merge
+  bm = branch --move
+  ff = merge --ff-only
   lr = log --oneline --left-right
+  ri = rebase -i
+  ra = rebase --abort
+  rc = rebase --continue
   l = "!. ~/.githelpers && pretty_git_log"
 [push]
   default = simple
