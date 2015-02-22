@@ -121,9 +121,11 @@ export NVM_DIR="$HOME/.nvm"
 
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
-# Gulp task autocompletion
+# Gulp task autocompletion, needs to be after nvm setup
 eval "$(gulp --completion=bash)"
 
+# Grunt task autocompletion, needs to be after nvm setup
+eval "$(grunt --completion=bash)"
 
 ###############################################################################
 ############ Github gits for ssh-agent
