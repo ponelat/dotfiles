@@ -67,7 +67,7 @@ function cds() {
   cd $(find "$arg" -maxdepth $limit -type d | s) 
 }
 
-function sp() {
+function cdd() {
   cd `print_parent_paths | s`
 }
 
