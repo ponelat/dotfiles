@@ -50,6 +50,7 @@ Plugin 'lfilho/cosco.vim'
 Plugin 'marijnh/tern_for_vim'
 " Plugin 'altercation/vim-colors-solarized'
 Plugin 'chriskempson/base16-vim'
+Plugin 'christoomey/vim-tmux-navigator'
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -142,20 +143,21 @@ endif
 
 " UltiSnips, a wonderfull snippet manager with python interpolation
 " UltiSnip Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
-let g:UltiSnipsExpandTrigger="<c-l>"
-let g:UltiSnipsJumpForwardTrigger="<c-j>"
-let g:UltiSnipsJumpBackwardTrigger="<c-k>"
+let g:UltiSnipsExpandTrigger = "<tab>"
+let g:UltiSnipsJumpForwardTrigger = "<tab>"
+let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
 " If you want :UltiSnipsEdit to split your window.
 let g:UltiSnipsEditSplit="vertical"
 
 let g:tern_show_argument_hints = "no"
 
-" Unmappings
-" Make sure nothing conflicts with tmux
-map <c-a> <nop>
-
 " ------------------------------ Key maps, Mappings...
 " Remap _,_ to _'_  .......... used jumping to marks
+
+" Remap c_a to leader_a, for compatibility with tmux
+noremap <leader>a <c-a>
+" Make sure nothing conflicts with tmux
+map <c-a> <nop>
 
 " map find
 " nmap <leader><leader> /
@@ -249,7 +251,7 @@ nnoremap <leader>w :w<CR>
 nnoremap <leader>so :source %<CR>
 
 " <Ctrl-l> redraws the screen and removes any search highlighting.
-nnoremap <silent><C-l> :nohl<CR><C-l>
+nnoremap <leader>/ :nohl \| :redraw!<cr>
 
 " Map semi-colon to colon....
 " ... no more shift :)
