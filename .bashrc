@@ -38,6 +38,14 @@ alias ls='ls -A --color=always'
 export DEV=true
 alias npm-exec='PATH=$(npm bin):$PATH'
 
+# Reboot into windows...
+function windows() {
+  # For this to work without requiring a password, run this...
+  # sudo visudo
+  # then add this to the bottom of sudoers
+  # josh    ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/reboot, /sbin/poweroff, /usr/sbin/grub-reboot
+  sudo grub-reboot 4 && sudo reboot
+}
 
 # Some powerful fuzzyfinder shortcuts to help me move around
 function s () {
