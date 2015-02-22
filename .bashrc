@@ -33,7 +33,8 @@ source /usr/share/autojump/autojump.sh
 # source "$HOME/.local/lib/python2.7/site-packages/powerline/bindings/shell/powerline.sh"
 
 # Aliases 
-alias ls='ls -A --color=always'
+alias ls='ls -A --color=always --group-directories-first -1 -v'
+alias o='xdg-open'
 
 export DEV=true
 alias npm-exec='PATH=$(npm bin):$PATH'
@@ -105,9 +106,9 @@ function cs {
   clear
   if ! git ls-files >& /dev/null
   then
-    ls -la
+    ls -la $1
   else
-    git status
+    git status $1
   fi
 }
 
