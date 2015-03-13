@@ -26,7 +26,6 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-repeat'
 Plugin 'tpope/vim-dispatch'
 Plugin 'Markdown-syntax'
-Plugin 'SirVer/ultisnips'
 Plugin 'honza/vim-snippets'
 " Plugin 'mbadran/headlights'
 Plugin 'vim-airline'
@@ -57,6 +56,8 @@ Plugin 'jgdavey/tslime.vim'
 Plugin 'christoomey/vim-tmux-navigator'
 Plugin 'mustache/vim-mustache-handlebars'
 Plugin 'ervandew/supertab'
+Plugin 'SirVer/ultisnips'
+Plugin 'Valloric/YouCompleteMe'
 
 
 " All of your Plugins must be added before the following line
@@ -161,14 +162,27 @@ if executable('ag')
 
 endif
 
-" UltiSnips, a wonderfull snippet manager with python interpolation
-" UltiSnip Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
+" Disable tab key in YCM
+" Should resolve.. UltiSnip Trigger configuration. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
+" let g:ycm_key_list_select_completion=[]
+" let g:ycm_key_list_previous_completion=[]
+
+" see: http://stackoverflow.com/a/22253548/3933724
+" Bind to c-p, which is then handled by supertab
+" make YCM compatible with UltiSnips (using supertab)
+let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
+let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
+
+" better key bindings for UltiSnipsExpandTrigger
 let g:UltiSnipsExpandTrigger = "<tab>"
 let g:UltiSnipsJumpForwardTrigger = "<tab>"
 let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
-" If you want :UltiSnipsEdit to split your window.
-let g:UltiSnipsEditSplit="vertical"
 
+" SuperTab
+let g:SuperTabDefaultCompletionType = "context"
+autocmd FileType html,css,sass,scss let g:SuperTabContextDefaultCompletionType = "<c-y>,"
+
+" Tern
 let g:tern_show_argument_hints = "no"
 
 " ------------------------------ Key maps, Mappings...
