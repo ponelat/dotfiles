@@ -23,7 +23,7 @@ eval `dircolors ~/.dircolors`
 source "/home/josh/.githelpers"
 
 # git flow autocompletion
-source "$HOME/git-flow-completion.bash"
+# source "$HOME/git-flow-completion.bash"
 
 # LiquidPrompt
 source "$HOME/liquidprompt/liquidprompt"
