@@ -1,6 +1,12 @@
 # Add Python installed bins to path
 export PATH+=:"$HOME/.local/bin"
 
+# Linuxbrew, see: 
+export PATH="$HOME/.linuxbrew/bin:$PATH"
+export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
+export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
+export EDITOR=vim
+
 # Setup color support
 # export TERM=xterm-256color
 case "$TERM" in
@@ -35,17 +41,27 @@ source /usr/share/autojump/autojump.sh
 # Aliases 
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
+alias .b=". ~/dotfiles/.bashrc"
+alias vib="vi ~/dotfiles/.bashrc"
 
-export DEV=true
 alias npm-exec='PATH=$(npm bin):$PATH'
 
+# The following function has been moved into it's own file...
 # Reboot into windows...
-function windows() {
-  # For this to work without requiring a password, run this...
-  # sudo visudo
-  # then add this to the bottom of sudoers
-  # josh    ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/reboot, /sbin/poweroff, /usr/sbin/grub-reboot
-  sudo grub-reboot 4 && sudo reboot
+# function windows() {
+#   # For this to work without requiring a password, run this...
+#   # sudo visudo
+#   # then add this to the bottom of sudoers
+#   # josh    ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/reboot, /sbin/poweroff, /usr/sbin/grub-reboot
+#   sudo grub-reboot 4 && sudo reboot
+# }
+
+function be () {
+  bundle exec "$*"
+}
+
+function lsla() {
+  ls -p -cltr "$*" | grep -v /
 }
 
 # Some powerful fuzzyfinder shortcuts to help me move around
@@ -115,9 +131,10 @@ function cs {
 # NVM ----------------------------------------------------
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+
 # Sauce Credentials -------------------------------------       
-  export SAUCE_USERNAME="ponelat"
-  export SAUCE_ACCESS_KEY="2b212c69-8a63-4846-b0af-32a7fc68950e"
+export SAUCE_USERNAME="ponelat"
+export SAUCE_ACCESS_KEY="2b212c69-8a63-4846-b0af-32a7fc68950e"
 
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
