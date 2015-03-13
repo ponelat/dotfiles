@@ -58,6 +58,8 @@ Plugin 'mustache/vim-mustache-handlebars'
 Plugin 'ervandew/supertab'
 Plugin 'SirVer/ultisnips'
 Plugin 'Valloric/YouCompleteMe'
+Plugin 'Raimondi/delimitMate'
+Plugin 'Sass'
 
 
 " All of your Plugins must be added before the following line
