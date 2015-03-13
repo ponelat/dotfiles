@@ -43,6 +43,7 @@ alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
 alias .b=". ~/dotfiles/.bashrc"
 alias vib="vi ~/dotfiles/.bashrc"
+alias dotinstall=". ~/dotfiles/install.sh"
 
 alias npm-exec='PATH=$(npm bin):$PATH'
 
