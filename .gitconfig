@@ -11,6 +11,7 @@
   ca = commit --all --verbose
   cm = commit -m
   amend = commit --amend --verbose
+  amendd = commit --amend --verbose -m ''
   di = diff
   dc = diff --staged
   ds = diff --stat
