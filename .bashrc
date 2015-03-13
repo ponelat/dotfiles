@@ -108,12 +108,26 @@ function print_parent_paths() {
 }
 
 function cps() {
-  # IGNORE='\( -not -name "node_modules" -not -name ".git" -not -name "bower_components" \)'
   limit=3
-  src=$1
-  dest=$2
-  echo Limited to 4 depth
-  cp $(find "$src" -maxdepth $limit | s) $(find "$dest" -maxdepth $limit -type d | s)
+  src_base=${1:-.}
+  dest_base=${2:-.}
+
+  src_base_final="$(find_dir_ignore_common "$src_base" | s)"
+  src=$(find $src_base_final -maxdepth $limit | s)
+  dest=$(find_dir_ignore_common "$dest_base" | s)
+
+  cp "$src" "$dest" 
+}
+
+function cpss() {
+  src_base=${1:-~/projects}
+  dest_base=${2:-.}
+  cps "$src_base" "$dest_base"
+}
+
+function find_dir_ignore_common() {
+  base=${1:-.}
+  find $1 -type d \( ! -path "*node_modules*" ! -path '*bower_components*' ! -path '*git*' ! -path '*cache*' \)
 }
 
 
