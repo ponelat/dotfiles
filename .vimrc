@@ -402,6 +402,10 @@ set background=dark
 " Emmet mapping
 " let g:user_emmet_leader_key = '<leader>,'
 
+" --------------------------------------- Neovim hacks
+"NeoVim + tmux handles ESC keys as alt+key somtimes
+" Be sure to have this line in Tmux
+" set -sg escape-time 10
 " --------------------------------------- Oneliners
 
 " Remove the scratch/preview window that pops up when I use Tern/Omnicomplete
