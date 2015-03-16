@@ -80,9 +80,9 @@ function cds() {
   limit=5
   # here we have a default value for our arg, go bash!
   # note: the hyphen is part of the syntax ....${var:-default}
-  arg=${1:-.}
+  base=${1:-.}
   echo Limited to $limit
-  cd $(find "$arg" -maxdepth $limit -type d | s) 
+  cd $(find_dir_ignore_common "$base" -maxdepth $limit -type d | s) 
 }
 
 function cdd() {
