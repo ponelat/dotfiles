@@ -42,6 +42,7 @@ source /usr/share/autojump/autojump.sh
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
 alias .b=". ~/dotfiles/.bashrc"
+alias .color=". ~/.config/base16-shell/colortest"
 alias vib="vi ~/dotfiles/.bashrc"
 alias dotinstall=". ~/dotfiles/install.sh"
 
