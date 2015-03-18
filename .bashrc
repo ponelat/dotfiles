@@ -5,7 +5,7 @@ export PATH+=:"$HOME/.local/bin"
 export PATH="$HOME/.linuxbrew/bin:$PATH"
 export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
 export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
-export EDITOR=vim
+export EDITOR=nvim
 
 # Linux brew bash completions
 for com in "$HOME/.linuxbrew/etc/bash_completion.d/*"; do
@@ -27,6 +27,7 @@ eval `dircolors ~/.dircolors`
 # git  helpers aliases and functions
 source "/home/josh/.githelpers"
 
+
 # git flow autocompletion
 # source "$HOME/git-flow-completion.bash"
 
@@ -46,6 +47,7 @@ source /usr/share/autojump/autojump.sh
 # Aliases 
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
+alias n='nvim'
 alias .b=". ~/dotfiles/.bashrc"
 alias .color=". ~/.config/base16-shell/colortest"
 alias vib="vi ~/dotfiles/.bashrc"
