@@ -12,5 +12,15 @@ do
   ln -i "$DIR/$_dotfile" "$HOME/$_dotfile" # interactive, hard links
 done
 
+# Link .nvimrc as .vimrc
+ln -i "$DIR/.vimrc" "$HOME/.nvimrc" # interactive, hard links
+# Link .nvim as .vim (in home)
+#... create the dir if it dones't exist
+if [[ ! -d $HOME/.vim ]]; then
+  echo 'making .vim'
+  mkdir $HOME/.vim
+fi
+ln -s -i "$HOME/.vim" "$HOME/.nvim" # interactive, hard links
+
 # echo Install gnome-terminal theme
 # see: https://github.com/chriskempson/base16-builder
