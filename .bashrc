@@ -7,6 +7,11 @@ export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
 export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
 export EDITOR=vim
 
+# Linux brew bash completions
+for com in "$HOME/.linuxbrew/etc/bash_completion.d/*"; do
+  . $com
+done
+
 # Setup color support
 # export TERM=xterm-256color
 case "$TERM" in
