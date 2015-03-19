@@ -1,0 +1,28 @@
+
+#!/usr/bin/env bash
+
+
+ME=`dirname "$0"`
+. "$ME/../color_variables.sh"
+
+# Either prints out success or failure depending on last arg (0 == success, 1+ failure)
+function _success {
+  echo_color $RESET
+  if [[ $1 = 0 ]]; then
+    echo_color $FG_GREEN
+    echo "[Success]"
+  else
+    echo_color $FG_RED
+    echo "[Failure]"
+  fi
+  echo_color $RESET
+}
+
+# Execute command
+eval "$*"
+code=$?
+_success $code
+
+# Pass along the exit code
+exit $code
+

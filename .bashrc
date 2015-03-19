@@ -1,6 +1,9 @@
 # Add Python installed bins to path
 export PATH+=:"$HOME/.local/bin"
 
+# Our own bins
+export PATH+=:"$HOME/dotfiles/bin"
+
 # Linuxbrew, see: 
 export PATH="$HOME/.linuxbrew/bin:$PATH"
 export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
