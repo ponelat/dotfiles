@@ -47,7 +47,7 @@ source /usr/share/autojump/autojump.sh
 # POWERLINE_BASH_SELECT=1
 # source "$HOME/.local/lib/python2.7/site-packages/powerline/bindings/shell/powerline.sh"
 
-# Aliases 
+## Aliases 
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
 alias n='nvim'
@@ -58,6 +58,10 @@ alias dotinstall=". ~/dotfiles/install.sh"
 
 alias npm-exec='PATH=$(npm bin):$PATH'
 
+## Local variables
+# global -maxdepth for 'find'
+FIND_MAX_DEPTH=5
+
 # The following function has been moved into it's own file...
 # Reboot into windows...
 # function windows() {
@@ -67,6 +71,7 @@ alias npm-exec='PATH=$(npm bin):$PATH'
 #   # josh    ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/reboot, /sbin/poweroff, /usr/sbin/grub-reboot
 #   sudo grub-reboot 4 && sudo reboot
 # }
+
 
 function be () {
   bundle exec "$*"
@@ -86,13 +91,17 @@ function ss() {
   cd $(find ~/projects -maxdepth 2 -type d | s) 
 }
 
+function lss() {
+  args=${1:-.}
+  ls `find $args -maxdepth $FIND_MAX_DEPTH | s `
+}
+
 function cds() {
-  limit=5
   # here we have a default value for our arg, go bash!
   # note: the hyphen is part of the syntax ....${var:-default}
   base=${1:-.}
-  echo Limited to $limit
-  cd $(find_dir_ignore_common "$base" -maxdepth $limit -type d | s) 
+  echo Limited to $FIND_MAX_DEPTH
+  cd $(find_dir_ignore_common "$base" -maxdepth $FIND_MAX_DEPTH -type d | s) 
 }
 
 function cdd() {
@@ -119,7 +128,7 @@ function print_parent_paths() {
 }
 
 function cps() {
-  limit=3
+  limit=$FIND_MAX_DEPTH
   src_base=${1:-.}
   dest_base=${2:-.}
 
