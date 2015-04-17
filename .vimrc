@@ -18,7 +18,10 @@ Plugin 'kien/ctrlp.vim'
 Plugin 'mattn/emmet-vim'
 Plugin 'pangloss/vim-javascript'
 Plugin 'jelera/vim-javascript-syntax'
+Plugin 'othree/javascript-libraries-syntax.vim'
 Plugin 'nathanaelkane/vim-indent-guides'
+Plugin 'burnettk/vim-angular'
+Plugin 'matthewsimo/angular-vim-snippets'
 Plugin 'editorconfig/editorconfig-vim'
 " Plugin 'L9'
 " Plugin 'FuzzyFinder'
@@ -33,7 +36,8 @@ Plugin 'vim-airline'
 "Plugin 'Lokaltog/powerline' ,{'rtp': '~/.vim/bundle/powerline/powerline/bindings/vim'}
 Plugin 'airblade/vim-gitgutter'
 "Plugin 'felixge/vim-nodejs-errorformat'
-Plugin 'rking/ag.vim' " Faster ack, which is faster grep :)
+" Plugin 'rking/ag.vim' " Faster ack, which is faster grep :)
+Plugin 'gabesoft/vim-ags' " Faster ack, which is faster grep :)
 Plugin 'justinmk/vim-gtfo'
 Plugin 'godlygeek/tabular'
 Plugin 'terryma/vim-expand-region'
@@ -58,9 +62,13 @@ Plugin 'ervandew/supertab'
 Plugin 'SirVer/ultisnips'
 Plugin 'Valloric/YouCompleteMe'
 Plugin 'Raimondi/delimitMate'
-Plugin 'Sass'
+Plugin 'cakebaker/scss-syntax.vim'
+Plugin 'groenewege/vim-less'
+Plugin 'gianarb/notify.vim'
+" Plugin 'etaoins/vim-volt-syntax'
+Plugin 'tmhedberg/matchit'
 
-
+ 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -95,15 +103,19 @@ let maplocalleader = ","
 let g:ctrlp_map = '<c-p>'
 let g:ctrlp_cmd = 'CtrlP'
 let g:ctrlp_working_path_mode = 'raw'
-let g:ctrlp_custom_ignore = 'node_modules\|DS_Store\|git'
-let g:ctrlp_show_hidden = 1
+
+" Selecting a file will default to a new tab...
+let g:ctrlp_prompt_mappings = {
+    \ 'AcceptSelection("e")': ['<c-t>'],
+    \ 'AcceptSelection("t")': ['<cr>', '<2-LeftMouse>'],
+    \ }
 
 " map ctrl-p
 nnoremap <Leader>j :CtrlP<CR>
 nnoremap <Leader><c-j> :cd %:p:h<CR>
 nnoremap <Leader>b :CtrlPBuffer<CR>
 " nnoremap <Leader><leader> :CtrlP<CR>
-nnoremap <Leader>y :CtrlPLine <C-R>=expand("%")<CR><CR>
+nnoremap <Leader>h :CtrlPLine <C-R>=expand("%")<CR><CR>
 nnoremap <Leader>k :CtrlPBookmarkDir<CR>
 nnoremap <Leader><c-k> :CtrlPBookmarkDirAdd<CR>
 
@@ -181,7 +193,6 @@ let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
 
 " SuperTab
 let g:SuperTabDefaultCompletionType = "context"
-autocmd FileType html,css,sass,scss let g:SuperTabContextDefaultCompletionType = "<c-y>,"
 
 " Tern
 let g:tern_show_argument_hints = "no"
@@ -209,9 +220,12 @@ vmap <C-v> <Plug>(expand_region_shrink)
 " Select inside function
 nmap <leader>z :set foldmethod=syntax<cr>
 nmap <leader>Z :set foldmethod=manual<cr>
+nmap <leader>d :Dispatch<space>
 
 " Select inside function
 nmap <leader>v <esc>/{<cr>%v%<s-v>
+
+nmap <leader>x :cclose <bar> :lclose<cr>
 
 " Shortcut to toggle `set number`
 nmap <Leader>n :set number!<CR>
@@ -267,6 +281,11 @@ vnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 
 " Search with selection
 vnoremap * y/<c-r>0<cr>
+
+" Count search instances 
+nnoremap <leader>8 :%s///gn<cr>
+
+
 
 " "Map NERDTree
 " nmap <leader>ne :NERDTreeToggle<cr>
@@ -377,14 +396,27 @@ nmap <Leader>hr <Plug>GitGutterRevertHunk
 " autocmd FocusLost * :set number
 " autocmd FocusGained * :set relativenumber
 
+" AutoCommands
 " my filetype syntax definitions
 augroup filetypedetect 
-  au! BufRead,BufNewFile *.hbs		set filetype=html
-  au! BufRead,BufNewFile *.md  		set filetype=markdown
+  au BufRead,BufNewFile *.hbs,*.volt	set filetype=html
+  au BufRead,BufNewFile *.md  		set filetype=markdown
   au BufRead,BufNewFile *.json          set filetype=json
+  au FileType snippets   set noexpandtab
+  au FileType javascript set omnifunc=javascriptcomplete#CompleteJS
   " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
 
+" augroup file_matching
+"   autocmd FileType html,css,sass,scss let g:SuperTabContextDefaultCompletionType = "<c-y>,"
+" augroup END
+
+" The row where your cursor is, is highlighted. It's warming to me
+" ...Only show when in buffer
+augroup enter_leave
+  autocmd  BufLeave * set nocursorline
+  autocmd  BufEnter * set cursorline
+augroup END
 
 " Colours, colors
 syntax on
@@ -400,12 +432,16 @@ set background=dark
 
 " Emmet mapping
 " let g:user_emmet_leader_key = '<leader>,'
+" autocmd FileType html imap <tab> <plug>(emmet-expand-abbr)
+" autocmd FileType mustache imap <tab> <plug>(emmet-expand-abbr)
 
 " --------------------------------------- Neovim hacks
 "NeoVim + tmux handles ESC keys as alt+key somtimes
 " Be sure to have this line in Tmux
 " set -sg escape-time 10
 " --------------------------------------- Oneliners
+
+set cursorline
 
 " Remove the scratch/preview window that pops up when I use Tern/Omnicomplete
 set completeopt-=preview
@@ -455,8 +491,6 @@ set smartcase     " ignore case if search pattern is all lowercase,
 set encoding=utf-8
 set laststatus=2
 
-" The row where your cursor is, is highlighted. It's warming to me
-set cursorline
 
 
 " Custom syntax highlighting

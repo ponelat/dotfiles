@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#vim: set ft=sh
+
+BASE=${1:-.}
+DEPTH=2
+FILE_SIZE=K
+echo $BASE with $DEPTH deep
+find "$BASE" -maxdepth $DEPTH -type f -exec \ls -l --block-size=$FILE_SIZE '{}' \; | log2_distribution.sh
+

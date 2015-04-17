@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# vim: set ft=sh
+
+find "$1" -maxdepth "$2" -type f| grep '\.[^/]\+$' | sed 's/.*\.//' | sort | uniq

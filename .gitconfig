@@ -21,9 +21,12 @@
   bm = branch --move
   ff = merge --ff-only
   lr = log --oneline --left-right
+  right = log --oneline --right-only 
+  left = log --oneline --left-only 
   ri = rebase -i
   ra = rebase --abort
   rc = rebase --continue
+  one = log --oneline
   l = "!. ~/.githelpers && pretty_git_log"
 [push]
   default = simple

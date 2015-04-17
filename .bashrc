@@ -4,16 +4,32 @@ export PATH+=:"$HOME/.local/bin"
 # Our own bins
 export PATH+=:"$HOME/dotfiles/bin"
 
+# For switching accounts...
+export PATH+=:"$HOME/projects/change_adsl"
+
+
 # Linuxbrew, see: 
 export PATH="$HOME/.linuxbrew/bin:$PATH"
 export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
 export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
 export EDITOR=nvim
 
+# Add this path for karma (I think)
+export PHANTOMJS_BIN=`type -p phantomjs`
+
 # Linux brew bash completions
 for com in "$HOME/.linuxbrew/etc/bash_completion.d/*"; do
   . $com
 done
+
+
+
+# Our own completions
+if [[ -d ~/dotfiles/bash_completion.d  ]]; then
+  for compl in `\ls ~/dotfiles/bash_completion.d/*` ; do
+    . $compl
+  done
+fi
 
 # Setup color support
 # export TERM=xterm-256color
@@ -22,7 +38,7 @@ case "$TERM" in
 esac
 
 # Base16 Shell
-BASE16_SHELL="/home/josh/.config/base16-shell/base16-google.dark.sh"
+BASE16_SHELL="/home/josh/.config/base16-shell/base16-tomorrow.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
 
 eval `dircolors ~/.dircolors`
@@ -52,8 +68,9 @@ alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
 alias n='nvim'
 alias .b=". ~/dotfiles/.bashrc"
-alias .color=". ~/.config/base16-shell/colortest"
+alias .color="(cd ~/.config/base16-shell/ && . ./colortest)"
 alias vib="vi ~/dotfiles/.bashrc"
+alias nib="nvim ~/dotfiles/.bashrc"
 alias dotinstall=". ~/dotfiles/install.sh"
 
 alias npm-exec='PATH=$(npm bin):$PATH'
@@ -96,6 +113,17 @@ function lss() {
   ls `find $args -maxdepth $FIND_MAX_DEPTH | s `
 }
 
+function movies() {
+  args="/mnt/Data/Movies ~/Downloads"
+  # xdg-open `find $args -maxdepth $FIND_MAX_DEPTH | s `
+  xdg-open "`find $args -maxdepth $FIND_MAX_DEPTH | s `"
+}
+
+function os() {
+  args=${1:-.}
+  xdg-open `find "$args" -maxdepth $FIND_MAX_DEPTH | s `
+}
+
 function cds() {
   # here we have a default value for our arg, go bash!
   # note: the hyphen is part of the syntax ....${var:-default}
@@ -127,14 +155,25 @@ function print_parent_paths() {
 # expr /hello/bob/and/mary : '\(\([^/]*/\)\{4\}\)'
 }
 
+function cpsa() {
+  cps --all-folders "$*"
+}
+
 function cps() {
   limit=$FIND_MAX_DEPTH
+  find_dir_command='find_dir_ignore_common'
+  if [[ "$1" = "--all-folders" ]]; then
+    find_dir_command='find_dir'
+    shift
+  fi
   src_base=${1:-.}
   dest_base=${2:-.}
 
-  src_base_final="$(find_dir_ignore_common "$src_base" | s)"
+
+
+  src_base_final="$($find_dir_command "$src_base" | s)"
   src=$(find $src_base_final -maxdepth $limit | s)
-  dest=$(find_dir_ignore_common "$dest_base" | s)
+  dest=$($find_dir_command "$dest_base" | s)
 
   cp "$src" "$dest" 
 }
@@ -150,6 +189,10 @@ function find_dir_ignore_common() {
   find $1 -type d \( ! -path "*node_modules*" ! -path '*bower_components*' ! -path '*git*' ! -path '*cache*' \)
 }
 
+function find_dir() {
+  base=${1:-.}
+  find "$1" -type d 
+}
 
 # Run git status if in git repo, else ls -la
 # see: https://gist.github.com/andrewberls/6119868#file-cs-sh
