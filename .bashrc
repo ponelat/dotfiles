@@ -1,3 +1,9 @@
+CLONED_DIR="$HOME/manual"
+PROJECTS="$HOME/projects"
+
+# For passwords and such...
+[[ -s $HOME/.env ]] && . $HOME/.env
+
 # Add Python installed bins to path
 export PATH+=:"$HOME/.local/bin"
 
@@ -7,26 +13,47 @@ export PATH+=:"$HOME/dotfiles/bin"
 # For switching accounts...
 export PATH+=:"$HOME/projects/change_adsl"
 
+# Java
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/
+export PATH+=:"$JAVA_HOME/bin"
 
-# Linuxbrew, see: 
+# NVM ----------------------------------------------------
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+
+# Sauce Credentials -------------------------------------
+export SAUCE_USERNAME="ponelat"
+export SAUCE_ACCESS_KEY="KEYKEYKEY"
+
+# Source the 'rvm' function
+. "$HOME/.rvm/scripts/rvm"
+export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+# Linuxbrew, see:
 export PATH="$HOME/.linuxbrew/bin:$PATH"
-export MANPATH="$HOME/.linuxbrew/share/man:$MANPATH"
-export INFOPATH="$HOME/.linuxbrew/share/info:$INFOPATH"
+export MANPATH="$(brew --prefix)/share/man:$MANPATH"
+export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
 export EDITOR=nvim
 
 # Add this path for karma (I think)
 export PHANTOMJS_BIN=`type -p phantomjs`
 
 # Linux brew bash completions
-for com in "$HOME/.linuxbrew/etc/bash_completion.d/*"; do
+for com in `\ls $(brew --prefix)/etc/profile.d/*`; do
   . $com
 done
 
+# Linuxbrew sourced files...
+for com in `\ls $(brew --prefix)/etc/bash_completion.d/*`; do
+  . $com
+done
 
+# Linuxbrew manually sourced files...
+. "$(brew --prefix)/share/liquidprompt"
 
 # Our own completions
-if [[ -d ~/dotfiles/bash_completion.d  ]]; then
-  for compl in `\ls ~/dotfiles/bash_completion.d/*` ; do
+if [[ -d $HOME/dotfiles/bash_completion.d  ]]; then
+  for compl in `\ls $HOME/dotfiles/bash_completion.d/*` ; do
     . $compl
   done
 fi
@@ -38,42 +65,36 @@ case "$TERM" in
 esac
 
 # Base16 Shell
-BASE16_SHELL="/home/josh/.config/base16-shell/base16-tomorrow.dark.sh"
-[[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
+. "$CLONED_DIR/base16-shell/base16-default.dark.sh"
 
-eval `dircolors ~/.dircolors`
+eval `dircolors`
 
 # git  helpers aliases and functions
-source "/home/josh/.githelpers"
-
+. $HOME/.githelpers
 
 # git flow autocompletion
 # source "$HOME/git-flow-completion.bash"
 
-# LiquidPrompt
-source "$HOME/liquidprompt/liquidprompt"
-# config will be in ~/.config/liquidprompt.sh
-
-# Autojump (easier file jumping)
-source /usr/share/autojump/autojump.sh
-
 # Powerline
-# powerline-daemon -q # this should be hiding in ~/.local/bin
+# powerline-daemon -q # this should be hiding in $HOME/.local/bin
 # POWERLINE_BASH_CONTINUATION=1
 # POWERLINE_BASH_SELECT=1
 # source "$HOME/.local/lib/python2.7/site-packages/powerline/bindings/shell/powerline.sh"
 
-## Aliases 
+## Aliases
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
 alias n='nvim'
-alias .b=". ~/dotfiles/.bashrc"
-alias .color="(cd ~/.config/base16-shell/ && . ./colortest)"
-alias vib="vi ~/dotfiles/.bashrc"
-alias nib="nvim ~/dotfiles/.bashrc"
-alias dotinstall=". ~/dotfiles/install.sh"
-
-alias npm-exec='PATH=$(npm bin):$PATH'
+alias .b=". $HOME/dotfiles/.bashrc"
+alias .color="(cd "$CLONED_DIR/base16-shell/" && . ./colortest)"
+alias vib="vi $HOME/dotfiles/.bashrc"
+alias nib="nvim $HOME/dotfiles/.bashrc"
+alias ns="nvim -S"
+alias dotinstall=". $HOME/dotfiles/install.sh"
+alias specs="ln -s $PROJECTS/swagger-notes/specs dist/s"
+alias impose="ln -fi ../swagger-notes/ui-gulpfile.js gulpfile.js"
+alias ne='PATH=$(npm bin):$PATH'
+alias damn_gitatt="echo '**/* binary' > .gitattributes && git add .gitattributes && git reset .gitattributes && git checkout .gitattributes"
 
 ## Local variables
 # global -maxdepth for 'find'
@@ -90,6 +111,11 @@ FIND_MAX_DEPTH=5
 # }
 
 
+function entrs() {
+  DIR=$(find . -type d | s)
+  ls "$DIR"/* | entr "$*"
+}
+
 function be () {
   bundle exec "$*"
 }
@@ -105,7 +131,7 @@ function s () {
 }
 
 function ss() {
-  cd $(find ~/projects -maxdepth 2 -type d | s) 
+  cd $(find $HOME/projects -maxdepth 2 -type d | s)
 }
 
 function lss() {
@@ -114,9 +140,16 @@ function lss() {
 }
 
 function movies() {
-  args="/mnt/Data/Movies ~/Downloads"
+  args="/mnt/Data/Movies $HOME/Downloads"
   # xdg-open `find $args -maxdepth $FIND_MAX_DEPTH | s `
-  xdg-open "`find $args -maxdepth $FIND_MAX_DEPTH | s `"
+
+  TYPES_STR=avi
+  TYPES="m4v mkv mp4"
+  for T in $TYPES; do
+    TYPES_STR=$TYPES_STR$T'\|'
+  done
+
+  xdg-open "`find $args -maxdepth $FIND_MAX_DEPTH -iregex '.*\.\('$TYPES_STR'\)' | s `"
 }
 
 function os() {
@@ -129,7 +162,7 @@ function cds() {
   # note: the hyphen is part of the syntax ....${var:-default}
   base=${1:-.}
   echo Limited to $FIND_MAX_DEPTH
-  cd $(find_dir_ignore_common "$base" -maxdepth $FIND_MAX_DEPTH -type d | s) 
+  cd $(find_dir_ignore_common "$base" -maxdepth $FIND_MAX_DEPTH -type d | s)
 }
 
 function cdd() {
@@ -175,11 +208,11 @@ function cps() {
   src=$(find $src_base_final -maxdepth $limit | s)
   dest=$($find_dir_command "$dest_base" | s)
 
-  cp "$src" "$dest" 
+  cp "$src" "$dest"
 }
 
 function cpss() {
-  src_base=${1:-~/projects}
+  src_base=${1:-$HOME/projects}
   dest_base=${2:-.}
   cps "$src_base" "$dest_base"
 }
@@ -191,7 +224,7 @@ function find_dir_ignore_common() {
 
 function find_dir() {
   base=${1:-.}
-  find "$1" -type d 
+  find "$1" -type d
 }
 
 # Run git status if in git repo, else ls -la
@@ -206,16 +239,6 @@ function cs {
   fi
 }
 
-# NVM ----------------------------------------------------
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-
-# Sauce Credentials -------------------------------------       
-export SAUCE_USERNAME="ponelat"
-export SAUCE_ACCESS_KEY="2b212c69-8a63-4846-b0af-32a7fc68950e"
-
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
-
 # Gulp task autocompletion, needs to be after nvm setup
 eval "$(gulp --completion=bash)"
 
@@ -227,10 +250,10 @@ eval "$(grunt --completion=bash)"
 ###############################################################################
 # See: https://help.github.com/articles/working-with-ssh-key-passphrases#auto-launching-ssh-agent-on-msysgit
 ###############################################################################
-# Note: ~/.ssh/environment should not be used, as it
+# Note: $HOME/.ssh/environment should not be used, as it
 #       already has a different purpose in SSH.
 
-env=~/.ssh/agent.env
+env=$HOME/.ssh/agent.env
 
 # Note: Don't bother checking SSH_AGENT_PID. It's not used
 #       by SSH itself, and it might even be incorrect
@@ -265,7 +288,7 @@ if ! agent_is_running; then
     agent_load_env
 fi
 
-# if your keys are not stored in ~/.ssh/id_rsa.pub or ~/.ssh/id_dsa.pub, you'll need
+# if your keys are not stored in $HOME/.ssh/id_rsa.pub or $HOME/.ssh/id_dsa.pub, you'll need
 # to paste the proper path after ssh-add
 if ! agent_is_running; then
     agent_start
@@ -335,3 +358,5 @@ get_sha() {
 #     PS1="$PS1"'$(__git_ps1) '   # bash function
 # fi
 # PS1="$PS1""\[\e[0m\]"            # change color
+
+
