@@ -1,6 +1,9 @@
 set nocompatible              " be iMproved, required
 filetype off                  " required
 
+" My own runtime
+set rtp+=~/dotfiles/.vim
+
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
 "set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
@@ -67,8 +70,10 @@ Plugin 'groenewege/vim-less'
 Plugin 'gianarb/notify.vim'
 " Plugin 'etaoins/vim-volt-syntax'
 Plugin 'tmhedberg/matchit'
+Plugin 'Quramy/vison'
+Plugin 'Shougo/unite.vim'
 
- 
+
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
@@ -91,7 +96,7 @@ if has("win32")
 " Regex breaks syntax highlighting, workaround...
 " ...mostly for the haroogon (can't remember spelling) Windows compiled bin
  "Windows options here
-  set regexpengine=1 
+  set regexpengine=1
 endif
 
 " Leader key
@@ -116,8 +121,12 @@ nnoremap <Leader><c-j> :cd %:p:h<CR>
 nnoremap <Leader>b :CtrlPBuffer<CR>
 " nnoremap <Leader><leader> :CtrlP<CR>
 nnoremap <Leader>h :CtrlPLine <C-R>=expand("%")<CR><CR>
-nnoremap <Leader>k :CtrlPBookmarkDir<CR>
-nnoremap <Leader><c-k> :CtrlPBookmarkDirAdd<CR>
+" nnoremap <Leader>k :CtrlPBookmarkDir<CR>
+nnoremap <Leader>k :CtrlP $HOME/projects<CR>
+" nnoremap <Leader><c-k> :CtrlPBookmarkDirAdd<CR>
+nnoremap <Leader>l :CtrlPTag<CR>
+nnoremap <Leader>; :CtrlPBufTag<CR>
+
 
 
 " Syntastic styntax checker
@@ -133,10 +142,14 @@ let g:syntastic_mode_map = { "mode": "passive"}
 
 " CtrlP extension 'ctrlp-funky' allows lookup of function definition, without
 " ...ctags
-let g:ctrlp_extensions = ['funky']
-nnoremap <Leader>fu :CtrlPFunky<Cr> 
-" narrow the list down with a word under cursor 
-nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr> 
+" let g:ctrlp_extensions = ['funky']
+" nnoremap <Leader>fu :CtrlPFunky<Cr>
+" " narrow the list down with a word under cursor
+" nnoremap <Leader>fU :execute 'CtrlPFunky ' . expand('<cword>')<Cr>
+
+" Now we're using ctags-exuberant
+" see: http://stackoverflow.com/questions/1790623/how-can-i-make-vims-taglist-plugin-show-useful-information-for-javascript
+let g:tlist_javascript_settings = 'javascript;s:string;a:array;o:object;f:function'
 
 " Map to proto search
 nnoremap <Leader>fp /prototype\.
@@ -147,9 +160,9 @@ let g:expand_region_text_objects = {
       \ 'iW'  :0,
       \ 'i"'  :1,
       \ 'i''' :1,
-      \ 'i]'  :1, 
-      \ 'ib'  :1, 
-      \ 'iB'  :1, 
+      \ 'i]'  :1,
+      \ 'ib'  :1,
+      \ 'iB'  :1,
       \ 'ip'  :1,
       \ }
 
@@ -190,6 +203,11 @@ let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
 let g:UltiSnipsExpandTrigger = "<tab>"
 let g:UltiSnipsJumpForwardTrigger = "<tab>"
 let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
+
+" 'snips' is in my dotfiles runtimepath dir
+let g:UltiSnipsSnippetsDir = "~/dotfiles/.vim/snips"
+let g:UltiSnipsSnippetDirectories=["UltiSnips", "snips"]
+map <leader>u :w\|:UltiSnipsEdit<cr>
 
 " SuperTab
 let g:SuperTabDefaultCompletionType = "context"
@@ -234,7 +252,7 @@ nmap <Leader>n :set number!<CR>
 nmap <Leader>sn :SyntasticToggleMode<CR>
 
 " Shortcut to rapidly toggle `set list`
-nmap <Leader>l :set list!<CR>
+nmap <Leader><tab>  :set list!<CR>
 
 " Shortcut to close the location window
 nmap <Leader>cl :lclose<cr>
@@ -282,7 +300,7 @@ vnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
 " Search with selection
 vnoremap * y/<c-r>0<cr>
 
-" Count search instances 
+" Count search instances
 nnoremap <leader>8 :%s///gn<cr>
 
 
@@ -398,11 +416,13 @@ nmap <Leader>hr <Plug>GitGutterRevertHunk
 
 " AutoCommands
 " my filetype syntax definitions
-augroup filetypedetect 
+augroup filetypedetect
   au BufRead,BufNewFile *.hbs,*.volt	set filetype=html
   au BufRead,BufNewFile *.md  		set filetype=markdown
   au BufRead,BufNewFile *.json          set filetype=json
-  au FileType snippets   set noexpandtab
+  au BufRead,BufNewFile *.json          set formatprg=python\ -m\ json.tool
+  au BufRead,BufNewFile *.snippets   set noexpandtab
+  au FileType snippets               set noexpandtab
   au FileType javascript set omnifunc=javascriptcomplete#CompleteJS
   " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
@@ -452,6 +472,7 @@ set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
 " For saving sane sessions...
 set ssop-=options    " do not store global and local values in a session
 set ssop-=folds      " do not store folds
+map <leader>ss :source Session.vim<cr>
 
 " fixed line numbers
 " set number
@@ -469,7 +490,7 @@ set nobackup
 set nowritebackup
 set noswapfile
 
-" Indents       
+" Indents
 set shiftwidth=2
 set expandtab
 set nowrap
@@ -494,13 +515,14 @@ set laststatus=2
 
 
 " Custom syntax highlighting
-" hlsearch 
+" hlsearch
 highlight Search term=underline cterm=underline ctermfg=18 gui=underline guifg=#ab4642
 
 " Status line with vim-airline
 " Define if doesn't exist...
 let g:airline#extensions#hunks#enabled = 1
 let g:airline#extensions#branch#enabled = 1
+let g:airline#extensions#tagbar#enabled = 1
 
 
 if !exists('g:airline_symbols')
@@ -521,7 +543,7 @@ let g:airline_powerline_fonts=1
 " Should be plugins, but have included them here...
 
 " My Search strings, yank them into register then search...
-" "\(.\{-}\)"/'\1'/g 
+" "\(.\{-}\)"/'\1'/g
 nmap <leader>c" :%s/"\(.\{-}\)"/'\1'/g<cr>
 
 " ------------------------------ Another function

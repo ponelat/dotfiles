@@ -1,0 +1,81 @@
+# require
+snippet req "Description" b
+var $1 = require('$1');
+endsnippet
+
+# Tests
+snippet desc "descibe('',f())" b
+describe('$1', function(){
+	${0:${VISUAL}}
+});
+endsnippet
+
+snippet it "it('', f())" b
+it('$1', function(){
+	${0:${VISUAL}}
+});
+endsnippet
+
+# Console logs
+
+snippet cl "console.log" b
+console.log('${0:${VISUAL}}');
+endsnippet
+
+snippet cll "console.log('hi', hi)" b
+console.log('${1:${VISUAL}}', $1);
+endsnippet
+
+snippet clll "console.log('hi', hi,'ho', hi,...)" b
+console.log(
+	'${1:${VISUAL}}', $1,
+	'$2', $2,
+	'$3', $3,
+	'$4', $4);
+endsnippet
+
+snippet cl* "console.log(*******)" b
+console.log('**********************************************');
+endsnippet
+
+# Angular shortcuts
+snippet ngdir "Angular directive file"
+
+/*global window */
+(function(angular) {
+
+	var DIRECTIVE = '${2:someDir}';
+	angular
+		.module('$1')
+		.directive(DIRECTIVE,[ $2Directive ]);
+
+	///////////////////////////
+
+	function $2Directive() {
+		return {
+			link: $2DirectiveLink,
+			restrict: 'A',
+			scope: {
+				'state': '='+DIRECTIVE
+			}
+		};
+
+		//////////////
+
+		function $2DirectiveLink ($scope, $el, $attrs) {
+
+			$0
+
+		}
+
+	}
+
+})(window.angular);
+
+endsnippet
+
+snippet fn "function name(){}"
+function $1() {
+	$2
+}
+endsnippet
