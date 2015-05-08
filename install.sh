@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-homefiles=".agignore .gitconfig .githelpers .bashrc .bash_completion .vimrc .tmux.conf .xsessionrc .Xmodmap"
+homefiles=".agignore .ctags .gitconfig .githelpers .bashrc .bash_completion .vimrc .tmux.conf .xsessionrc .Xmodmap"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo  Link all homefiles
@@ -8,7 +8,7 @@ echo  Link all homefiles
 # Each file on a separate line.
 for _dotfile in $homefiles
 do
-  echo  ...Linking $_dotfile  
+  echo  ...Linking $_dotfile
   ln -i "$DIR/$_dotfile" "$HOME/$_dotfile" # interactive, hard links
 done
 
