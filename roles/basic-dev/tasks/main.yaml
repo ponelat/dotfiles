@@ -1,0 +1,44 @@
+---
+- name: Apt packages
+  apt: pkg={{ item }} state=installed 
+  with_items:
+    - "{{ build.pkgs }}"
+  become: yes
+
+- name: Install Repos
+  register: repos_cloned
+  git:  repo="{{ item.repo }}" dest="{{ item.dest }}"
+  with_items:
+    - "{{ build.repos }}"
+
+- name: Install Pythons Pips
+  pip:  name="{{item}}" state=present
+  with_items:
+    - "{{ build.pips }}"
+
+- name: Update LinuxBrew
+  register: linuxbrew_updated
+  shell: ~/.linuxbrew/bin/brew update
+
+- name: Install LinuxBrews
+  when: linuxbrew_updated
+  shell: ~/.linuxbrew/bin/brew install {{item}}
+  with_items:
+    - "{{ build.brews }}"
+
+- name: Chown Repos
+  when: repos_cloned
+  file: path="{{ item.dest }}" owner="{{ user.name }}" group="{{ user.name }}" recurse=yes
+  with_items:
+    - "{{ build.repos }}"
+  become: yes
+
+    # Vim has an enter prompt if anything is remiss, this screws with me!
+# - name: Update Vundle
+#   shell: vim +PluginInstall +qall
+#   when: installed_vundle | success
+#   register: updated_vundle
+
+# - name: show debug
+ #  debug: msg="{{ updated_vundle.stdout }}"
+ #  when: updated_vundle

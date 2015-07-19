@@ -1,0 +1,39 @@
+---
+- hosts: localhost
+  vars:
+    - user:
+        name: "josh"
+    - build:
+        pkgs:
+          - git
+          - vim
+          - curl
+          - wget
+          - build-essential
+          - cmake
+          - python-dev
+          - tmux
+          - python-pip
+        brews:
+          - liquidprompt
+          - tmux
+          - autojump
+        pips:
+          - setuptools
+        repos: 
+        - repo: https://github.com/VundleVim/Vundle.vim 
+          dest: /home/{{user.name}}/.vim/bundle/Vundle.vim 
+        - repo: https://github.com/chriskempson/base16-shell  
+          dest: /home/{{user.name}}/.config/base16-shell
+        - repo: https://github.com/Homebrew/linuxbrew.git  
+          dest: /home/{{user.name}}/.linuxbrew
+
+  remote_user: "{{user.name}}"
+  roles: 
+    - basic-dev
+    - role: ansible-nvm
+      nvm: 
+        user: "{{ user.name }}"
+        version: master
+        node_version: 0.12.7
+    - role: rvm1-ansible

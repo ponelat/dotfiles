@@ -1,0 +1,6 @@
+[submodule "roles/rvm1-ansible"]
+	path = roles/rvm1-ansible
+	url = https://github.com/rvm/rvm1-ansible
+[submodule "roles/ansible-nvm"]
+	path = roles/ansible-nvm
+	url = https://github.com/leonidas/ansible-nvm
