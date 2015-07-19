@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Path=/home/josh
+Exec=/home/josh/.xsession
+X-GNOME-Autostart-enabled=true
+NoDisplay=false
+Hidden=false
+Name[en_ZA]=Remap Capslock
+Comment[en_ZA]=A hack-around, because I can't find something more elegant in linux mint / mdm
+X-GNOME-Autostart-Delay=0
