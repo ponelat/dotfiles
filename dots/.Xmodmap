@@ -1,0 +1,7 @@
+! Clear Capslock (make sure we're not ALL-CAPS)
+clear Lock
+remove Lock = Caps_Lock
+
+! Map Capslock to Control
+keysym Caps_Lock = Control_L
+add Control = Control_L

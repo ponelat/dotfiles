@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-homefiles=".agignore .ctags .gitconfig .githelpers .bashrc .bash_completion .vimrc .tmux.conf .xsessionrc .Xmodmap"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DOTS="$DIR/dots"
+homefiles=`find $DOTS` 
 
 echo  Link all homefiles
 
@@ -9,18 +10,18 @@ echo  Link all homefiles
 for _dotfile in $homefiles
 do
   echo  ...Linking $_dotfile
-  ln -i "$DIR/$_dotfile" "$HOME/$_dotfile" # interactive, hard links
+  ln -i "$_dotfile" "$HOME/`basename $_dotfile`" # interactive, hard links
 done
 
 # Link .nvimrc as .vimrc
-ln -i "$DIR/.vimrc" "$HOME/.nvimrc" # interactive, hard links
+ln -i "$DOTS/.vimrc" "$HOME/.nvimrc" # interactive
 # Link .nvim as .vim (in home)
-#... create the dir if it dones't exist
+#... create the dir if it doesn't exist
 if [[ ! -d $HOME/.vim ]]; then
   echo 'making .vim'
   mkdir $HOME/.vim
 fi
-ln -s -i "$HOME/.vim" "$HOME/.nvim" # interactive, hard links
+[ ! -d "$HOME/.nvim" ] && ln -s -i "$HOME/.vim" "$HOME/.nvim" # interactive
 
 # echo Install gnome-terminal theme
 # see: https://github.com/chriskempson/base16-builder

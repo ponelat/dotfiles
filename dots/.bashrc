@@ -1,58 +1,76 @@
-CLONED_DIR="$HOME/manual"
 PROJECTS="$HOME/projects"
 
 # For passwords and such...
-[[ -s $HOME/.env ]] && . $HOME/.env
+[ -s $HOME/.env ] && . $HOME/.env
 
 # Add Python installed bins to path
-export PATH+=:"$HOME/.local/bin"
+[ -d $HOME/.local/bin ] && export PATH+=:"$HOME/.local/bin"
 
 # Our own bins
-export PATH+=:"$HOME/dotfiles/bin"
+[ -d $HOME/dotfiles/bin ] && export PATH+=:"$HOME/dotfiles/bin"
 
 # For switching accounts...
-export PATH+=:"$HOME/projects/change_adsl"
+[ -d "$HOME/projects/change_adsl" ] && export PATH+=:"$HOME/projects/change_adsl"
 
 # Java
-export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/
-export PATH+=:"$JAVA_HOME/bin"
+[ -d /usr/lib/jvm/java-7-openjdk-amd64/ ] && export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/; export PATH+=:"$JAVA_HOME/bin"
 
 # NVM ----------------------------------------------------
-export NVM_DIR="$HOME/.nvm"
+[ -d "$HOME/.nvm" ] && export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 
+# added by travis gem
+[ -f "$HOME/.travis/travis.sh" ] && source "$HOME/.travis/travis.sh"
+
 # Sauce Credentials -------------------------------------
-export SAUCE_USERNAME="ponelat"
-export SAUCE_ACCESS_KEY="KEYKEYKEY"
+# export SAUCE_USERNAME="ponelat"
+# export SAUCE_ACCESS_KEY="KEYKEYKEY"
 
 # Source the 'rvm' function
-. "$HOME/.rvm/scripts/rvm"
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+# Add RVM to PATH for scripting 
+[ -s "$HOME/.rvm/scripts/rvm" ] && . "$HOME/.rvm/scripts/rvm"; export PATH="$PATH:$HOME/.rvm/bin"
 
 # Linuxbrew, see:
-export PATH="$HOME/.linuxbrew/bin:$PATH"
-export MANPATH="$(brew --prefix)/share/man:$MANPATH"
-export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
-export EDITOR=nvim
+if [ -d "$HOME/.linuxbrew" ]; then
+  export PATH="$HOME/.linuxbrew/bin:$PATH"
+  export MANPATH="$(brew --prefix)/share/man:$MANPATH"
+  export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
+
+  # Linux brew bash completions
+  if [ -d "$(brew --prefix)/etc/profile.d/" ] ; then
+    for com in `\ls $(brew --prefix)/etc/profile.d/*`; do
+      . $com
+    done
+  fi
+
+  # Linuxbrew sourced files...
+  if [ -d "$(brew --prefix)/etc/bash_completion.d/" ] ; then
+    for com in `\ls $(brew --prefix)/etc/bash_completion.d/*`; do
+      . $com
+      done
+  fi
+
+  # Linuxbrew manually sourced files...
+  [ -f "$(brew --prefix)/share/liquidprompt" ] && . "$(brew --prefix)/share/liquidprompt" 
+
+fi
+
+# Pick the right editor
+[ -n "`type -P vi`" ] && export EDITOR=nvim
+[ -n "`type -P vim`" ] && export EDITOR=nvim
+[ -n "`type -P nvim`" ] && export EDITOR=nvim
 
 # Add this path for karma (I think)
-export PHANTOMJS_BIN=`type -p phantomjs`
+[ -n "`type -P phantomjs`" ] && export PHANTOMJS_BIN="`type -p phantomjs`"
 
-# Linux brew bash completions
-for com in `\ls $(brew --prefix)/etc/profile.d/*`; do
-  . $com
-done
+# Gulp task autocompletion, needs to be after nvm setup
+[ -n "`type -P gulp`" ] && eval "$(gulp --completion=bash)"
 
-# Linuxbrew sourced files...
-for com in `\ls $(brew --prefix)/etc/bash_completion.d/*`; do
-  . $com
-done
-
-# Linuxbrew manually sourced files...
-. "$(brew --prefix)/share/liquidprompt"
+# Grunt task autocompletion, needs to be after nvm setup
+[ -n "`type -P grunt `" ] && eval "$(grunt --completion=bash)"
 
 # Our own completions
-if [[ -d $HOME/dotfiles/bash_completion.d  ]]; then
+if [ -d $HOME/dotfiles/bash_completion.d  ]; then
   for compl in `\ls $HOME/dotfiles/bash_completion.d/*` ; do
     . $compl
   done
@@ -65,15 +83,13 @@ case "$TERM" in
 esac
 
 # Base16 Shell
-. "$CLONED_DIR/base16-shell/base16-default.dark.sh"
+[ -d "$HOME/.config/base16-shell" ] && . "/home/josh/.config/base16-shell/base16-bright.dark.sh"
 
-eval `dircolors`
+# Correct base16 colors for ls output
+[ -x `type -P dircolors` ] && eval `dircolors`
 
 # git  helpers aliases and functions
-. $HOME/.githelpers
-
-# git flow autocompletion
-# source "$HOME/git-flow-completion.bash"
+[ -d "$HOME/.githelpers" ] && . $HOME/.githelpers
 
 # Powerline
 # powerline-daemon -q # this should be hiding in $HOME/.local/bin
@@ -85,16 +101,24 @@ eval `dircolors`
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
 alias n='nvim'
-alias .b=". $HOME/dotfiles/.bashrc"
-alias .color="(cd "$CLONED_DIR/base16-shell/" && . ./colortest)"
-alias vib="vi $HOME/dotfiles/.bashrc"
-alias nib="nvim $HOME/dotfiles/.bashrc"
+alias .b=". $HOME/.bashrc"
+alias .color="(cd "$HOME/.config/base16-shell/" && . ./colortest)"
+alias vib="vi $HOME/.bashrc"
+alias nib="nvim $HOME/.bashrc"
 alias ns="nvim -S"
 alias dotinstall=". $HOME/dotfiles/install.sh"
 alias specs="ln -s $PROJECTS/swagger-notes/specs dist/s"
 alias impose="ln -fi ../swagger-notes/ui-gulpfile.js gulpfile.js"
 alias ne='PATH=$(npm bin):$PATH'
 alias damn_gitatt="echo '**/* binary' > .gitattributes && git add .gitattributes && git reset .gitattributes && git checkout .gitattributes"
+
+# Set vi mode by default
+set -o vi
+# set show-mode-in-prompt on
+
+###
+############### FUNCTIONS
+###
 
 ## Local variables
 # global -maxdepth for 'find'
@@ -109,7 +133,6 @@ FIND_MAX_DEPTH=5
 #   # josh    ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/reboot, /sbin/poweroff, /usr/sbin/grub-reboot
 #   sudo grub-reboot 4 && sudo reboot
 # }
-
 
 function entrs() {
   DIR=$(find . -type d | s)
@@ -195,7 +218,7 @@ function cpsa() {
 function cps() {
   limit=$FIND_MAX_DEPTH
   find_dir_command='find_dir_ignore_common'
-  if [[ "$1" = "--all-folders" ]]; then
+  if [ "$1" = "--all-folders" ]; then
     find_dir_command='find_dir'
     shift
   fi
@@ -233,17 +256,12 @@ function cs {
   clear
   if ! git ls-files >& /dev/null
   then
-    ls -la $1
+    ls -a $1
   else
     git status $1
   fi
 }
 
-# Gulp task autocompletion, needs to be after nvm setup
-eval "$(gulp --completion=bash)"
-
-# Grunt task autocompletion, needs to be after nvm setup
-eval "$(grunt --completion=bash)"
 
 ###############################################################################
 ############ Github gits for ssh-agent
@@ -300,15 +318,6 @@ fi
 unset env
 
 
-# added by travis gem
-[ -f "$HOME/.travis/travis.sh" ] && source "$HOME/.travis/travis.sh"
-
-
-# Set vi mode by default, probably should be the last line
-# ...I've made it the second last 'section' so that I can add a VI mode in the prompt
-set -o vi
-# set show-mode-in-prompt on
-
 # Prompt
 get_root_git_dir() {
     printf "%s" $(pwd | sed "s:$HOME:~:")
@@ -321,42 +330,3 @@ get_dir() {
 get_sha() {
     git rev-parse --short HEAD 2>/dev/null
 }
-# GIT PROMPT_COMMAND
-
-# source ~/git-completion.bash
-
-# GIT_PS1_SHOWDIRTYSTATE=1
-# GIT_PS1_SHOWSTASHSTATE=1
-# GIT_PS1_SHOWUNTRACKEDFILES=1
-# # Explicitly unset color (default anyhow). Use 1 to set it.
-# GIT_PS1_SHOWCOLORHINTS=1
-# GIT_PS1_DESCRIBE_STYLE="branch"
-# GIT_PS1_SHOWUPSTREAM="auto git"
-
-
-# ------------------
-# ------ PROMPT COMMAND
-# ------------------
-# PROMPT_COMMAND='__git_ps1 "\u \W" "\\\$ " " [%s $(get_sha)] "'
-
-# PS1 Prompt
-# # non-printable characters must be enclosed inside \[ and \]
-# PS1='\[\033]0;$MSYSTEM:${PWD//[^[:ascii:]]/?}\007\]' # set window title
-# PS1="$PS1"'\n'                 # new line
-# PS1="$PS1""\[\e[0;36m\]"            # change color
-# PS1="$PS1"'dir: \w'                 # current working directory
-
-# PS1="$PS1"'\n'                 # new line
-
-# # \e[38;5;ColorNumberm
-# INFINITY="VI: ∞"   # my fancy unicode prompt
-# PS1="$PS1""\[\e[0;33m\]"        # change color
-# PS1="$PS1""$INFINITY "            # prompt: always {lambda}
-
-# if test -z "$WINELOADERNOEXEC"
-# then
-#     PS1="$PS1"'$(__git_ps1) '   # bash function
-# fi
-# PS1="$PS1""\[\e[0m\]"            # change color
-
-
