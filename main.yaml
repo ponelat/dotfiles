@@ -13,13 +13,17 @@
           - cmake
           - python-dev
           - tmux
-          - python-pip
+          - python-pip # needed for the ansible pip module
+          - bzip2 # needed for cmake
+          - xsel # for clipboard operations in neovim
         brews:
           - liquidprompt
           - tmux
           - autojump
+          - ag
         pips:
-          - setuptools
+          - setuptools # needed for cmake, might actually be included with python-pip.. dunno
+          - neovim # for vim/python plugins in neovim
         repos: 
         - repo: https://github.com/VundleVim/Vundle.vim 
           dest: /home/{{user.name}}/.vim/bundle/Vundle.vim 

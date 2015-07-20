@@ -13,6 +13,7 @@
 
 - name: Install Pythons Pips
   pip:  name="{{item}}" state=present
+  become: yes
   with_items:
     - "{{ build.pips }}"
 
@@ -25,6 +26,15 @@
   shell: ~/.linuxbrew/bin/brew install {{item}}
   with_items:
     - "{{ build.brews }}"
+
+- name: Tap neovim
+  when: linuxbrew_updated
+  shell: ~/.linuxbrew/bin/brew tap neovim/neovim
+  register: tapped_neovim
+
+- name: Install Neovim
+  when: tapped_neovim
+  shell: ~/.linuxbrew/bin/brew install neovim --HEAD
 
 - name: Chown Repos
   when: repos_cloned
