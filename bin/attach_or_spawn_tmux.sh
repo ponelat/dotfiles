@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
+TMUX="/home/josh/.linuxbrew/bin/tmux"
+
 # Try to attach to tmux, failing that spawn new instance
-tmux -2 attach || tmux -2
+$TMUX -2 attach || $TMUX -2
