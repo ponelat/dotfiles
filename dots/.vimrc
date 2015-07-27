@@ -265,12 +265,12 @@ nmap <Leader>cl :lclose<cr>
 " For consistant behaviour with s-D and s-C
 nnoremap Y y$
 
-vmap <Leader>y "+y
-vmap <Leader>d "+d
-nmap <Leader>p "+p
-nmap <Leader>P "+P
-vmap <Leader>p "+p
-vmap <Leader>P "+P
+set clipboard+=unnamedplus
+vnoremap <Leader>y "+y
+vnoremap <Leader>d "+d
+
+noremap <Leader>p "+p
+noremap <Leader>P "+P
 
 " Paste inside mappings
 nmap <leader>i' di'h"0p

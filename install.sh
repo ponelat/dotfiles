@@ -23,5 +23,8 @@ if [[ ! -d $HOME/.vim ]]; then
 fi
 [ ! -d "$HOME/.nvim" ] && ln -s -i "$HOME/.vim" "$HOME/.nvim" # interactive
 
+# Create link for bin
+[ ! -d "$HOME/bin" ] && ln -s "$DIR/bin" "$HOME/bin"  # interactive
+
 # echo Install gnome-terminal theme
 # see: https://github.com/chriskempson/base16-builder
