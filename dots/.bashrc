@@ -36,19 +36,7 @@ if [ -d "$HOME/.linuxbrew" ]; then
   export MANPATH="$(brew --prefix)/share/man:$MANPATH"
   export INFOPATH="$(brew --prefix)/share/info:$INFOPATH"
 
-  # Linux brew bash completions
-  if [ -d "$(brew --prefix)/etc/profile.d/" ] ; then
-    for com in `\ls $(brew --prefix)/etc/profile.d/*`; do
-      . $com
-    done
-  fi
-
-  # Linuxbrew sourced files...
-  if [ -d "$(brew --prefix)/etc/bash_completion.d/" ] ; then
-    for com in `\ls $(brew --prefix)/etc/bash_completion.d/*`; do
-      . $com
-      done
-  fi
+  [ -f "`brew --prefix`/etc/bash_completion" ] && . "`brew --prefix`/etc/bash_completion"
 
   # Linuxbrew manually sourced files...
   [ -f "$(brew --prefix)/share/liquidprompt" ] && . "$(brew --prefix)/share/liquidprompt" 
