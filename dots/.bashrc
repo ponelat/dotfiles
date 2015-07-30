@@ -114,6 +114,7 @@ alias specs="ln -s $PROJECTS/swagger-notes/specs dist/s"
 alias impose="ln -fi ../swagger-notes/ui-gulpfile.js gulpfile.js"
 alias ne='PATH=$(npm bin):$PATH'
 alias damn_gitatt="echo '**/* binary' > .gitattributes && git add .gitattributes && git reset .gitattributes && git checkout .gitattributes"
+alias gl="git l -10"
 
 # Set vi mode by default
 set -o vi
