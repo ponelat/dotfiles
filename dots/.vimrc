@@ -20,6 +20,7 @@ Plugin 'tpope/vim-surround'
 Plugin 'kien/ctrlp.vim'
 Plugin 'mattn/emmet-vim'
 Plugin 'pangloss/vim-javascript'
+Plugin 'mxw/vim-jsx'
 Plugin 'jelera/vim-javascript-syntax'
 Plugin 'othree/javascript-libraries-syntax.vim'
 Plugin 'nathanaelkane/vim-indent-guides'
@@ -41,6 +42,7 @@ Plugin 'airblade/vim-gitgutter'
 "Plugin 'felixge/vim-nodejs-errorformat'
 " Plugin 'rking/ag.vim' " Faster ack, which is faster grep :)
 Plugin 'gabesoft/vim-ags' " Faster ack, which is faster grep :)
+Plugin 'wincent/ferret'
 Plugin 'justinmk/vim-gtfo'
 Plugin 'godlygeek/tabular'
 Plugin 'terryma/vim-expand-region'
@@ -115,8 +117,10 @@ let g:ctrlp_prompt_mappings = {
     \ 'AcceptSelection("t")': ['<cr>', '<2-LeftMouse>'],
     \ }
 
+let g:ctrlp_follow_symlinks = 2
+
 " map ctrl-p
-nnoremap <Leader>j :CtrlP<CR>
+nnoremap <Learer>j :CtrlP<CR>
 nnoremap <Leader><c-j> :cd %:p:h<CR>
 nnoremap <Leader>b :CtrlPBuffer<CR>
 " nnoremap <Leader><leader> :CtrlP<CR>
@@ -130,7 +134,7 @@ nnoremap <Leader>; :CtrlPBufTag<CR>
 
 
 " Syntastic styntax checker
-let g:syntastic_javascript_checkers = ["jshint"]
+let g:syntastic_javascript_checkers = ["eslint"]
 let g:syntastic_mode_map = { "mode": "passive"}
 " let g:syntastic_mode_map = { "mode": "active"}
 
@@ -520,7 +524,7 @@ highlight Search term=underline cterm=underline ctermfg=18 gui=underline guifg=#
 
 " Status line with vim-airline
 " Define if doesn't exist...
-let g:airline#extensions#hunks#enabled = 1
+let g:airline#extensions#hunks#enabled = 0
 let g:airline#extensions#branch#enabled = 1
 let g:airline#extensions#tagbar#enabled = 1
 

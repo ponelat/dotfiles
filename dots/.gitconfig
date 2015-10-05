@@ -3,7 +3,8 @@
   email = josh@ponelat.com
 [alias]
   re = reset
-  ref= reflog
+  rh = reset HEAD~
+  ref = reflog
   rf= reflog -n 10
   co = checkout
   cb = checkout -b
@@ -19,6 +20,7 @@
   aa = add --all
   ap = add --all -p
   br = branch
+  bc = branch --contains
   bm = branch --move
   ff = merge --ff-only
   lr = log --oneline --left-right
