@@ -17,7 +17,9 @@
           - python-pip # needed for the ansible pip module
           - bzip2 # needed for cmake
           - xsel # for clipboard operations in neovim
+          - unzip # needed for neovim (or actually luarocks)
         brews:
+          - ncurses
           - liquidprompt
           - tmux
           - autojump
@@ -41,6 +43,11 @@
     - role: ansible-nvm
       nvm: 
         user: "{{ user.name }}"
+        become: yes
         version: master
         node_version: 0.12.7
     - role: rvm1-ansible
+      sudo: true
+      rvm1_install_flags: '--auto-dotfiles --user-install'
+      rvm1_install_path: '/home/{{ user.name }}/.rvm'
+      rvm1_user: '{{ user.name }}'
