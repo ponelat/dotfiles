@@ -116,6 +116,9 @@ alias ne='PATH=$(npm bin):$PATH'
 alias damn_gitatt="echo '**/* binary' > .gitattributes && git add .gitattributes && git reset .gitattributes && git checkout .gitattributes"
 alias gl="git l -10"
 
+alias drm="docker rm -v $(docker ps -a -q -f status=exited)"
+alias drmi="docker rmi $(docker images -f "dangling=true" -q)"
+
 # Set vi mode by default
 set -o vi
 # set show-mode-in-prompt on
