@@ -120,7 +120,7 @@ let g:ctrlp_prompt_mappings = {
 let g:ctrlp_follow_symlinks = 2
 
 " map ctrl-p
-nnoremap <Learer>j :CtrlP<CR>
+nnoremap <Leader>j :CtrlP<CR>
 nnoremap <Leader><c-j> :cd %:p:h<CR>
 nnoremap <Leader>b :CtrlPBuffer<CR>
 " nnoremap <Leader><leader> :CtrlP<CR>
@@ -513,7 +513,7 @@ set smartcase     " ignore case if search pattern is all lowercase,
                     "    case-sensitive otherwise
 "set guifont=Consolas\ for\ Powerline\ FixedD:h10
 
-set encoding=utf-8
+" set encoding=utf-8
 set laststatus=2
 
 
