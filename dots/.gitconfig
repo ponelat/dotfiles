@@ -31,5 +31,6 @@
   rc = rebase --continue
   one = log --oneline
   l = "!. ~/.githelpers && pretty_git_log"
+  cleanup = "!git branch --merged | grep  -v '\\*\\|master\\|develop' | xargs -n 1 git branch -d"
 [push]
   default = simple
