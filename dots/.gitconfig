@@ -32,5 +32,6 @@
   one = log --oneline
   l = "!. ~/.githelpers && pretty_git_log"
   cleanup = "!git branch --merged | grep  -v '\\*\\|master\\|develop' | xargs -n 1 git branch -d"
+  wipe = "!git checkout . ; git clean -f"
 [push]
   default = simple
