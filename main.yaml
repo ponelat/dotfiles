@@ -13,6 +13,7 @@
           - cmake
           - python-dev
           - tmux
+          - entr
           - vagrant
           - python-pip # needed for the ansible pip module
           - bzip2 # needed for cmake
