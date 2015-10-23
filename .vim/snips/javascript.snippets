@@ -4,16 +4,66 @@ var $1 = require('$1');
 endsnippet
 
 # Tests
-snippet desc "descibe('',f())" b
+snippet ex "chai.expect" b
+expect(${1:${0:${VISUAL}}}).to.$2
+endsnippet
+
+snippet exms "chai.expect.matchState" b
+expect(${1:${0:${VISUAL}}}).to.matchState($2)
+endsnippet
+
+snippet exe "chai.expect.eql" b
+expect(${1:${0:${VISUAL}}}).to.eql($2)
+endsnippet
+
+snippet exee "chai.expect.equal" b
+expect(${1:${0:${VISUAL}}}).to.equal($2)
+endsnippet
+
+snippet exeee "chai.expect.deepEqual" b
+expect(${1:${0:${VISUAL}}}).to.equal($2)
+endsnippet
+
+snippet describe "descibe('',f())" b
 describe('$1', function(){
 	${0:${VISUAL}}
-});
+})
 endsnippet
 
 snippet it "it('', f())" b
 it('$1', function(){
 	${0:${VISUAL}}
-});
+})
+endsnippet
+
+snippet before "before(fn)" b
+before(function(){
+	${0:${VISUAL}}
+})
+endsnippet
+
+snippet beforee "beforeEach(fn)" b
+beforeEach(function(){
+	${0:${VISUAL}}
+})
+endsnippet
+
+snippet after "after(fn)" b
+after(function(){
+	${0:${VISUAL}}
+})
+endsnippet
+
+snippet aftere "afterEach(fn)" b
+afterEach(function(){
+	${0:${VISUAL}}
+})
+endsnippet
+
+snippet fjo "fauxJax.on('', fn)" b
+fauxJax.on('request', function(req) {
+	${0:${VISUAL}}
+})
 endsnippet
 
 # Console logs
