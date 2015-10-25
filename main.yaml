@@ -28,6 +28,7 @@
           - git-flow
           - bash-completion
           - selecta
+          - hub
         pips:
           - setuptools # needed for cmake, might actually be included with python-pip.. dunno
           - neovim # for vim/python plugins in neovim

@@ -3,6 +3,19 @@ snippet req "Description" b
 var $1 = require('$1');
 endsnippet
 
+# superagent
+snippet rrn "fn(req,res,next)" w
+function(req,res,next) {
+	${0:${VISUAL}}
+}
+endsnippet
+
+snippet fer "fn(err,res)" w
+function(err,res) {
+	${0:${VISUAL}}
+}
+endsnippet
+
 # Tests
 snippet ex "chai.expect" b
 expect(${1:${0:${VISUAL}}}).to.$2

@@ -108,7 +108,6 @@ alias .b=". $HOME/.bashrc"
 alias .color="(cd "$HOME/.config/base16-shell/" && . ./colortest)"
 alias vib="vi $HOME/.bashrc"
 alias nib="nvim $HOME/.bashrc"
-alias ns="nvim -S"
 alias dotinstall=". $HOME/dotfiles/install.sh"
 alias specs="ln -s $PROJECTS/swagger-notes/specs dist/s"
 alias impose="ln -fi ../swagger-notes/ui-gulpfile.js gulpfile.js"
@@ -140,6 +139,11 @@ FIND_MAX_DEPTH=5
 #   # josh    ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/reboot, /sbin/poweroff, /usr/sbin/grub-reboot
 #   sudo grub-reboot 4 && sudo reboot
 # }
+
+function ns() {
+  local FILE=`find_file_ignore_git $1 | s`
+  nvim $FILE
+}
 
 function entrs() {
   DIR=$(find . -type d | s)
@@ -250,6 +254,11 @@ function cpss() {
 function find_dir_ignore_common() {
   base=${1:-.}
   find $1 -type d \( ! -path "*node_modules*" ! -path '*bower_components*' ! -path '*git*' ! -path '*cache*' \)
+}
+
+function find_file_ignore_git() {
+  base=${1:-.}
+  find $base -type f \( ! -path '*git*' ! -path '*cache*' \)
 }
 
 function find_dir() {
