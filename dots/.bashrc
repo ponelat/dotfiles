@@ -118,6 +118,8 @@ alias gl="git l -10"
 alias drm="docker rm -v $(docker ps -a -q -f status=exited)"
 alias drmi="docker rmi $(docker images -f "dangling=true" -q)"
 
+[ ! -z `type -P hub` ] && alias git=hub
+
 # Set vi mode by default
 set -o vi
 # set show-mode-in-prompt on
