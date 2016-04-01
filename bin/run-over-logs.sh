@@ -17,8 +17,16 @@ if [[ $1 == -v ]]; then
     shift
 fi
 
-start_ref=$1
-end_ref=$2
+if [[ $1 == -r ]]; then
+    user_revs=$2
+elif [[ $1 == -f ]]; then
+  user_revs="`git --no-pager log --oneline -- $2 | cut -d' ' -f1`"
+  end_ref=`echo $user_revs | cut -d' ' -f1`
+else
+  start_ref=$1
+  end_ref=$2
+fi
+
 test_command=$3
 
 main() {
@@ -59,7 +67,7 @@ usage() {
 }
 
 run_tests() {
-    revs=`log_command git rev-list --reverse ${start_ref}..${end_ref}`
+    revs=${user_revs:-`log_command git rev-list --reverse ${start_ref}..${end_ref}`}
 
     for rev in $revs; do
         debug "Checking out: $(git log --oneline -1 $rev)"
