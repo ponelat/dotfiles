@@ -3,6 +3,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 DOTS="$DIR/dots"
 homefiles=`find $DOTS` 
+CONFIG=${XDG_CONFIG_HOME:=$HOME/.config}
+NVIM_HOME="$CONFIG/nvim"
 
 echo  Link all homefiles
 
@@ -13,15 +15,15 @@ do
   ln -i "$_dotfile" "$HOME/`basename $_dotfile`" # interactive, hard links
 done
 
-# Link .nvimrc as .vimrc
-ln -i "$DOTS/.vimrc" "$HOME/.nvimrc" # interactive
-# Link .nvim as .vim (in home)
-#... create the dir if it doesn't exist
+
 if [[ ! -d $HOME/.vim ]]; then
   echo 'making .vim'
   mkdir $HOME/.vim
 fi
-[ ! -d "$HOME/.nvim" ] && ln -s -i "$HOME/.vim" "$HOME/.nvim" # interactive
+
+# Setup nvim as links to vim
+[ ! -d "$NVIM_HOME" ] && ln -s "$HOME/.vim" "$NVIM_HOME"
+ln "$DOTS/.vimrc" "$NVIM_HOME/init.vim" 
 
 # Create link for bin
 [ ! -d "$HOME/bin" ] && ln -s "$DIR/bin" "$HOME/bin"  # interactive
