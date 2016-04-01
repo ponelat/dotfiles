@@ -1,0 +1,3 @@
+#!/bin/sh
+
+sudo openvpn --config ~/vpns/josh-dev-swagger-vpn.ovpn
