@@ -23,9 +23,10 @@ Plugin 'pangloss/vim-javascript'
 Plugin 'mxw/vim-jsx'
 Plugin 'jelera/vim-javascript-syntax'
 Plugin 'othree/javascript-libraries-syntax.vim'
+" Plugin 'othree/xml'
 Plugin 'nathanaelkane/vim-indent-guides'
-Plugin 'burnettk/vim-angular'
-Plugin 'matthewsimo/angular-vim-snippets'
+" Plugin 'burnettk/vim-angular'
+" Plugin 'matthewsimo/angular-vim-snippets'
 Plugin 'editorconfig/editorconfig-vim'
 " Plugin 'L9'
 " Plugin 'FuzzyFinder'
@@ -33,6 +34,7 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'tpope/vim-repeat'
 Plugin 'tpope/vim-dispatch'
 Plugin 'Markdown-syntax'
+Plugin 'jtratner/vim-flavored-markdown.git'
 Plugin 'honza/vim-snippets'
 " Plugin 'mbadran/headlights'
 Plugin 'vim-airline'
@@ -49,13 +51,15 @@ Plugin 'terryma/vim-expand-region'
 Plugin 'jaxbot/selective-undo.vim'
 Plugin 'tacahiroy/ctrlp-funky'
 Plugin 'elzr/vim-json'
+Plugin 'tpope/vim-jdaddy'
 Plugin 'scrooloose/syntastic'
 " Plugin 'wookiehangover/jshint.vim'
 Plugin 'tpope/vim-unimpaired'
 " Plugin 'lfilho/cosco.vim'
 " Plugin 'summerfruit256.vim'
 Plugin 'marijnh/tern_for_vim'
-" Plugin 'altercation/vim-colors-solarized'
+Plugin 'sjl/badwolf'
+Plugin 'altercation/vim-colors-solarized'
 Plugin 'chriskempson/base16-vim'
 Plugin 'majutsushi/tagbar'
 Plugin 'jceb/vim-orgmode'
@@ -74,6 +78,10 @@ Plugin 'gianarb/notify.vim'
 Plugin 'tmhedberg/matchit'
 Plugin 'Quramy/vison'
 Plugin 'Shougo/unite.vim'
+Plugin 'Shougo/unite-help'
+Plugin 'Shougo/vimproc.vim'
+Plugin 'tpope/vim-eunuch'
+Plugin 'powerman/vim-plugin-AnsiEsc'
 
 
 " All of your Plugins must be added before the following line
@@ -119,6 +127,46 @@ let g:ctrlp_prompt_mappings = {
 
 let g:ctrlp_follow_symlinks = 2
 
+" Unite 
+call unite#filters#matcher_default#use(['matcher_fuzzy'])
+let g:unite_source_rec_async_command = 'ag --follow --skip-vcs-ignores --nocolor --nogroup --hidden -g ""'
+nnoremap <Leader>k :Unite -start-insert <CR>
+
+
+ call unite#custom#profile('default', 'context', {
+ \   'start_insert': 1,
+ \   'winheight': 20,
+ \   'direction': 'botright',
+ \ })
+
+" Set up some custom ignores
+call unite#custom_source('file_rec,file_rec/async,file_mru,buffer,grep',
+      \ 'ignore_pattern', join([
+      \ '\.git/',
+      \ 'git5/.*/review/',
+      \ 'google/obj/',
+      \ 'tmp/',
+      \ '.sass-cache',
+      \ '.git5_specs/',
+      \ '.pyc',
+      \ ], '\|'))
+
+      " \ 'node_modules/',
+      " \ 'bower_components/',
+      " "\ 'dist/',
+
+" Custom mappings for the unite buffer
+autocmd FileType unite call s:unite_settings()
+function! s:unite_settings()
+  " Play nice with supertab
+  let b:SuperTabDisabled=1
+  " Enable navigation with control-j and control-k in insert mode
+  imap <buffer> <C-j> <Plug>(unite_select_next_line)
+  imap <buffer> <C-k> <Plug>(unite_select_previous_line)
+  nmap <buffer> <C-[> <Plug>(unite_all_exit)
+  nmap <buffer> <leader>p <Plug>(unite_all_exit)
+endfunction
+
 " map ctrl-p
 nnoremap <Leader>j :CtrlP<CR>
 nnoremap <Leader><c-j> :cd %:p:h<CR>
@@ -126,7 +174,7 @@ nnoremap <Leader>b :CtrlPBuffer<CR>
 " nnoremap <Leader><leader> :CtrlP<CR>
 nnoremap <Leader>h :CtrlPLine <C-R>=expand("%")<CR><CR>
 " nnoremap <Leader>k :CtrlPBookmarkDir<CR>
-nnoremap <Leader>k :CtrlP $HOME/projects<CR>
+" nnoremap <Leader>k :CtrlP $HOME/projects<CR>
 " nnoremap <Leader><c-k> :CtrlPBookmarkDirAdd<CR>
 nnoremap <Leader>l :CtrlPTag<CR>
 nnoremap <Leader>; :CtrlPBufTag<CR>
@@ -135,6 +183,7 @@ nnoremap <Leader>; :CtrlPBufTag<CR>
 
 " Syntastic styntax checker
 let g:syntastic_javascript_checkers = ["eslint"]
+let g:syntastic_javascript_eslint_exec = 'eslint_d'
 let g:syntastic_mode_map = { "mode": "passive"}
 " let g:syntastic_mode_map = { "mode": "active"}
 
@@ -202,6 +251,7 @@ endif
 " make YCM compatible with UltiSnips (using supertab)
 let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
 let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
+let g:ycm_filetype_blacklist={'unite': 1}
 
 " better key bindings for UltiSnipsExpandTrigger
 let g:UltiSnipsExpandTrigger = "<tab>"
@@ -211,7 +261,7 @@ let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
 " 'snips' is in my dotfiles runtimepath dir
 let g:UltiSnipsSnippetsDir = "~/dotfiles/.vim/snips"
 let g:UltiSnipsSnippetDirectories=["UltiSnips", "snips"]
-map <leader>u :w\|:UltiSnipsEdit<cr>
+let g:UltiSnipsEditSplit= "context"
 
 " SuperTab
 let g:SuperTabDefaultCompletionType = "context"
@@ -291,11 +341,11 @@ nnoremap <Leader>9 ct(
 nnoremap <Leader>- ct,
 nnoremap <Leader>' ct'
 nnoremap <Leader>" ct"
-nnoremap <Leader>] ct]
+nnoremap <Leader>[ :Errors<cr>
 
 " Commentary map
-nnoremap <Leader>c :Commentary<CR>
-vnoremap <Leader>c :Commentary<CR>
+" <leader>c shouldn't be used. Use gc{motion} instead
+map <leader>c <nop>
 
 " Map 'K' to search for word under cursor, ie: `find in files`
 nnoremap K :Ag "\b<C-R><C-W>\b"<CR>:cw<CR>
@@ -359,9 +409,6 @@ nmap <leader>pi :PluginInstall<CR>
 " Source local .vimrc file, shortcut...
 nnoremap <leader>sv :source .vimrc<CR>
 
-" UltiSnipEdit, shortcut...
-nnoremap <silent><F10> :UltiSnipsEdit<CR>
-
 " Show errors, 'syntastic'
 nnoremap <leader>er :Errors<CR>
 " Show errors and move into window
@@ -372,6 +419,8 @@ nnoremap <silent><leader>ev :tabnew ~/.vimrc<CR>
 
 " Edit bashrc
 nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
+nnoremap <leader>eb :tabnew ~/.bashrc<CR>
+nnoremap <leader>eu :UltiSnipsEdit<cr>
 
 " Edit gvimrc, shortcut...
 "nnoremap <silent><F12> :vsp ~/.gvimrc<CR>
@@ -399,6 +448,15 @@ nnoremap <leader>dd :Dispatch<SPACE>
 " Spelling on/off
 nnoremap <leader>sp :set spell!<CR>
 
+" function s:Mkdir()
+"   let dir = expand('%:p:h')
+
+"   if !isdirectory(dir)
+"     call mkdir(dir, 'p')
+"     echo 'Created non-existing directory: '.dir
+"   endif
+" endfunction
+
 " Local .vimrc files...
 "set exrc            " enable per-directory .vimrc files
 "set secure          " disable unsafe commands in local .vimrc files
@@ -422,14 +480,19 @@ nmap <Leader>hr <Plug>GitGutterRevertHunk
 " my filetype syntax definitions
 augroup filetypedetect
   au BufRead,BufNewFile *.hbs,*.volt	set filetype=html
-  au BufRead,BufNewFile *.md  		set filetype=markdown
+  au BufRead,BufNewFile *.md  		set filetype=ghmarkdown
   au BufRead,BufNewFile *.json          set filetype=json
   au BufRead,BufNewFile *.json          set formatprg=python\ -m\ json.tool
   au BufRead,BufNewFile *.snippets   set noexpandtab
-  au FileType snippets               set noexpandtab
-  au FileType javascript set omnifunc=javascriptcomplete#CompleteJS
   " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
+
+augroup markdown
+  au!
+  au BufNewFile, BufRead *.md, *.markdown setlocal filtetype=ghmarkdown
+augroup END
+
+" autocmd BufWritePre * call s:Mkdir()
 
 " augroup file_matching
 "   autocmd FileType html,css,sass,scss let g:SuperTabContextDefaultCompletionType = "<c-y>,"
@@ -443,12 +506,16 @@ augroup enter_leave
 augroup END
 
 " Colours, colors
+set t_Co=256
+let base16colorspace=256
 syntax on
+colorscheme base16-default
+set background=dark
+highlight Normal ctermbg=NONE
+highlight nonText ctermbg=NONE
 " colorscheme molokai
 " colorscheme summerfruit256
-colorscheme base16-default
-let base16colorspace=256  " Access colors present in 256 colorspace
-set background=dark
+" colorscheme badwolf
 " colorscheme solarized
 " let g:solarized_termcolors=256
 " hi MatchParen ctermbg=3 cterm=underline term=NONE
@@ -496,13 +563,15 @@ set noswapfile
 
 " Indents
 set shiftwidth=2
+set softtabstop=2 
+set tabstop=2 
 set expandtab
 set nowrap
+set cindent
 set autoindent
 
 " Colours
 set visualbell
-" set t_Co=256
 " set t_ut=
 
 " Search
@@ -540,6 +609,8 @@ let g:airline_right_alt_sep = ' '
 let g:airline_symbols.branch = ''
 let g:airline_symbols.readonly = ''
 let g:airline_symbols.linenr = ''
+
+let g:airline_section_y = ''
 
 "" let g:airline_theme='tomorrow' " looks better than my normal molokai, but only for status bar
 let g:airline_powerline_fonts=1
@@ -624,4 +695,31 @@ function! s:DiffWithSaved()
 endfunction
 com! DiffSaved call s:DiffWithSaved()
 nmap <leader>ds :DiffSaved<CR>
+
+" ------------------------------ Another function
+function! DeleteFile(...)
+  if(exists('a:1'))
+    let theFile=a:1
+  elseif ( &ft == 'help' )
+    echohl Error
+    echo "Cannot delete a help buffer!"
+    echohl None
+    return -1
+  else
+    let theFile=expand('%:p')
+  endif
+  let delStatus=delete(theFile)
+  if(delStatus == 0)
+    echo "Deleted " . theFile
+  else
+    echohl WarningMsg
+    echo "Failed to delete " . theFile
+    echohl None
+  endif
+  return delStatus
+endfunction
+"delete the current file
+" com! Rm call DeleteFile()
+"delete the file and quit the buffer (quits vim if this was the last file)
+com! Rm call DeleteFile() <Bar> q!
 

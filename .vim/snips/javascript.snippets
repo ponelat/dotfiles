@@ -1,24 +1,111 @@
-# require
+
+snippet import "import a from 'a'" b
+import ${1/([\w-]+)\$/$1/} from '$1'
+endsnippet
+
+# commonjs
+
+snippet tne "throw new Error" b
+throw new Error('wat')
+endsnippet
+
 snippet req "Description" b
-var $1 = require('$1');
+var $1 = require('$1')
+endsnippet
+
+snippet wat "console.log('wat?')" b
+console.log('wat?')
+endsnippet
+
+snippet retio "" b
+if(!(this instanceof $1)) { return new $1($2) }
+endsnippet
+
+# React
+
+snippet cwm "componentWillMount(){}" b
+componentWillMount() {
+		${0:${VISUAL}}
+},
+endsnippet
+
+snippet cwum "componentWillUnMount(){}" b
+componentWillUnMount() {
+		${0:${VISUAL}}
+},
+endsnippet
+
+snippet cdm "componentDidMount(){}" b
+componentDidMount() {
+		${0:${VISUAL}}
+},
+endsnippet
+
+snippet gis "getInitialState(){}" b
+getInitialState() {
+		return {
+				${0:${VISUAL}}
+		}
+},
+endsnippet
+
+snippet gip "getInitialProps(){}" b
+getInitalProps() {
+		return {
+				${0:${VISUAL}}
+		}
+},
+endsnippet
+
+snippet cwrp "componentWillReceiveProps(){}" b
+componentWillReceiveProps() {
+		${0:${VISUAL}}
+},
+endsnippet
+
+snippet render() "render(){ return <tag/> }" b
+render() {
+		return (
+				${0:${VISUAL}}
+		)
+}
+endsnippet
+
+snippet rcomp "React component (es2015 class)" b
+import React from "react"
+
+export default class $1 extends React.Component {
+
+	render() {
+		return (
+			${0:${VISUAL}}
+		)
+	}
+
+}
+
 endsnippet
 
 # superagent
 snippet rrn "fn(req,res,next)" w
 function(req,res,next) {
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 }
 endsnippet
 
 snippet fer "fn(err,res)" w
 function(err,res) {
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 }
 endsnippet
 
 # Tests
 snippet ex "chai.expect" b
 expect(${1:${0:${VISUAL}}}).to.$2
+endsnippet
+
+snippet efail "chai.expect true = false" b
+expect(true).to.eql(false)
 endsnippet
 
 snippet exms "chai.expect.matchState" b
@@ -37,68 +124,80 @@ snippet exeee "chai.expect.deepEqual" b
 expect(${1:${0:${VISUAL}}}).to.equal($2)
 endsnippet
 
+snippet ete "Expect.js - ex.toEqual" b
+expect(${1:${0:${VISUAL}}}).toEqual($2)
+endsnippet
+
+snippet etf "Expect.js - ex.toEqual(false)" b
+expect(${1:${0:${VISUAL}}}).toEqual(false)
+endsnippet
+
 snippet describe "descibe('',f())" b
 describe('$1', function(){
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 })
 endsnippet
 
 snippet it "it('', f())" b
 it('$1', function(){
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 })
 endsnippet
 
 snippet before "before(fn)" b
 before(function(){
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 })
 endsnippet
 
 snippet beforee "beforeEach(fn)" b
 beforeEach(function(){
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 })
 endsnippet
 
 snippet after "after(fn)" b
 after(function(){
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 })
 endsnippet
 
 snippet aftere "afterEach(fn)" b
 afterEach(function(){
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 })
 endsnippet
 
 snippet fjo "fauxJax.on('', fn)" b
 fauxJax.on('request', function(req) {
-	${0:${VISUAL}}
+		${0:${VISUAL}}
 })
 endsnippet
 
 # Console logs
 
 snippet cl "console.log" b
-console.log('${0:${VISUAL}}');
+console.log('${0:${VISUAL}}')
 endsnippet
 
 snippet cll "console.log('hi', hi)" b
-console.log('${1:${VISUAL}}', $1);
+console.log('${1:${VISUAL}}', $1)
 endsnippet
 
 snippet clll "console.log('hi', hi,'ho', hi,...)" b
 console.log(
-	'${1:${VISUAL}}', $1,
-	'$2', $2,
-	'$3', $3,
-	'$4', $4);
+		'${1:${VISUAL}}', $1,
+		'$2', $2,
+		'$3', $3,
+		'$4', $4)
+endsnippet
+
+snippet cla "console.log(args)" b
+console.log('arguments', arguments)
 endsnippet
 
 snippet cl* "console.log(*******)" b
-console.log('**********************************************');
+console.log('**********************************************')
 endsnippet
 
 # Angular shortcuts
@@ -107,38 +206,38 @@ snippet ngdir "Angular directive file"
 /*global window */
 (function(angular) {
 
-	var DIRECTIVE = '${2:someDir}';
-	angular
-		.module('$1')
-		.directive(DIRECTIVE,[ $2Directive ]);
+		var DIRECTIVE = '${2:someDir}';
+		angular
+				.module('$1')
+				.directive(DIRECTIVE,[ $2Directive ]);
 
-	///////////////////////////
+		///////////////////////////
 
-	function $2Directive() {
-		return {
-			link: $2DirectiveLink,
-			restrict: 'A',
-			scope: {
-				'state': '='+DIRECTIVE
-			}
-		};
+		function $2Directive() {
+				return {
+						link: $2DirectiveLink,
+						restrict: 'A',
+						scope: {
+								'state': '='+DIRECTIVE
+						}
+				};
 
-		//////////////
+				//////////////
 
-		function $2DirectiveLink ($scope, $el, $attrs) {
+				function $2DirectiveLink ($scope, $el, $attrs) {
 
-			$0
+						$0
+
+				}
 
 		}
-
-	}
 
 })(window.angular);
 
 endsnippet
 
-snippet f "function name(){}" i
+snippet f "function name(){}" w
 function $1() {
-	$2
+		$2
 }
 endsnippet
