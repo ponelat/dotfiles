@@ -86,7 +86,7 @@ case "$TERM" in
 esac
 
 # Base16 Shell
-[ -d "$HOME/.config/base16-shell" ] && . "/home/josh/.config/base16-shell/base16-bright.dark.sh"
+[ -d "$HOME/.config/base16-shell" ] && . "/home/josh/.config/base16-shell/base16-paraiso.dark.sh"
 
 # Correct base16 colors for ls output
 [ -x `type -P dircolors` ] && eval `dircolors`
@@ -105,6 +105,7 @@ alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias o='xdg-open'
 alias n='nvim'
 alias .b=". $HOME/.bashrc"
+alias .x="$HOME/.xsession"
 alias .color="(cd "$HOME/.config/base16-shell/" && . ./colortest)"
 alias vib="vi $HOME/.bashrc"
 alias nib="nvim $HOME/.bashrc"
@@ -145,6 +146,17 @@ FIND_MAX_DEPTH=5
 function ns() {
   local FILE=`find_file_ignore_git $1 | s`
   nvim $FILE
+}
+
+function nms() {
+  local FILE=`find_file_ignore_git $1 | s`
+  nvim $FILE
+}
+
+
+function cats() {
+  local FILE=`find_file_ignore_git $1 | s`
+  echo `cat $FILE | s`
 }
 
 function entrs() {
@@ -348,3 +360,6 @@ get_dir() {
 get_sha() {
     git rev-parse --short HEAD 2>/dev/null
 }
+
+# added by travis gem
+[ -f /home/josh/.travis/travis.sh ] && source /home/josh/.travis/travis.sh
