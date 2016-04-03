@@ -1,8 +1,20 @@
 #!/usr/bin/env bash
 # vim: set ft=sh
 
-for source in "$@"; do
+SOURCES="$@"
+if [ -z "$SOURCES" ] ; then
+  if which selecta ; then
+    SOURCES="`ls /etc/apt/sources.list.d | selecta`"
+  else
+    echo We cannot find 'selecta' in the path. Its what we use to dynamically choose a repo. You can install it with '(brew update && brew install selecta)' 
+    echo
+    echo In the meantime these are the available sources you can update...
+    ls /etc/apt/sources.list.d
+    exit 1
+  fi
+fi
+
+for source in "$SOURCES"; do
   sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/${source}" \
     -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"    
 done
-
