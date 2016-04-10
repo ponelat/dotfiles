@@ -1,0 +1,115 @@
+#!/bin/sh
+# vim: set ft=sh
+
+# Just a simple git-log wrapper (with interactive selection)
+
+CMD="git"
+FINAL_ARGS="log"
+
+F_AUTHOR="%C(bold blue)<%an>%Creset"
+F_RELATIVE_TIME="%Cgreen(%ar)%Creset"
+F_SUBJECT="%s"
+F_HASH="%C(yellow)%h%Creset"
+F_REFS="%C(bold red)%d%Creset"
+FORMAT="$F_HASH}$F_RELATIVE_TIME}$F_AUTHOR}$F_REFS $F_SUBJECT"
+
+ANSI_BLACK='\033[30m'
+ANSI_BLACK_BOLD='\033[0;30;1m'
+ANSI_RED='\033[31m'
+ANSI_RED_BOLD='\033[0;31;1m'
+ANSI_GREEN='\033[32m'
+ANSI_GREEN_BOLD='\033[0;32;1m'
+ANSI_YELLOW='\033[33m'
+ANSI_YELLOW_BOLD='\033[0;33;1m'
+ANSI_BLUE='\033[34m'
+ANSI_BLUE_BOLD='\033[0;34;1m'
+ANSI_MAGENTA='\033[35m'
+ANSI_MAGENTA_BOLD='\033[0;35;1m'
+ANSI_CYAN='\033[36m'
+ANSI_CYAN_BOLD='\033[0;36;1m'
+ANSI_WHITE='\033[37m'
+ANSI_WHITE_BOLD='\033[0;37;1m'
+ANSI_RESET='\033[0m'
+
+APROXIDATES="
+\nyesterday
+\nlast week
+\nlast month
+\nlast monday
+\nlast tuesday
+\nlast wednesday
+\nlast thursday
+\nlast friday
+\nlast saturday
+\nlast sunday
+\nJanuary 1
+\nFebuary 1
+\nMarch 1
+\nApril 1
+\nMay 1
+\nJune 1
+\nJuly 1
+\nAugust 1
+\nSeptember 1
+\nOctober 1
+\nNovember 1
+\nDecember 1
+"
+
+
+getArg() {
+  case $1 in
+    "author" )
+      RESULT="--author=\"`getAuthor`\""
+      ;;
+    "after" )
+      RESULT="--after=\"`getAproxidate`\""
+      ;;
+    "before" )
+      RESULT="--before=\"`getAproxidate`\""
+      ;;
+    "since" )
+      RESULT="--since=\"`getAproxidate`\""
+      ;;
+    "until" )
+      RESULT="--until=\"`getAproxidate`\""
+      ;;
+  esac
+
+  echo $RESULT
+}
+
+getAuthor() {
+  git log --format='%aN <%aE>}%cN <%cE>' | tr '}' "\n" | sort -u | selecta 
+}
+
+getAproxidate() {
+  echo $APROXIDATES | selecta
+}
+
+for ARG in "$@" ; do
+  FINAL_ARGS="$FINAL_ARGS `getArg $ARG`"
+done
+
+gitLog() {
+  eval $@  |
+  # Replace (2 years ago) with (2 years)
+  sed -Ee 's/(^[^<]*) ago\)/\1)/' |
+  # Replace (2 years, 5 months) with (2 years)
+  sed -Ee 's/(^[^<]*), [[:digit:]]+ .*months?\)/\1)/' |
+  # Line columns up based on } delimiter
+  column -s '}' -t |
+  # Color merge commits specially
+  sed -Ee "s/(Merge (branch|remote-tracking branch|pull request) .*$)/$(printf $ANSI_RED)\1$(printf $ANSI_RESET)/" 
+}
+
+
+FINAL_ARGS="$FINAL_ARGS --format=\"$FORMAT\""
+
+echo "$CMD $FINAL_ARGS"
+gitLog $CMD $FINAL_ARGS
+
+
+
+
+
