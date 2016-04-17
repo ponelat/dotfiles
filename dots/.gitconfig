@@ -18,6 +18,7 @@
   amendd = commit --amend --verbose -m ''
   di = diff
   dc = diff --staged
+  dcs= diff-index -u HEAD -S
   ds = diff --stat
   aa = add --all
   ap = add --all -p
