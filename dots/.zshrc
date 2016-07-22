@@ -1,36 +1,27 @@
+
 # Path to your oh-my-zsh installation.
-  export ZSH=/home/josh/.oh-my-zsh
+export ZSH=$HOME/.oh-my-zsh
 
-# Set name of the theme to load.
-# Look in ~/.oh-my-zsh/themes/
-# Optionally, if you set this to "random", it'll load a random theme each
-# time that oh-my-zsh is loaded.
-ZSH_THEME="amuse"
+# Set my terminal if I'm not in tmux.
+[[ "$TMUX" == "" ]] && TERM=xterm-256color
 
-# Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
+ZSH_THEME="avit"
 
 # Uncomment the following line to use hyphen-insensitive completion. Case
 # sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
+HYPHEN_INSENSITIVE="true"
 
 # Uncomment the following line to disable bi-weekly auto-update checks.
 DISABLE_AUTO_UPDATE="false"
 
-# Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
 # Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
 # ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
@@ -49,22 +40,52 @@ ZSH_CUSTOM=~/dotfiles/zsh
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(brew npm web-search fasd nvm docker)
+plugins=(brew npm fasd nvm docker)
 # ssh-agent
 
 # User configuration
 
-  export PATH="/home/josh/.nvm/versions/node/v0.12.7/bin:/home/josh/bin:/home/josh/.linuxbrew/bin:/usr/local/rvm/gems/ruby-2.1.3/bin:/usr/local/rvm/gems/ruby-2.1.3@global/bin:/usr/local/rvm/rubies/ruby-2.1.3/bin:/home/josh/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/local/rvm/bin:/home/josh/dotfiles/bin:/usr/lib/jvm/java-7-openjdk-amd64//bin:/home/josh/.rvm/bin"
-# export MANPATH="/usr/local/man:$MANPATH"
+PATH="/home/josh/bin:/home/josh/.linuxbrew/bin:.1.3/bin:/home/josh/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/josh/dotfiles/bin:/usr/lib/jvm/java-7-openjdk-amd64/bin"
+
+PATH="$PATH:/home/josh/downloadedapps/robomongo-0.9.0-rc8-linux-x86_64-c113244/bin"
+PATH="$PATH:/home/josh/downloadedapps/apache-maven-3.3.9/bin"
+
+export PATH=$PATH
+# export EDITOR="emacsclient -t"
+# export ALTERNATE_EDITOR=""
+# export VISUAL="emacsclient -c -a emacs"
+
+export EDITOR="nvim"
+export ALTERNATE_EDITOR=""
+export VISUAL="nvim"
+
+
+
 
 source $ZSH/oh-my-zsh.sh
+
+export RPROMPT=
+
 
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
-export EDITOR='nvim'
+
 bindkey -v
+
+setopt autolist       # Display completion candidates immediately.
+setopt cdablevars     # When an argument should be a dir but is not one,
+                      # expand it as if it started with ~ (see below).
+setopt autonamedirs   # Any parameter that is set to an abosolute directory
+                      # name automatically becomes a name for that directory
+                      # in the form ~param.
+setopt histignoredups # Do not record a command in the history if it is a
+                      # duplicate of the previous one.
+setopt listtypes      # When listing files that are possible completions,
+                      # indicate their types with a trailing character.
+setopt nolistbeep     # No bell on ambiguous completion!!
+
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
@@ -91,18 +112,20 @@ alias j="fasd_cd -d"
 alias .x="~/.xsession"
 alias ne="PATH=$PATH:./node_modules/.bin; "
 alias gg="git --no-pager l -30"
-alias dtutum="docker run -it -v /usr/bin/docker:/usr/bin/docker -v /var/run/docker.sock:/var/run/docker.sock -e TUTUM_USER=$TUTUM_USER -e TUTUM_APIKEY=$TUTUM_APIKEY --rm tutum/cli"
-alias dcloud="docker run -it -v /usr/bin/docker:/usr/bin/docker -v /var/run/docker.sock:/var/run/docker.sock -e DOCKERCLOUD_USER=$DOCKERCLOUD_USER -e DOCKERCLOUD_PASS=$DOCKERCLOUD_PASS --rm dockercloud/cli"
+alias dcloud="docker run -it -v /usr/bin/docker:/usr/bin/docker -v /var/run/docker.sock:/var/run/docker.sock -e DOCKERCLOUD_USER=$DOCKERCLOUD_USER -e DOCKERCLOUD_APIKEY=$DOCKERCLOUD_APIKEY --rm dockercloud/cli"
+alias be="bundle exec"
+alias poston="pg_ctl start -D ~/.linuxbrew/var/postgres/ -l ~/.linuxbrew/var/postgres/log"
+alias postoff="pg_ctl stop -D ~/.linuxbrew/var/postgres/"
+alias postlog="cat ~/.linuxbrew/var/postgres/log"
+alias encodeURIComponent='perl -pe '\''s/([^a-zA-Z0-9_.!~*()'\''\'\'''\''-])/sprintf("%%%02X",ord($1))/ge'\'
+alias open="xdg-open"
+alias fonts="fc-list | cut -f2 -d: | selecta"
 
 export RBENV_ROOT=/home/josh/.linuxbrew/var/rbenv
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
 # Base16 Shell
-BASE16_SHELL="$HOME/.config/base16-shell/base16-default.dark.sh"
+BASE16_SHELL="/home/josh/.config/base16-shell/base16-paraiso.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
-
-if [ -f "$(brew --prefix scm_breeze)/scm_breeze.sh" ]; then
-  source "$(brew --prefix scm_breeze)/scm_breeze.sh"
-fi
 
 fpath=(/home/josh/.linuxbrew/share/zsh-completions /home/josh/.oh-my-zsh/functions /home/josh/.oh-my-zsh/completions /usr/local/share/zsh/site-functions /home/josh/.linuxbrew/share/zsh/site-functions /home/josh/.linuxbrew/Cellar/zsh/5.1.1/share/zsh/functions)

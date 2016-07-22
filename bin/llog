@@ -87,9 +87,19 @@ getAproxidate() {
   echo $APROXIDATES | selecta
 }
 
-for ARG in "$@" ; do
-  FINAL_ARGS="$FINAL_ARGS `getArg $ARG`"
-done
+printHelp() {
+  echo L Log, just a way to run git log... with selecta! Yay
+  echo
+  echo usage:
+  echo llog [type] [type..]
+  echo
+  echo where type can be...
+  echo
+  echo "author"
+  echo "after"
+  echo "before"
+  echo "until"
+}
 
 gitLog() {
   eval $@  |
@@ -103,6 +113,15 @@ gitLog() {
   sed -Ee "s/(Merge (branch|remote-tracking branch|pull request) .*$)/$(printf $ANSI_RED)\1$(printf $ANSI_RESET)/" 
 }
 
+if [ "$1" = "help" ] ; then
+  printHelp
+  exit 0
+fi
+
+for ARG in "$@" ; do
+
+  FINAL_ARGS="$FINAL_ARGS `getArg $ARG`"
+done
 
 FINAL_ARGS="$FINAL_ARGS --format=\"$FORMAT\""
 

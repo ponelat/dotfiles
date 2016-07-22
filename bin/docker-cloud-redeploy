@@ -1,0 +1,27 @@
+# Hide implicit messages..
+set +x
+# Relies on these vars...
+# DOCKERCLOUD_SERVICE: <docker-cloud-service-id> ( description )
+# DOCKERCLOUD_USER: <docker cloud user>
+# DOCKERCLOUD_APIKEY: <docker cloud api key>
+# DOCKER_REPO: a docker hub repository
+# DOCKER_TAG: a tag on that repo (eg: latest, staging)
+
+# Remove the everything after the '('
+SERVICE=${DOCKERCLOUD_SERVICE%%(*}
+
+# The Tutum-Cli docker image (aliased, because no-one is going to type that out :) )
+alias dcloud="docker run -i -v /usr/bin/docker:/usr/bin/docker -v /var/run/docker.sock:/var/run/docker.sock -e DOCKERCLOUD_USER=$DOCKERCLOUD_USER -e DOCKERCLOUD_APIKEY=$DOCKERCLOUD_APIKEY --rm dockercloud/cli"
+
+FULL_IMAGE=$DOCKER_REPO:$DOCKER_TAG
+
+echo Service.. $SERVICE
+echo Using docker image: "$FULL_IMAGE"
+
+# Verify the image exists first
+docker pull $FULL_IMAGE
+
+# https://docs.tutum.co/v2/api/?shell#update-an-existing-service
+# PS: the above docs are actually pretty usless when it comes to the CLI
+# FOr better results try `tutum service set`
+dcloud service set --image $FULL_IMAGE --redeploy $SERVICE

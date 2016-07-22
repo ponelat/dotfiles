@@ -17,8 +17,16 @@ snippet wat "console.log('wat?')" b
 console.log('wat?')
 endsnippet
 
+snippet clll "console.log('lll', a)" b
+console.log('lll $1', $1)
+endsnippet
+
 snippet retio "" b
 if(!(this instanceof $1)) { return new $1($2) }
+endsnippet
+
+snippet clj "console.log(JSON.stringify)" b
+console.log('$1', JSON.stringify($1, null, 2))
 endsnippet
 
 # React
@@ -57,6 +65,53 @@ getInitalProps() {
 },
 endsnippet
 
+snippet pts "PropType.string.isRequired" b
+$1: PropTypes.string.isRequired
+endsnippet
+
+snippet ptn "PropTypes.node.isRequired" b
+$1: PropTypes.node.isRequired
+endsnippet
+
+snippet pto "PropTypes.object.isRequired" b
+$1: PropTypes.object.isRequired
+endsnippet
+
+snippet pta "PropTypes.array.isRequired" b
+$1: PropTypes.array.isRequired
+endsnippet
+
+snippet ptf "PropTypes.func.isRequired" b
+$1: PropTypes.func.isRequired
+endsnippet
+
+snippet ptb "PropTypes.bool.isRequired" b
+$1: PropTypes.bool.isRequired
+endsnippet
+
+snippet propt "PropTypes" b
+$1.propTypes = {
+	$0
+}
+endsnippet
+
+snippet propta "PropTypes with examples" b
+$1.propTypes = {
+	one: PropTypes.string.isRequired,
+	two: PropTypes.number.isRequired,
+	three: PropTypes.object.isRequired,
+	four: PropTypes.func.isRequired,
+	five: PropTypes.bool.isRequired,
+	six: PropTypes.bool.isRequired,
+	seven: PropTypes.any.isRequired,
+	eight: PropTypes.oneOf(["M", "F"]),
+	nine: PropTypes.oneOfType([
+		PropTypes.string,
+	])
+}
+
+endsnippet
+
 snippet cwrp "componentWillReceiveProps(){}" b
 componentWillReceiveProps() {
 		${0:${VISUAL}}
@@ -71,7 +126,30 @@ render() {
 }
 endsnippet
 
+snippet rcons "React.Component contructro" b
+constructor(props, context) {
+	super(props, context)
+	$0
+}
+endsnippet
+
 snippet rcomp "React component (es2015 class)" b
+export class $1 extends React.Component {
+
+	render() {
+		return (
+			${0:${VISUAL}}
+		)
+	}
+
+}
+
+$1.propTypes = {
+
+}
+endsnippet
+
+snippet rcompf "React component (es2015 class)" b
 import React from "react"
 
 export default class $1 extends React.Component {
@@ -124,11 +202,11 @@ snippet exeee "chai.expect.deepEqual" b
 expect(${1:${0:${VISUAL}}}).to.equal($2)
 endsnippet
 
-snippet ete "Expect.js - ex.toEqual" b
+snippet ete "Expect.js - ex.toEqual" w
 expect(${1:${0:${VISUAL}}}).toEqual($2)
 endsnippet
 
-snippet etf "Expect.js - ex.toEqual(false)" b
+snippet etf "Expect.js - ex.toEqual(false)" w
 expect(${1:${0:${VISUAL}}}).toEqual(false)
 endsnippet
 
@@ -140,6 +218,12 @@ endsnippet
 
 snippet it "it('', f())" b
 it('$1', function(){
+		${0:${VISUAL}}
+})
+endsnippet
+
+snippet its "it.skip('', f())" b
+it.skip('$1', function(){
 		${0:${VISUAL}}
 })
 endsnippet
@@ -182,14 +266,6 @@ endsnippet
 
 snippet cll "console.log('hi', hi)" b
 console.log('${1:${VISUAL}}', $1)
-endsnippet
-
-snippet clll "console.log('hi', hi,'ho', hi,...)" b
-console.log(
-		'${1:${VISUAL}}', $1,
-		'$2', $2,
-		'$3', $3,
-		'$4', $4)
 endsnippet
 
 snippet cla "console.log(args)" b
