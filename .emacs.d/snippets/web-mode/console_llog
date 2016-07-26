@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: console.log('', )
+# key: cll
+# --
+console.log('$1', $1)

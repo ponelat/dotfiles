@@ -1,0 +1,16 @@
+# -*- mode: snippet -*-
+# name: react: class/component
+# key: rclass
+# --
+export class $1 extends React.Component {
+
+  constructor(props, context) {
+    super(props, context)
+  }
+
+
+  render() {
+    $0
+  }
+
+}
