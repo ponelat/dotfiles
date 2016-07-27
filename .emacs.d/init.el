@@ -32,9 +32,10 @@ re-downloaded in order to locate PACKAGE."
   (term "/usr/local/bin/zsh"))
 
 (global-set-key (kbd "M-z") 'zsh)
-(add-hook 'term-mode-hook (lambda ()
-			    (setq show-trailing-whitespace nil)
-			    (linum-mode 0)))
+(defun my-term-hooks ()
+  (setq show-trailing-whitespace nil)
+  (linum-mode 0))
+(add-hook 'term-mode-hook 'my-term-hooks)
 
 ;;;; Autocomplete
 (require-package 'auto-complete)
@@ -43,7 +44,6 @@ re-downloaded in order to locate PACKAGE."
 
 ;;;; Snippets
 (require-package 'yasnippet)
-(yas-global-mode)
 
 ;;;; Generic Key Bindings
 (global-set-key (kbd "C-x C-k") 'kill-this-buffer)
@@ -59,50 +59,54 @@ re-downloaded in order to locate PACKAGE."
 ;;;; General Modes
 (require-package 'json-mode)
 (require-package 'yaml-mode)
+
+;;;; Editorconfig
 (require-package 'editorconfig)
+(defun my-editor-config-hooks (hash)
+  (setq web-mode-block-padding 0))
+  
+(add-hook 'editorconfig-custom-hooks 'my-editor-config-hooks)
 
-
+(editorconfig-mode 1)
 
 ;;;; Javascript
-(require-package 'js3-mode)
-(require-package 'flycheck)
-(require-package 'tern)
-(require-package 'tern-auto-complete)
 (require-package 'npm-mode)
 
 (npm-global-mode)
+
+
+;;;; Web
+(require-package 'emmet-mode)
+(require-package 'web-mode)
+(require-package 'less-css-mode)
 
 (defun my-web-mode-hook ()
   "Hooks for Web mode. Adjust indents"
   (setq web-mode-markup-indent-offset 2)
   (setq web-mode-css-indent-offset 2)
+
+;; Don't auto-quote attribute values
+  (setq-local web-mode-enable-auto-quoting nil)
   (setq web-mode-code-indent-offset 2))
 
-(add-hook 'web-mode-hook  'my-web-mode-hook)
+(add-hook 'web-mode-hook  'emmet-mode)
 (add-hook 'web-mode-hook  'npm-mode)
-(add-hook 'web-mode-hook  'yas-minor-mode)
+(add-hook 'web-mode-hook  'my-web-mode-hook)
+
 (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
 
-;; What does this do?
+;; Add better syntax highlighting of jsx
 (defadvice web-mode-highlight-part (around tweak-jsx activate)
   (if (equal web-mode-content-type "jsx")
     (let ((web-mode-enable-part-face nil))
       ad-do-it)
     ad-do-it))
 
-;;;; Web
-(require-package 'emmet-mode)
-(require-package 'web-mode)
-(require-package 'less-css-mode)
-(add-hook 'web-mode-hook  'emmet-mode)
-(add-hook 'js2-mode-hook  'emmet-mode)
 
 ;;;; Flycheck
 (require 'flycheck)
+(require-package 'flycheck)
 (add-hook 'after-init-hook #'global-flycheck-mode)
-(setq-default flycheck-disabled-checkers
-  (append flycheck-disabled-checkers
-    '(javascript-jshint)))
 
 (defun my/use-eslint-from-node-modules ()
   (let* ((root (locate-dominating-file
@@ -118,6 +122,9 @@ re-downloaded in order to locate PACKAGE."
 
 (flycheck-add-mode 'javascript-eslint 'web-mode)
 (setq-default flycheck-temp-prefix ".flycheck")
+(setq-default flycheck-disabled-checkers
+  (append flycheck-disabled-checkers
+    '(javascript-jshint)))
 
 ;;;; Evil
 (require-package 'evil)
@@ -131,19 +138,23 @@ re-downloaded in order to locate PACKAGE."
 
 (global-evil-leader-mode)
 
-(evil-set-initial-state 'term-mode 'emacs)
+(defun my-evil-hooks ()
+  (evil-set-initial-state 'term-mode 'emacs)
+  (evil-leader/set-leader "<SPC>" )
+  (evil-leader/set-key
+    "e" 'eval-buffer
+    "j" 'helm-projectile
+    "s" 'helm-projectile-switch-project
+    "b" 'helm-projectile-switch-to-buffer
+    "n" 'linum-mode
+    "g" 'magit-status
+    "q" 'kill-this-buffer
+    "a" 'helm-projectile-ag
+    "w" 'save-buffer)
+  )
 
-(evil-leader/set-leader "<SPC>" )
-(evil-leader/set-key
-  "e" 'eval-buffer
-  "j" 'helm-projectile
-  "s" 'helm-projectile-switch-project
-  "b" 'helm-projectile-switch-to-buffer
-  "n" 'linum-mode
-  "g" 'magit-status
-  "q" 'kill-this-buffer
-  "a" 'helm-projectile-ag
-  "w" 'save-buffer)
+  
+(add-hook 'evil-mode-hook 'my-evil-hooks)
 
 (add-hook 'evil-mode-hook 'evil-surround-mode)
 (add-hook 'evil-mode-hook 'evil-commentary-mode)
