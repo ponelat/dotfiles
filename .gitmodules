@@ -4,3 +4,6 @@
 [submodule "roles/ansible-nvm"]
 	path = roles/ansible-nvm
 	url = https://github.com/leonidas/ansible-nvm
+[submodule ".emacs.d/karma.el"]
+	path = .emacs.d/karma.el
+	url = https://github.com/tonini/karma.el
