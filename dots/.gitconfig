@@ -39,3 +39,5 @@
   wipe = "!git checkout . ; git clean -f"
 [push]
   default = simple
+[github]
+	user = ponelat
