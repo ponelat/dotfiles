@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: export function name() {}
+# key: efn
+# --
+export function $1($2) {
+       $0
+}
