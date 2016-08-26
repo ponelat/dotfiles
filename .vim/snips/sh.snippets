@@ -1,0 +1,34 @@
+snippet switch "Bash switch/case thing" b
+case "${1:\$1}" in  
+	("$2")
+		$0
+	;;
+esac
+endsnippet
+
+snippet case "a single case for a bash switch" b
+("$1")
+	$0
+;;
+endsnippet
+
+snippet read "Read a chunk of text into a variable, bash"
+read -r -d '' VAR << EOM
+${0:${VISUAL}}
+EOM
+# Remember to wrap the var with quotes ( for the newlines to appear )
+echo "$VAR"
+endsnippet
+
+snippet curlswag "curl with swaggerhub token" b
+curl -iL -X GET \
+	-H "Authorization: $SWAGGERHUBDEV_TOKEN" \
+	-H "Accept: application/json" \
+	https://dev-api.swaggerhub.com/$0
+endsnippet
+
+snippet for "For loop" b
+for $1 in \$$2; do
+	${0:${VISUAL}}
+done
+endsnippet

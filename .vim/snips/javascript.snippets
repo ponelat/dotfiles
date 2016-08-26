@@ -1,9 +1,12 @@
-
-snippet import "import a from 'a'" b
-import ${1/([\w-]+)\$/$1/} from '$1'
+snippet i "import a from 'a'" b
+import $1 from '$2'
 endsnippet
 
 # commonjs
+
+snippet spyr "spyOn(require..." w
+spyOn(require('$1'), '$2')
+endsnippet
 
 snippet tne "throw new Error" b
 throw new Error('wat')
@@ -171,6 +174,12 @@ function(req,res,next) {
 }
 endsnippet
 
+snippet efn "export function() {}" b
+export function $1($2) {
+	${0:${VISUAL}}
+}
+endsnippet
+
 snippet fer "fn(err,res)" w
 function(err,res) {
 		${0:${VISUAL}}
@@ -266,6 +275,14 @@ endsnippet
 
 snippet cll "console.log('hi', hi)" b
 console.log('${1:${VISUAL}}', $1)
+endsnippet
+
+snippet cle "console.error('hi', hi)" b
+console.error('${1:${VISUAL}}', $1)
+endsnippet
+
+snippet clk "console.log(Object.keys)" b
+console.log('keys for ' + '${1:${VISUAL}}', Object.keys($1))
 endsnippet
 
 snippet cla "console.log(args)" b
