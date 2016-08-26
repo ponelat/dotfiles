@@ -46,6 +46,7 @@ Plugin 'kana/vim-textobj-function'
 Plugin 'kana/vim-textobj-line'
 Plugin 'kana/vim-textobj-indent'
 Plugin 'glts/vim-textobj-comment'
+Plugin 'thinca/vim-textobj-function-javascript'
 Plugin 'vim-scripts/ReplaceWithRegister'
 
 " Completers
@@ -58,6 +59,7 @@ Plugin 'Markdown-syntax'
 Plugin 'jtratner/vim-flavored-markdown.git'
 Plugin 'elzr/vim-json'
 Plugin 'groenewege/vim-less'
+Plugin 'hail2u/vim-css3-syntax'
 Plugin 'powerman/vim-plugin-AnsiEsc'
 
 " Nvim nodejs
@@ -70,22 +72,60 @@ Plugin 'snoe/nvim-parinfer.js'
 Plugin 'tpope/vim-speeddating' " Required by org-mode
 Plugin 'jceb/vim-orgmode'
 
+"""" FZF
+Plugin 'junegunn/fzf'
+Plugin 'junegunn/fzf.vim'
+
+"""" Ledger cli
+Plugin 'ledger/vim-ledger'
+
+"""" camelCaseMotion
+Plugin 'bkad/CamelCaseMotion'
+
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
 
-" Leader key
+"""" Leader key
 let mapleader = "\<Space>"
 let maplocalleader = ","
 
+"""" camelCaseMotion maps
+map <silent> ,w <Plug>CamelCaseMotion_w
+map <silent> ,b <Plug>CamelCaseMotion_b
+map <silent> ,e <Plug>CamelCaseMotion_e
+map <silent> ,ge <Plug>CamelCaseMotion_ge
+
+omap <silent> ,iw <Plug>CamelCaseMotion_iw
+xmap <silent> ,iw <Plug>CamelCaseMotion_iw
+omap <silent> ,ie <Plug>CamelCaseMotion_ie
+xmap <silent> ,ie <Plug>CamelCaseMotion_ie
+map <silent> ,ib <Plug>CamelCaseMotion_ib
+xmap <silent> ,ib <Plug>CamelCaseMotion_ib
+
+
+"""" Ledger cli
+" augroup ledger-cli
+" inoremap <silent> <buffer> <Tab> <C-r>=ledger#autocomplete_and_align()<CR>
+" vnoremap <silent> <buffer> <Tab> :LedgerAlign<CR>
+" augroup END
 
 
 """" FZF
-Plugin 'junegunn/fzf'
-Plugin 'junegunn/fzf.vim'
-nnoremap <leader>f :FzfGFiles<cr>
+nnoremap <leader>f :FzfFiles<cr>
+nnoremap <Leader>j :FzfAgFiles<CR>
+nnoremap <Leader>l :FzfLines<CR>
+nnoremap <Leader>a :FzfAg<CR>
+nnoremap <Leader>b :FzfBuffer<CR>
+
 let g:fzf_command_prefix = 'Fzf'
 nnoremap <a-x> :FzfCommands<cr>
+let g:fzf_layout = { 'window': 'enew' }
+let g:fzf_layout = { 'window': '-tabnew' }
+
+imap <c-x><c-f> <plug>(fzf-complete-file-ag)
+imap <c-x><c-d> <plug>(fzf-complete-path)
+imap <c-x><c-l> <plug>(fzf-complete-line)
 
 function! s:echoline(line)
   execute append(line("."), a:line)
@@ -93,6 +133,18 @@ endfunction
 
 command! -nargs=1 -complete=file Lines call fzf#run(
       \ {'source': 'cat <q-args>', 'sink': function('s:echoline'), 'options': '-m'})
+" Recent jump list with fasd
+command! Fasd call fzf#run(
+      \ {'source': 'fasd -l -d | uniq', 'sink': 'cd', 'options': ''})
+
+command! AgFiles call fzf#run({
+      \ 'source':  "ag -g '' -l ",
+      \ 'options': '-m --prompt "Ag Files> "'
+      \})
+
+" Set the current dir, based on fasd jump list
+nnoremap <Leader>p :Fasd<CR>
+
 
 let g:fzf_colors =
   \ { 'fg':    ['fg', 'Normal'],
@@ -108,14 +160,11 @@ let g:fzf_colors =
   \ 'spinner': ['fg', 'Label'],
   \ 'header':  ['fg', 'Comment'] }
 
-nnoremap <Leader>j :FzfGFiles<CR>
-nnoremap <Leader>l :FzfLines<CR>
-nnoremap <Leader>a :FzfAg<CR>
-
 """" Syntastic 
 let g:syntastic_javascript_checkers = ["eslint"]
 let g:syntastic_javascript_eslint_exec = "eslint_d"
 let g:syntastic_mode_map = { "mode": "passive"}
+let g:syntastic_error_symbol          = '✘'
 " let g:syntastic_mode_map = { "mode": "active"}
 
 " Now we're using ctags-exuberant
@@ -169,7 +218,7 @@ nmap <leader>x :cclose <bar> :lclose<cr>
 nmap <Leader>sn :SyntasticToggleMode<CR>
 
 " Shortcut to rapidly toggle `set list`
-nmap <Leader><tab>  :set list!<CR>
+" nmap <Leader><tab>  :set list!<CR>
 
 " Some useful tips...
 " http://sheerun.net/2014/03/21/how-to-boost-your-vim-productivity/
@@ -221,8 +270,12 @@ nnoremap <leader>o :!xdg-open %<CR>
 " Dispatch: in ex mode
 nnoremap <leader>dd :Dispatch<SPACE>
 
-" Spelling on/off
-nnoremap <leader>sp :set spell!<CR>
+" Autocomplete with dictionary words when spell check is on
+set complete+=kspell
+" Set region to British English
+set spelllang=en_gb
+" set spellfile=$HOME/.vim-spell-en.utf-8.add
+
 
 """" Local .vimrc files
 " Local .vimrc files...
@@ -247,14 +300,18 @@ augroup switchingbuffers
   autocmd FocusGained * :set relativenumber
 augroup END
 
-"""" AutoCommands
+"""" AutoCommands ( syntaxes )
 " my filetype syntax definitions
 augroup filetypedetect
   au BufRead,BufNewFile *.hbs,*.volt	set filetype=html
   au BufRead,BufNewFile *.md  		set filetype=ghmarkdown
   au BufRead,BufNewFile *.json          set filetype=json
   au BufRead,BufNewFile *.json          set formatprg=python\ -m\ json.tool
+  au BufRead,BufNewFile *.ledger        set filetype=ledger
   au BufRead,BufNewFile *.snippets   set noexpandtab
+  au BufRead,BufNewFile *.md   setlocal spell
+  au BufRead,BufNewFile *.gitcommit   setlocal spell
+  au BufRead,BufNewFile *.org   setlocal spell
   " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
 
