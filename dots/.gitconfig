@@ -15,7 +15,7 @@
   ca = commit --all --verbose
   cm = commit -m
   amend = commit --amend --verbose
-  amendd = commit --amend --verbose -m ''
+  amendd = commit --amend --verbose -C HEAD^1
   di = diff
   dc = diff --staged
   dcs= diff-index -u HEAD -S
