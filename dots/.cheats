@@ -1,0 +1,3 @@
+# ps all :ps -A 
+# pick pid :ps -A | pick | sed 's/^ *//' | cut -f1 -d' ' 
+# tail/head all but first line, ie: the rest  :tail -n +2
