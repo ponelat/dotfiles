@@ -31,3 +31,5 @@
 ### Log lines/regex
 - git log -L <start>,<end>:filespec
 - git log -L /regex/:filespec
+
+

@@ -6,16 +6,15 @@ alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias cs="clear; git status || ls "
 alias .z=". ~/.zshrc"
 alias j="fasd_cd -d"
-alias .x="~/.xsession"
-alias ne="PATH=$PATH:./node_modules/.bin; "
-alias gg="git --no-pager l -30"
-alias be="bundle exec"
+alias o='a -e xdg-open' # quick opening files with xdg-open
+alias open="xdg-open"
+alias ne="PATH=$PATH:./node_modules/.bin; " # Run a npm command, with the local npm bins
+alias be="bundle exec" 
 alias poston="pg_ctl start -D ~/.linuxbrew/var/postgres/ -l ~/.linuxbrew/var/postgres/log"
 alias postoff="pg_ctl stop -D ~/.linuxbrew/var/postgres/"
 alias postlog="cat ~/.linuxbrew/var/postgres/log"
 alias encodeURIComponent='perl -pe '\''s/([^a-zA-Z0-9_.!~*()'\''\'\'''\''-])/sprintf("%%%02X",ord($1))/ge'\'
-alias open="xdg-open"
-alias fonts="fc-list | cut -f2 -d: | selecta"
+alias fonts="fc-list | cut -f2 -d: | fzf"
 
 alias post="curl -X POST"
 alias put="curl -X POST"
@@ -46,35 +45,11 @@ alias registry-api="curl -s \
   -H 'Accept: application/json' \
   https://internal-api.swaggerhub.com/apis/swagger-hub/registry-api/1.0.28"
 
-# Tail / Head aliases
-alias tail-n="tail -n +2"
-# GitHub aliases
-alias ghi-tasks
+# pick-cheat() {
+#   $(cat ~/.cheats | IFS=':' fzf)
+# }
 
-
-pick-cheat() {
-  cmd=$(cat ~/.cheats | IFS=':' pick -Xdo) 
-  bash -c "$cmd"
-}
-
-pick-cheat-echo() {
-  cmd=$(cat ~/.cheats | IFS=':' pick -Xdo) 
-  echo "$cmd"
-}
-
-alias pc=pick-cheat
-alias pce=pick-cheat-echo
-
-get-endpoint() {
-  jq-paths | selecta
-}
-
-function select-endpoint() { 
-  api="$(</dev/stdin)"  
-  echo $api | get-endpoint | jq 
-  # echo Your path: $path
-}
-
+# Add entry into .gitignore
 function ignore() {
   echo $@ >> .gitignore
 }
