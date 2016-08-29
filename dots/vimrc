@@ -328,11 +328,11 @@ syntax on
 set background=dark
 set novisualbell
 " Terminal color mode
-set t_Co=256
+" set t_Co=256
 "
 """" Base 16 
 let base16colorspace=256
-colorscheme base16-default
+colorscheme base16-default-dark
 
 " Use the terminal's BG color
 highlight Normal ctermbg=NONE

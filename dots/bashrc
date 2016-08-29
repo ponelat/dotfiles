@@ -7,7 +7,7 @@ PROJECTS="$HOME/projects"
 [ -d $HOME/.local/bin ] && export PATH+=:"$HOME/.local/bin"
 
 # Our own bins
-[ -d $HOME/dotfiles/bin ] && export PATH+=:"$HOME/dotfiles/bin"
+[ -d $HOME/dotfiles/bin ] && export PATH+=:"$HOME/projects/dotfiles/bin"
 
 # For switching accounts...
 [ -d "$HOME/projects/change_adsl" ] && export PATH+=:"$HOME/projects/change_adsl"
@@ -31,6 +31,7 @@ PROJECTS="$HOME/projects"
 [ -s "$HOME/.rvm/scripts/rvm" ] && . "$HOME/.rvm/scripts/rvm"; export PATH="$PATH:$HOME/.rvm/bin"
 
 # Linuxbrew, see:
+echo $HOME/.linuxbrew
 if [ -d "$HOME/.linuxbrew" ]; then
   export PATH="$HOME/.linuxbrew/bin:$PATH"
   export MANPATH="$(brew --prefix)/share/man:$MANPATH"
