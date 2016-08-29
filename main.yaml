@@ -12,6 +12,7 @@
           - build-essential
           - cmake
           - python-dev
+          - openvpn
           - tmux
           - entr
           - vagrant
@@ -27,13 +28,10 @@
           - ag
           - git-flow
           - bash-completion
-          - selecta
           - hub
           - jq
-          - sift
-        pips:
-          - setuptools # needed for cmake, might actually be included with python-pip.. dunno
-          - neovim # for vim/python plugins in neovim
+          - fzf
+          - neovim
         repos: 
         - repo: https://github.com/VundleVim/Vundle.vim 
           dest: /home/{{user.name}}/.vim/bundle/Vundle.vim 
@@ -56,3 +54,7 @@
       rvm1_install_flags: '--auto-dotfiles --user-install'
       rvm1_install_path: '/home/{{ user.name }}/.rvm'
       rvm1_user: '{{ user.name }}'
+
+        #pips:
+        # - setuptools # needed for cmake, might actually be included with python-pip.. dunno
+        # - neovim # for vim/python plugins in neovim
