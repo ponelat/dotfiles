@@ -114,7 +114,7 @@ xmap <silent> ,ib <Plug>CamelCaseMotion_ib
 
 """" FZF
 nnoremap <leader>f :FzfFiles<cr>
-nnoremap <Leader>j :FzfAgFiles<CR>
+nnoremap <Leader>j :AgFiles<CR>
 nnoremap <Leader>l :FzfLines<CR>
 nnoremap <Leader>a :FzfAg<CR>
 nnoremap <Leader>b :FzfBuffer<CR>
@@ -132,34 +132,37 @@ function! s:echoline(line)
   execute append(line("."), a:line)
 endfunction
 
-command! -nargs=1 -complete=file Lines call fzf#run(
-      \ {'source': 'cat <q-args>', 'sink': function('s:echoline'), 'options': '-m'})
+command! -nargs=1 -complete=file Lines call PasteLineFromFile(<q-args>) 
+
+function! PasteLineFromFile(line)
+  call fzf#run({'source': 'cat '.a:line, 'sink': function('s:echoline'), 'options': '-m'})
+endfunction
+
 " Recent jump list with fasd
 command! Fasd call fzf#run(
       \ {'source': 'fasd -l -d | uniq', 'sink': 'cd', 'options': ''})
 
-command! AgFiles call fzf#run({
-      \ 'source':  "ag -g '' -l ",
-      \ 'options': '-m --prompt "Ag Files> "'
-      \})
+command! AgFiles call fzf#run(fzf#wrap({
+      \ 'source':  "ag -g '' -l --hidden ",
+      \ 'options': '-m --prompt "Ag Files> "',
+      \}))
 
 " Set the current dir, based on fasd jump list
 nnoremap <Leader>p :Fasd<CR>
 
-
-let g:fzf_colors =
-  \ { 'fg':    ['fg', 'Normal'],
-  \ 'bg':      ['bg', 'ColorColumn'],
-  \ 'hl':      ['fg', 'Comment'],
-  \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
-  \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-  \ 'hl+':     ['fg', 'Statement'],
-  \ 'info':    ['fg', 'PreProc'],
-  \ 'prompt':  ['fg', 'Conditional'],
-  \ 'pointer': ['fg', 'Exception'],
-  \ 'marker':  ['fg', 'Keyword'],
-  \ 'spinner': ['fg', 'Label'],
-  \ 'header':  ['fg', 'Comment'] }
+" let g:fzf_colors =
+"   \ { 'fg':    ['fg', 'Normal'],
+"   \ 'bg':      ['bg', 'ColorColumn'],
+"   \ 'hl':      ['fg', 'Comment'],
+"   \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+"   \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
+"   \ 'hl+':     ['fg', 'Statement'],
+"   \ 'info':    ['fg', 'PreProc'],
+"   \ 'prompt':  ['fg', 'Conditional'],
+"   \ 'pointer': ['fg', 'Exception'],
+"   \ 'marker':  ['fg', 'Keyword'],
+"   \ 'spinner': ['fg', 'Label'],
+"   \ 'header':  ['fg', 'Comment'] }
 
 """" Syntastic 
 let g:syntastic_javascript_checkers = ["eslint"]
