@@ -1,6 +1,7 @@
-### User credentials (dont check this into your repo)
+### Secret tokens / keys
 . ~/.env
 
+### Aliases
 alias n=nvim
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias cs="clear; git status || ls "
@@ -10,6 +11,7 @@ alias o='a -e xdg-open' # quick opening files with xdg-open
 alias open="xdg-open"
 alias ne="PATH=$PATH:./node_modules/.bin; " # Run a npm command, with the local npm bins
 alias be="bundle exec" 
+alias bf=nvim
 alias poston="pg_ctl start -D ~/.linuxbrew/var/postgres/ -l ~/.linuxbrew/var/postgres/log"
 alias postoff="pg_ctl stop -D ~/.linuxbrew/var/postgres/"
 alias postlog="cat ~/.linuxbrew/var/postgres/log"
