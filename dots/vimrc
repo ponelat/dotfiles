@@ -2,11 +2,12 @@ set nocompatible              " be iMproved, required
 filetype off                  " required
 
 " My own runtime
-set rtp+=~/dotfiles/.vim
+set rtp+=~/project/dotfiles/.vim
 
 " set the runtime path to include Vundle and initialize
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
+
 
 " let Vundle manage Vundle, required
 Plugin 'gmarik/Vundle.vim'
@@ -52,7 +53,7 @@ Plugin 'vim-scripts/ReplaceWithRegister'
 " Completers
 Plugin 'SirVer/ultisnips'
 Plugin 'Valloric/YouCompleteMe'
-Plugin 'honza/vim-snippets'
+" Plugin 'honza/vim-snippets'
 
 " Family syntaxes
 Plugin 'Markdown-syntax'
@@ -189,12 +190,14 @@ let g:UltiSnipsJumpForwardTrigger = "<tab>"
 let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
 
 " 'snips' is in my dotfiles runtimepath dir
-let g:UltiSnipsSnippetsDir = "~/dotfiles/.vim/snips"
+let g:UltiSnipsSnippetsDir = "~/projects/dotfiles/.vim/snips"
 let g:UltiSnipsSnippetDirectories=["UltiSnips", "snips"]
 let g:UltiSnipsEditSplit= "context"
 
+
 " Edit Ultisnips ( for current filetype )
 nnoremap <leader>eu :UltiSnipsEdit<cr>
+
 
 """" Tern
 let g:tern_show_argument_hints = "no"
