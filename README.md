@@ -1,6 +1,8 @@
 dotfiles
 ========
 
+> Seriously, this is just my mess of things :)
+
 ## Notes...
 #### /etc/sudoers
 `josh	ALL=(ALL) NOPASSWD: /sbin/poweroff, /sbin/reboot, /sbin/shutdown`
