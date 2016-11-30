@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env hyperterm
 
 TMUX="/home/josh/.linuxbrew/bin/tmux"
 

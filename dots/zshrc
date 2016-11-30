@@ -50,6 +50,7 @@ plugins=(fasd npm docker unaliases)
 ### Path
 [[ -d "$HOME/.linuxbrew" ]] && PATH="$PATH:$HOME/.linuxbrew/bin"
 [[ -d "$HOME/projects/dotfiles/bin" ]] && PATH="$PATH:$HOME/projects/dotfiles/bin"
+[[ -d "$HOME/.local/bin" ]] && PATH="$PATH:$HOME/.local/bin"
 
 # project-bins will export a list of dirs, which we'll add to the path
 projectBins=`$HOME/projects/dotfiles/bin/project-bins.sh | tr '\n' ':' | sed 's/:$//'`
@@ -110,6 +111,7 @@ export NVM_DIR="$HOME/.nvm"
 ### User credentials (dont check this into your repo)
 . ~/.env
 . ~/projects/dotfiles/funcs/aliases
+. ~/projects/dotfiles/funcs/funcs
 
 ### Functions 
 function zenv() {

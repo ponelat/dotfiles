@@ -2,11 +2,12 @@
 # vim: set ft=sh
 
 SOURCES="$@"
+FUZZY=fzf
 if [ -z "$SOURCES" ] ; then
-  if which selecta ; then
-    SOURCES="`ls /etc/apt/sources.list.d | selecta`"
+  if which $FUZZY ; then
+    SOURCES="`ls /etc/apt/sources.list.d | $FUZZY`"
   else
-    echo We cannot find 'selecta' in the path. Its what we use to dynamically choose a repo. You can install it with '(brew update && brew install selecta)' 
+    echo We cannot find "$FUZZY" in the path. Its what we use to dynamically choose a repo. You can install it with '(brew update && brew install $FUZZY)' 
     echo
     echo In the meantime these are the available sources you can update...
     ls /etc/apt/sources.list.d

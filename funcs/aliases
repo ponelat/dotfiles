@@ -2,7 +2,8 @@
 . ~/.env
 
 ### Aliases
-alias n=nvim
+alias n=vim
+alias v=vim
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias cs="clear; git status || ls "
 alias .z=". ~/.zshrc"
@@ -19,7 +20,7 @@ alias encodeURIComponent='perl -pe '\''s/([^a-zA-Z0-9_.!~*()'\''\'\'''\''-])/spr
 alias fonts="fc-list | cut -f2 -d: | fzf"
 
 alias post="curl -X POST"
-alias put="curl -X POST"
+alias put="curl -X PUT"
 
 # jq aliases 
 alias jq-apis-hash="jq '[.apis[] | .props = (reduce .properties[] as \$x ({}; . + {(\$x.type | ascii_downcase): (\$x.value // \$x.url)})) | del(.properties)']"
@@ -46,6 +47,11 @@ alias registry-api="curl -s \
   -H 'Authorization: $SWAGGERHUBINTERNAL_TOKEN' \
   -H 'Accept: application/json' \
   https://internal-api.swaggerhub.com/apis/swagger-hub/registry-api/1.0.28"
+
+
+function pgcli-a() {
+  pgcli -U accounts -h mongo-${1:-dev}.swaggerhub.com accounts
+}
 
 # pick-cheat() {
 #   $(cat ~/.cheats | IFS=':' fzf)
