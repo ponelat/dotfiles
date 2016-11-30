@@ -1,0 +1,9 @@
+function ours {
+  git checkout --ours $@
+  git add --all $@
+}
+
+function thiers {
+  git checkout --thiers $@
+  git add --all $@
+}

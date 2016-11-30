@@ -1,0 +1,3 @@
+#!/bin/sh
+# Start a Postgres SQL shell
+pgcli -U accounts -h mongo-${1:-dev}.swaggerhub.com accounts

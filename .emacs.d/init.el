@@ -253,17 +253,6 @@ re-downloaded in order to locate PACKAGE."
       inhibit-startup-echo-area-message t)
 
 
-;;;; Swagger
-(defun swaggervpn ()
-  (interactive)
-  (start-process "SwaggerVPN" "swaggervpn" "~/bin/swaggervpn")
-  )
-
-(defun swaggerhub ()
-  (interactive)
-  (start-process "SwaggerHubFrontend" "swaggerhub" "~/bin/swaggerhub")
-  )
-
 ;;;; Custom variables
 (custom-set-variables
  ;; custom-set-variables was added by Custom.

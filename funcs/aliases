@@ -27,36 +27,6 @@ alias jq-apis-hash="jq '[.apis[] | .props = (reduce .properties[] as \$x ({}; . 
 alias jq-apis="jq-apis-hash | jq '[.[] + .[].props | del(.props)]'"
 alias jq-is-private="jq 'map(select(.props[\"x-private\"] == \"true\"))'"
 
-# SwaggerHub Aliases
-alias ponelat-apis="curl -s \
-  -H 'Authorization: $SWAGGERHUBDEV_TOKEN' \
-  -H 'Accept: application/json' \
-  https://dev-api.swaggerhub.com/apis/ponelat"
-
-alias josh-apis="curl -s \
-  -H 'Authorization: $SWAGGERHUBDEV_JOSH_TOKEN' \
-  -H 'Accept: application/json' \
-  https://dev-api.swaggerhub.com/apis/josh"
- 
-alias swaggerhub-apis="curl -s \
-  -H 'Authorization: $SWAGGERHUBINTERNAL_TOKEN' \
-  -H 'Accept: application/json' \
-  https://internal-api.swaggerhub.com/apis/swagger-hub"
-
-alias registry-api="curl -s \
-  -H 'Authorization: $SWAGGERHUBINTERNAL_TOKEN' \
-  -H 'Accept: application/json' \
-  https://internal-api.swaggerhub.com/apis/swagger-hub/registry-api/1.0.28"
-
-
-function pgcli-a() {
-  pgcli -U accounts -h mongo-${1:-dev}.swaggerhub.com accounts
-}
-
-# pick-cheat() {
-#   $(cat ~/.cheats | IFS=':' fzf)
-# }
-
 # Add entry into .gitignore
 function ignore() {
   echo $@ >> .gitignore

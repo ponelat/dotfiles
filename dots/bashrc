@@ -111,8 +111,6 @@ alias .color="(cd "$HOME/.config/base16-shell/" && . ./colortest)"
 alias vib="vi $HOME/.bashrc"
 alias nib="nvim $HOME/.bashrc"
 alias dotinstall=". $HOME/dotfiles/install.sh"
-alias specs="ln -s $PROJECTS/swagger-notes/specs dist/s"
-alias impose="ln -fi ../swagger-notes/ui-gulpfile.js gulpfile.js"
 alias ne='PATH=$(npm bin):$PATH'
 alias damn_gitatt="echo '**/* binary' > .gitattributes && git add .gitattributes && git reset .gitattributes && git checkout .gitattributes"
 alias gl="git l -10"
