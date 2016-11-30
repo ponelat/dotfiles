@@ -2,6 +2,22 @@ snippet i "import a from 'a'" b
 import $1 from '$2'
 endsnippet
 
+snippet ir "import React" b
+import React$0 from 'react'
+endsnippet
+
+snippet e "export const" b
+export const $0
+endsnippet
+
+snippet try "Try/Catch" b
+try {
+	${0:${VISUAL}}
+} catch(err) {
+	${1:console.error(err)}
+}
+endsnippet
+
 # commonjs
 
 snippet spyr "spyOn(require..." w
@@ -129,25 +145,27 @@ render() {
 }
 endsnippet
 
-snippet rcons "React.Component contructro" b
+snippet cons "React.Component constructor" b
 constructor(props, context) {
 	super(props, context)
 	$0
 }
 endsnippet
 
-snippet rcomp "React component (es2015 class)" b
+snippet eclass "React component (es2015 class)" b
 export class $1 extends React.Component {
+
+	static propTypes = {
+	};
+
+	static defaultProps = {
+	};
 
 	render() {
 		return (
 			${0:${VISUAL}}
 		)
 	}
-
-}
-
-$1.propTypes = {
 
 }
 endsnippet
@@ -170,7 +188,7 @@ endsnippet
 # superagent
 snippet rrn "fn(req,res,next)" w
 function(req,res,next) {
-		${0:${VISUAL}}
+	${0:${VISUAL}}
 }
 endsnippet
 
@@ -182,7 +200,7 @@ endsnippet
 
 snippet fer "fn(err,res)" w
 function(err,res) {
-		${0:${VISUAL}}
+	${0:${VISUAL}}
 }
 endsnippet
 
@@ -221,7 +239,7 @@ endsnippet
 
 snippet describe "descibe('',f())" b
 describe('$1', function(){
-		${0:${VISUAL}}
+	${0:${VISUAL}}
 })
 endsnippet
 
@@ -331,6 +349,20 @@ endsnippet
 
 snippet f "function name(){}" w
 function $1() {
-		$2
+	$2
 }
+endsnippet
+
+snippet express "simple express server" b
+var express = require('express')
+var app = express()
+const server = app.listen(${1:3001})
+
+app.use(function(req,res,next) {
+	${0:${VISUAL}}
+})
+
+server.once('listening', function () {
+	console.log('node.js server running at http://' + server.address().address + ':' + server.address().port)
+})
 endsnippet
