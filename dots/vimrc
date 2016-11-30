@@ -1,91 +1,107 @@
 set nocompatible              " be iMproved, required
 filetype off                  " required
 
-" My own runtime
-set rtp+=~/project/dotfiles/.vim
-
 " set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-
+call plug#begin('~/.vim/plugged')
 
 " let Vundle manage Vundle, required
-Plugin 'gmarik/Vundle.vim'
+Plug 'gmarik/Vundle.vim'
 
 " Motions, Core
-Plugin 'tpope/vim-commentary'
-Plugin 'tpope/vim-surround'
-Plugin 'tpope/vim-repeat'
-Plugin 'tpope/vim-dispatch'
-Plugin 'tpope/vim-unimpaired'
+Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-dispatch'
+Plug 'tpope/vim-unimpaired'
+Plug 'haya14busa/incsearch.vim'
+Plug 'Chiel92/vim-autoformat'
+
+" Ctags
+Plug 'xolox/vim-misc'
+Plug 'xolox/vim-easytags'
+
+" Menu ( emacs's guide-key )
+" Plug 'hecal3/vim-leader-guide'
+
+" Docs
+Plug 'KabbAmine/zeavim.vim'
 
 " Git
-Plugin 'tpope/vim-fugitive'
+Plug 'tpope/vim-fugitive'
 
 " Linters, javascript
-Plugin 'tpope/vim-jdaddy'
-Plugin 'scrooloose/syntastic'
-Plugin 'jelera/vim-javascript-syntax'
-Plugin 'pangloss/vim-javascript'
-Plugin 'othree/javascript-libraries-syntax.vim'
-Plugin 'marijnh/tern_for_vim'
-Plugin 'mxw/vim-jsx'
+Plug 'tpope/vim-jdaddy'
+Plug 'scrooloose/syntastic'
+Plug 'pangloss/vim-javascript' " Includes indenting
+Plug 'mxw/vim-jsx'
+Plug 'marijnh/tern_for_vim', { 'do': 'npm install' }
+Plug 'okcompute/vim-javascript-motions'
+
+" All langs ( ftdetect, syntax, etc )
+" Plug 'sheerun/vim-polyglot'
 
 " Basic utils
-Plugin 'tpope/vim-eunuch'
-Plugin 'editorconfig/editorconfig-vim'
-" Plugin 'vim-airline'
-Plugin 'airblade/vim-gitgutter'
-Plugin 'gabesoft/vim-ags' " Faster ack, which is faster grep :)
-Plugin 'chriskempson/base16-vim'
-Plugin 'christoomey/vim-tmux-navigator'
-Plugin 'tmhedberg/matchit'
-" Plugin 'kien/ctrlp.vim'
-Plugin 'mattn/emmet-vim'
-Plugin 'kana/vim-textobj-user'
-Plugin 'kana/vim-textobj-function'
-Plugin 'kana/vim-textobj-line'
-Plugin 'kana/vim-textobj-indent'
-Plugin 'glts/vim-textobj-comment'
-Plugin 'thinca/vim-textobj-function-javascript'
-Plugin 'vim-scripts/ReplaceWithRegister'
+Plug 'tpope/vim-eunuch'
+Plug 'editorconfig/editorconfig-vim'
+" Plug 'vim-airline'
+Plug 'airblade/vim-gitgutter'
+Plug 'gabesoft/vim-ags' " Faster ack, which is faster grep :)
+Plug 'chriskempson/base16-vim'
+Plug 'christoomey/vim-tmux-navigator'
+Plug 'tmhedberg/matchit'
+" Plug 'kien/ctrlp.vim'
+Plug 'mattn/emmet-vim'
+Plug 'kana/vim-textobj-user'
+Plug 'kana/vim-textobj-function'
+Plug 'kana/vim-textobj-line'
+Plug 'kana/vim-textobj-indent'
+Plug 'glts/vim-textobj-comment'
+" Plug 'thinca/vim-textobj-function-javascript'
+Plug 'vim-scripts/ReplaceWithRegister'
 
 " Completers
-Plugin 'SirVer/ultisnips'
-Plugin 'Valloric/YouCompleteMe'
-" Plugin 'honza/vim-snippets'
+Plug 'SirVer/ultisnips'
+Plug 'Valloric/YouCompleteMe', { 'do': './install.py --tern-completer' }
+" Plug 'honza/vim-snippets'
 
 " Family syntaxes
-Plugin 'Markdown-syntax'
-Plugin 'jtratner/vim-flavored-markdown.git'
-Plugin 'elzr/vim-json'
-Plugin 'groenewege/vim-less'
-Plugin 'hail2u/vim-css3-syntax'
-Plugin 'powerman/vim-plugin-AnsiEsc'
+Plug 'Markdown-syntax'
+" Plug 'jtratner/vim-flavored-markdown.git'
+Plug 'elzr/vim-json'
+Plug 'groenewege/vim-less'
+Plug 'hail2u/vim-css3-syntax'
+Plug 'powerman/vim-plugin-AnsiEsc'
 
 " Nvim nodejs
-Plugin 'neovim/node-host'
+" Plug 'neovim/node-host'
 
 " Parenthese inflector
-Plugin 'snoe/nvim-parinfer.js'
+" Plug 'snoe/nvim-parinfer.js'
 
 " Org mode
-Plugin 'tpope/vim-speeddating' " Required by org-mode
-Plugin 'jceb/vim-orgmode'
+" Plug 'tpope/vim-speeddating' " Required by org-mode
+" Plug 'jceb/vim-orgmode'
 
 """" FZF
-Plugin 'junegunn/fzf'
-Plugin 'junegunn/fzf.vim'
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
 
 """" Ledger cli
-Plugin 'ledger/vim-ledger'
+" Plug 'ledger/vim-ledger'
 
 """" camelCaseMotion
-Plugin 'bkad/CamelCaseMotion'
+Plug 'bkad/CamelCaseMotion'
 
 " All of your Plugins must be added before the following line
-call vundle#end()            " required
-filetype plugin indent on    " required
+call plug#end()              " required
+
+"""" My own runtime ( For Ultisnips )
+set rtp+=~/projects/dotfiles/.vim
+
+"""" Ctags
+" let g:easytags_suppress_ctags_warning = 1
+
+
 
 """" Leader key
 let mapleader = "\<Space>"
@@ -104,11 +120,10 @@ xmap <silent> ,ie <Plug>CamelCaseMotion_ie
 map <silent> ,ib <Plug>CamelCaseMotion_ib
 xmap <silent> ,ib <Plug>CamelCaseMotion_ib
 
-
 """" Ledger cli
 " augroup ledger-cli
-" inoremap <silent> <buffer> <Tab> <C-r>=ledger#autocomplete_and_align()<CR>
-" vnoremap <silent> <buffer> <Tab> :LedgerAlign<CR>
+"   inoremap <silent> <buffer> <Tab> <C-r>=ledger#autocomplete_and_align()<CR>
+"   vnoremap <silent> <buffer> <Tab> :LedgerAlign<CR>
 " augroup END
 
 
@@ -118,14 +133,15 @@ nnoremap <Leader>j :AgFiles<CR>
 nnoremap <Leader>l :FzfLines<CR>
 nnoremap <Leader>a :FzfAg<CR>
 nnoremap <Leader>b :FzfBuffer<CR>
+nnoremap <Leader>t :FzfTags<CR>
 
 let g:fzf_command_prefix = 'Fzf'
 nnoremap <a-x> :FzfCommands<cr>
 let g:fzf_layout = { 'window': 'enew' }
 let g:fzf_layout = { 'window': '-tabnew' }
 
-imap <c-x><c-f> <plug>(fzf-complete-file-ag)
-imap <c-x><c-d> <plug>(fzf-complete-path)
+" imap <c-x><c-f> <plug>(fzf-complete-file-ag)
+" imap <c-x><c-d> <plug>(fzf-complete-path)
 imap <c-x><c-l> <plug>(fzf-complete-line)
 
 function! s:echoline(line)
@@ -169,7 +185,10 @@ let g:syntastic_javascript_checkers = ["eslint"]
 let g:syntastic_javascript_eslint_exec = "eslint_d"
 let g:syntastic_mode_map = { "mode": "passive"}
 let g:syntastic_error_symbol          = '✘'
-" let g:syntastic_mode_map = { "mode": "active"}
+let g:syntastic_mode_map = { "mode": "active"}
+
+"""" JSX for all both .js and .jsx
+let g:jsx_ext_required = 0
 
 " Now we're using ctags-exuberant
 " see: http://stackoverflow.com/questions/1790623/how-can-i-make-vims-taglist-plugin-show-useful-information-for-javascript
@@ -183,6 +202,8 @@ let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
 nnoremap <leader>er :Errors<CR>
 " Show errors and move into window
 nnoremap <leader>err :w<CR>:Errors<CR><C-W>j<CR>
+nnoremap gen :lnext<cr>
+nnoremap gep :lprev<cr>
 
 
 
@@ -198,9 +219,10 @@ let g:UltiSnipsSnippetDirectories=["UltiSnips", "snips"]
 let g:UltiSnipsEditSplit= "context"
 
 
-" Edit Ultisnips ( for current filetype )
+" Edits
 nnoremap <leader>eu :UltiSnipsEdit<cr>
-
+nnoremap <leader>eh :tabnew $HOME/.hyperterm.js<cr>
+nnoremap <leader>ez :tabnew $HOME/.zsh<cr>
 
 """" Tern
 let g:tern_show_argument_hints = "no"
@@ -235,8 +257,12 @@ nnoremap Y y$
 " Use the global clipboard, by default
 set clipboard=unnamedplus
 
+" Search
 " Search with selection
 vnoremap * y/<c-r>0<cr>
+map /  <Plug>(incsearch-forward)
+map ?  <Plug>(incsearch-backward)
+map g/ <Plug>(incsearch-stay)
 
 " Count search instances
 nnoremap <leader>8 :%s///gn<cr>
@@ -256,7 +282,7 @@ nnoremap <leader>s. :! . %<CR>
 nnoremap <leader>/ :nohl \| :redraw!<cr>
 
 " Vundle PluginInstall
-nmap <leader>pi :PluginInstall<CR>
+nmap <leader>pi :PlugInstall<CR>
 
 " Edit this file, shortcut...
 
@@ -290,10 +316,17 @@ set secure          " disable unsafe commands in local .vimrc files
 
 """" Git Gutter
 let g:gitgutter_map_keys = 0
+noremap <leader>g :GitGutterLineHighlightsToggle <cr>
 nmap gbk <Plug>GitGutterPrevHunk
 nmap gbj <Plug>GitGutterNextHunk
 nmap gbs <Plug>GitGutterStageHunk
-nmap gbr <Plug>GitGutterRevertHunk
+nmap gbr <Plug>GitGutterUndoHunk
+
+omap ig <Plug>GitGutterTextObjectInnerPending
+omap ag <Plug>GitGutterTextObjectOuterPending
+xmap ig <Plug>GitGutterTextObjectInnerVisual
+xmap ag <Plug>GitGutterTextObjectOuterVisual
+
 
 """" Line numbers
 " Relative/Absolute lines numbers...
@@ -318,6 +351,8 @@ augroup filetypedetect
   au BufRead,BufNewFile *.md   setlocal spell
   au BufRead,BufNewFile *.gitcommit   setlocal spell
   au BufRead,BufNewFile *.org   setlocal spell
+  au BufRead,BufNewFile *.less set filetype=less
+  au FileType less set omnifunc=csscomplete#CompleteCSS
   " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
 
@@ -341,8 +376,8 @@ let base16colorspace=256
 colorscheme base16-default-dark
 
 " Use the terminal's BG color
-highlight Normal ctermbg=NONE
-highlight nonText ctermbg=NONE
+" highlight Normal ctermbg=NONE
+" highlight nonText ctermbg=NONE
 
 """" List Chars
 " Use the same symbols as TextMate for tabstops and EOLs
@@ -370,6 +405,7 @@ set softtabstop=2
 set tabstop=2 
 set expandtab
 set nowrap
+set smartindent
 set cindent
 set autoindent
 
@@ -379,6 +415,7 @@ set incsearch
 set ignorecase    " ignore case when searching
 set smartcase     " ignore case if search pattern is all lowercase,
                   "    case-sensitive otherwise
+                  "    
 
 """" Statusline
 " Always show a status line, even if the current window isn't active
@@ -389,3 +426,6 @@ highlight Search term=underline cterm=underline ctermfg=18 gui=underline guifg=#
 
 """" Greviences
 " I want comments to only extend, when I hit C-RET, not on RET
+" I want my theme to use the underlying colors ( without base16 )
+" 
+
