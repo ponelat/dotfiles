@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Capslock -> Ctrl
+sudo xmodmap \
+  -e 'remove Lock = Caps_Lock' \
+  -e 'keysym Caps_Lock = Control_L' \
+  -e 'add Control = Control_L'
