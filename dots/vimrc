@@ -24,7 +24,8 @@ Plug 'airblade/vim-gitgutter'
 " Plug 'tpope/vim-fugitive'
 
 " Color theme, from terminal
-Plug 'chriskempson/base16-vim'
+" Plug 'chriskempson/base16-vim'
+Plug 'nanotech/jellybeans.vim'
 
 " TMUX <c-{hjkl}> movements
 Plug 'christoomey/vim-tmux-navigator'
@@ -385,12 +386,17 @@ augroup END
 syntax on
 set background=dark
 set novisualbell
+" let base16colorspace=256
+" colorscheme base16-default-dark
 " Terminal color mode, if in a non-true-color term
+" set Vim-specific sequences for RGB colors
+let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+set termguicolors
 " set t_Co=256
-let base16colorspace=256
-colorscheme base16-default-dark
+colorscheme jellybeans
 
-" Use the terminal's BG color
+" Use the terminal's BG color, useful if the colorscheme does wierd things
 " highlight Normal ctermbg=NONE
 " highlight nonText ctermbg=NONE
 
