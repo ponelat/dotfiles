@@ -374,13 +374,13 @@ augroup filetypedetect
   au FileType less set omnifunc=csscomplete#CompleteCSS
 augroup END
 
-"""" Cursor line
-" The row where your cursor is, is highlighted. It's warming to me
-set cursorline
-augroup enter_leave
-  autocmd  BufLeave * set nocursorline
-  autocmd  BufEnter * set cursorline
-augroup END
+""""" Cursor line
+" " The row where your cursor is, is highlighted. It's warming to me
+" set cursorline
+" augroup enter_leave
+"   autocmd  BufLeave * set nocursorline
+"   autocmd  BufEnter * set cursorline
+" augroup END
 
 """" Colours, colors
 syntax on
