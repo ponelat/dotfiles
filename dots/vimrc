@@ -1,11 +1,8 @@
 set nocompatible              " be iMproved, required
 filetype off                  " required
 
-" set the runtime path to include Vundle and initialize
+" Start the plugins! ( stored them at the given path )
 call plug#begin('~/.vim/plugged')
-
-" let Vundle manage Vundle, required
-Plug 'gmarik/Vundle.vim'
 
 " Motions, Core
 Plug 'tpope/vim-commentary'
@@ -16,22 +13,66 @@ Plug 'tpope/vim-unimpaired'
 Plug 'haya14busa/incsearch.vim'
 Plug 'Chiel92/vim-autoformat'
 
+" Unix tools
+Plug 'tpope/vim-eunuch'
+
+" .editorconfig file support
+Plug 'editorconfig/editorconfig-vim'
+
+" Git
+Plug 'airblade/vim-gitgutter'
+" Plug 'tpope/vim-fugitive'
+
+" Color theme, from terminal
+Plug 'chriskempson/base16-vim'
+
+" TMUX <c-{hjkl}> movements
+Plug 'christoomey/vim-tmux-navigator'
+
+" Tag matching ( with % )
+" Plug 'tmhedberg/matchit'
+
+" Emmet 
+Plug 'mattn/emmet-vim'
+
+" Motions
+Plug 'kana/vim-textobj-user'
+Plug 'kana/vim-textobj-function'
+Plug 'kana/vim-textobj-line'
+Plug 'kana/vim-textobj-indent'
+Plug 'glts/vim-textobj-comment'
+Plug 'bkad/CamelCaseMotion'
+
+" Replace motion ( super useful )
+Plug 'vim-scripts/ReplaceWithRegister'
+
+" Completers
+Plug 'SirVer/ultisnips'
+Plug 'Valloric/YouCompleteMe', { 'do': './install.py --tern-completer' }
+Plug 'scrooloose/syntastic'
+
+" Family syntaxes
+Plug 'Markdown-syntax'
+Plug 'tpope/vim-jdaddy'
+Plug 'elzr/vim-json'
+Plug 'groenewege/vim-less'
+Plug 'hail2u/vim-css3-syntax'
+
+" Ansi colors, useful for when looking at console dumps with ansi-escape codes
+" ( ie: colors )
+" Plug 'powerman/vim-plugin-AnsiEsc'
+
+" Ag, faster than ack, faster than grep
+Plug 'gabesoft/vim-ags' " Faster ack, which is faster grep :)
+
 " Ctags
 Plug 'xolox/vim-misc'
 Plug 'xolox/vim-easytags'
 
-" Menu ( emacs's guide-key )
-" Plug 'hecal3/vim-leader-guide'
-
 " Docs
 Plug 'KabbAmine/zeavim.vim'
 
-" Git
-Plug 'tpope/vim-fugitive'
-
 " Linters, javascript
-Plug 'tpope/vim-jdaddy'
-Plug 'scrooloose/syntastic'
 Plug 'pangloss/vim-javascript' " Includes indenting
 Plug 'mxw/vim-jsx'
 Plug 'marijnh/tern_for_vim', { 'do': 'npm install' }
@@ -40,68 +81,29 @@ Plug 'okcompute/vim-javascript-motions'
 " All langs ( ftdetect, syntax, etc )
 " Plug 'sheerun/vim-polyglot'
 
-" Basic utils
-Plug 'tpope/vim-eunuch'
-Plug 'editorconfig/editorconfig-vim'
-" Plug 'vim-airline'
-Plug 'airblade/vim-gitgutter'
-Plug 'gabesoft/vim-ags' " Faster ack, which is faster grep :)
-Plug 'chriskempson/base16-vim'
-Plug 'christoomey/vim-tmux-navigator'
-Plug 'tmhedberg/matchit'
-" Plug 'kien/ctrlp.vim'
-Plug 'mattn/emmet-vim'
-Plug 'kana/vim-textobj-user'
-Plug 'kana/vim-textobj-function'
-Plug 'kana/vim-textobj-line'
-Plug 'kana/vim-textobj-indent'
-Plug 'glts/vim-textobj-comment'
-" Plug 'thinca/vim-textobj-function-javascript'
-Plug 'vim-scripts/ReplaceWithRegister'
-
-" Completers
-Plug 'SirVer/ultisnips'
-Plug 'Valloric/YouCompleteMe', { 'do': './install.py --tern-completer' }
-" Plug 'honza/vim-snippets'
-
-" Family syntaxes
-Plug 'Markdown-syntax'
-" Plug 'jtratner/vim-flavored-markdown.git'
-Plug 'elzr/vim-json'
-Plug 'groenewege/vim-less'
-Plug 'hail2u/vim-css3-syntax'
-Plug 'powerman/vim-plugin-AnsiEsc'
-
 " Nvim nodejs
 " Plug 'neovim/node-host'
 
-" Parenthese inflector
+" Parenthesis inflector
 " Plug 'snoe/nvim-parinfer.js'
 
 " Org mode
 " Plug 'tpope/vim-speeddating' " Required by org-mode
 " Plug 'jceb/vim-orgmode'
 
-"""" FZF
+" FZF, fuzzy searching
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
 
 """" Ledger cli
 " Plug 'ledger/vim-ledger'
 
-"""" camelCaseMotion
-Plug 'bkad/CamelCaseMotion'
-
 " All of your Plugins must be added before the following line
-call plug#end()              " required
+" End the plugins!
+call plug#end()
 
 """" My own runtime ( For Ultisnips )
 set rtp+=~/projects/dotfiles/.vim
-
-"""" Ctags
-" let g:easytags_suppress_ctags_warning = 1
-
-
 
 """" Leader key
 let mapleader = "\<Space>"
@@ -343,9 +345,7 @@ augroup END
 " my filetype syntax definitions
 augroup filetypedetect
   au BufRead,BufNewFile *.hbs,*.volt	set filetype=html
-  au BufRead,BufNewFile *.md  		set filetype=ghmarkdown
   au BufRead,BufNewFile *.json          set filetype=json
-  au BufRead,BufNewFile *.json          set formatprg=python\ -m\ json.tool
   au BufRead,BufNewFile *.ledger        set filetype=ledger
   au BufRead,BufNewFile *.snippets   set noexpandtab
   au BufRead,BufNewFile *.md   setlocal spell
@@ -353,7 +353,6 @@ augroup filetypedetect
   au BufRead,BufNewFile *.org   setlocal spell
   au BufRead,BufNewFile *.less set filetype=less
   au FileType less set omnifunc=csscomplete#CompleteCSS
-  " au! BufRead,BufNewFile *.xyz		setfiletype drawing
 augroup END
 
 """" Cursor line
@@ -368,10 +367,8 @@ augroup END
 syntax on
 set background=dark
 set novisualbell
-" Terminal color mode
+" Terminal color mode, if in a non-true-color term
 " set t_Co=256
-"
-"""" Base 16 
 let base16colorspace=256
 colorscheme base16-default-dark
 
@@ -388,7 +385,7 @@ set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
 set ssop-=options    " do not store global and local values in a session
 set ssop-=folds      " do not store folds
 
-"""" Autocomplete in command line...
+"""" Autocomplete in ex readline...
 set wildmode=longest,list,full
 
 """" Backspace, goes over everything
@@ -414,18 +411,14 @@ set hlsearch
 set incsearch
 set ignorecase    " ignore case when searching
 set smartcase     " ignore case if search pattern is all lowercase,
-                  "    case-sensitive otherwise
-                  "    
+                  " case-sensitive otherwise
 
-"""" Statusline
-" Always show a status line, even if the current window isn't active
-set laststatus=2
+"""" Statusline, 0=never, 1=if-other-windows, 2=always
+set laststatus=1
 
 """" Search
-highlight Search term=underline cterm=underline ctermfg=18 gui=underline guifg=#ab4642
+" highlight Search term=underline cterm=underline ctermfg=18 gui=underline guifg=#ab4642
 
 """" Greviences
 " I want comments to only extend, when I hit C-RET, not on RET
 " I want my theme to use the underlying colors ( without base16 )
-" 
-
