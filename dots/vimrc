@@ -1,5 +1,5 @@
 set nocompatible              " be iMproved, required
-filetype off                  " required
+filetype off                  
 
 " Start the plugins! ( stored them at the given path )
 call plug#begin('~/.vim/plugged')
@@ -104,6 +104,14 @@ call plug#end()
 
 """" My own runtime ( For Ultisnips )
 set rtp+=~/projects/dotfiles/.vim
+
+"""" Speed!
+set nocursorline
+set nocursorcolumn
+" set scrolljump=5
+set lazyredraw
+set synmaxcol=180 " (or whatever you prefer)
+set noshowmatch
 
 """" Leader key
 let mapleader = "\<Space>"
@@ -330,16 +338,26 @@ xmap ig <Plug>GitGutterTextObjectInnerVisual
 xmap ag <Plug>GitGutterTextObjectOuterVisual
 
 
-"""" Line numbers
-" Relative/Absolute lines numbers...
-set relativenumber
+"""" Experimental
+" Bullets.vim
+let g:bullets_enabled_file_types = [
+    \ 'markdown',
+    \ 'text',
+    \ 'gitcommit',
+    \ 'scratch'
+    \]
+
+
+" """" Line numbers
+" " Relative/Absolute lines numbers...
+" set relativenumber
 set number
-augroup switchingbuffers
-  autocmd InsertEnter * :set number
-  autocmd InsertLeave * :set relativenumber
-  autocmd FocusLost * :set number
-  autocmd FocusGained * :set relativenumber
-augroup END
+" augroup switchingbuffers
+"   autocmd InsertEnter * :set number
+"   autocmd InsertLeave * :set relativenumber
+"   autocmd FocusLost * :set number
+"   autocmd FocusGained * :set relativenumber
+" augroup END
 
 """" AutoCommands ( syntaxes )
 " my filetype syntax definitions
