@@ -33,7 +33,7 @@
   ra = rebase --abort
   rc = rebase --continue
   rs = rebase --skip
-  one = log --oneline
+  last = log --oneline -1
   l = "!. ~/.githelpers && pretty_git_log"
   cleanup = "!git branch --merged | grep  -v '\\*\\|master\\|develop' | xargs -n 1 git branch -d"
   wipe = "!git checkout . ; git clean -f"
