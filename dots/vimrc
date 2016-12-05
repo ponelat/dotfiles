@@ -375,6 +375,7 @@ augroup filetypedetect
   au BufRead,BufNewFile *.gitcommit   setlocal spell
   au BufRead,BufNewFile *.org   setlocal spell
   au BufRead,BufNewFile *.less set filetype=less
+  au BufRead,BufNewFile .eslintrc set filetype=json
   au FileType less set omnifunc=csscomplete#CompleteCSS
 augroup END
 
@@ -444,9 +445,13 @@ set smartcase     " ignore case if search pattern is all lowercase,
 """" Statusline, 0=never, 1=if-other-windows, 2=always
 set laststatus=1
 
+"""" Allow open buffers ( prevents warning about unsaved changes, when
+"""""" opening a new file 
+set hidden
+
 """" Search
 " highlight Search term=underline cterm=underline ctermfg=18 gui=underline guifg=#ab4642
 
 """" Greviences
 " I want comments to only extend, when I hit C-RET, not on RET
-" I want my theme to use the underlying colors ( without base16 )
+" ~I want my theme to use the underlying colors ( without base16 )~
