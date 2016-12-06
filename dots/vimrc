@@ -1,6 +1,7 @@
 set nocompatible              " be iMproved, required
 filetype off                  
 
+"""" Plugins
 " Start the plugins! ( stored them at the given path )
 call plug#begin('~/.vim/plugged')
 
@@ -49,8 +50,11 @@ Plug 'vim-scripts/ReplaceWithRegister'
 
 " Completers
 Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
+
 Plug 'Valloric/YouCompleteMe', { 'do': './install.py --tern-completer' }
-Plug 'scrooloose/syntastic'
+Plug 'neomake/neomake'
+" Plug 'scrooloose/syntastic'
 
 " Family syntaxes
 Plug 'Markdown-syntax'
@@ -106,22 +110,16 @@ Plug 'dkarter/bullets.vim'
 " End the plugins!
 call plug#end()
 
-"""" My own runtime ( For Ultisnips )
+"""" Runtime, My own runtime ( For Ultisnips )
 set rtp+=~/projects/dotfiles/.vim
 
-"""" Speed!
-set nocursorline
-set nocursorcolumn
-" set scrolljump=5
-set lazyredraw
-set synmaxcol=180 " (or whatever you prefer)
-set noshowmatch
 
 """" Leader key
 let mapleader = "\<Space>"
 let maplocalleader = ","
 
-"""" camelCaseMotion maps
+
+" camelCaseMotion maps {{{
 map <silent> ,w <Plug>CamelCaseMotion_w
 map <silent> ,b <Plug>CamelCaseMotion_b
 map <silent> ,e <Plug>CamelCaseMotion_e
@@ -133,13 +131,14 @@ omap <silent> ,ie <Plug>CamelCaseMotion_ie
 xmap <silent> ,ie <Plug>CamelCaseMotion_ie
 map <silent> ,ib <Plug>CamelCaseMotion_ib
 xmap <silent> ,ib <Plug>CamelCaseMotion_ib
+"}}}
 
-"""" Ledger cli
+" Ledger cli {{{
 " augroup ledger-cli
 "   inoremap <silent> <buffer> <Tab> <C-r>=ledger#autocomplete_and_align()<CR>
 "   vnoremap <silent> <buffer> <Tab> :LedgerAlign<CR>
 " augroup END
-
+"}}}
 
 """" FZF
 nnoremap <leader>f :FzfFiles<cr>
@@ -148,6 +147,8 @@ nnoremap <Leader>l :FzfLines<CR>
 nnoremap <Leader>a :FzfAg<CR>
 nnoremap <Leader>b :FzfBuffer<CR>
 nnoremap <Leader>t :FzfTags<CR>
+
+"" End FZF
 
 let g:fzf_command_prefix = 'Fzf'
 nnoremap <a-x> :FzfCommands<cr>
@@ -195,18 +196,25 @@ nnoremap <Leader>p :Fasd<CR>
 "   \ 'header':  ['fg', 'Comment'] }
 
 """" Syntastic 
-let g:syntastic_javascript_checkers = ["eslint"]
-let g:syntastic_javascript_eslint_exec = "eslint_d"
-let g:syntastic_mode_map = { "mode": "passive"}
-let g:syntastic_error_symbol          = '✘'
-let g:syntastic_mode_map = { "mode": "active"}
+" let g:syntastic_javascript_checkers = ["eslint"]
+" let g:syntastic_javascript_eslint_exec = "eslint_d"
+" let g:syntastic_mode_map = { "mode": "passive"}
+" let g:syntastic_error_symbol          = '✘'
+" let g:syntastic_mode_map = { "mode": "active"}
+
+"""" Neomake
+let g:neomake_javascript_enabled_makers = ['eslint_d']
+let g:neomake_jsx_enabled_makers = ['eslint_d']
+
+"""" Easy Tags ( ctags )
+let g:easytags_async = 1
 
 """" JSX for all both .js and .jsx
 let g:jsx_ext_required = 0
 
 " Now we're using ctags-exuberant
 " see: http://stackoverflow.com/questions/1790623/how-can-i-make-vims-taglist-plugin-show-useful-information-for-javascript
-let g:tlist_javascript_settings = 'javascript;s:string;a:array;o:object;f:function'
+" let g:tlist_javascript_settings = 'javascript;s:string;a:array;o:object;f:function'
 
 """" YCM You complete me
 let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
@@ -229,105 +237,75 @@ let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
 
 " 'snips' is in my dotfiles runtimepath dir
 let g:UltiSnipsSnippetsDir = "~/projects/dotfiles/.vim/snips"
-let g:UltiSnipsSnippetDirectories=["UltiSnips", "snips"]
+let g:UltiSnipsSnippetDirectories=["snips", "UltiSnips"]
 let g:UltiSnipsEditSplit= "context"
 
 
-" Edits
-nnoremap <leader>eu :UltiSnipsEdit<cr>
-nnoremap <leader>eh :tabnew $HOME/.hyperterm.js<cr>
-nnoremap <leader>ez :tabnew $HOME/.zsh<cr>
-
 """" Tern
 let g:tern_show_argument_hints = "no"
-" Remove the scratch/preview window that pops up when I use Tern/Omnicomplete
-set completeopt-=preview
+set completeopt-=preview " Remove the scratch/preview window that pops up when I use Tern/Omnicomplete
 
-
-"""" General
-
+"""" Map File Edits
+nnoremap <silent><leader>eu :UltiSnipsEdit<cr>
+nnoremap <silent><leader>eh :tabnew $HOME/.hyperterm.js<cr>
+nnoremap <silent><leader>ez :tabnew $HOME/.zsh<cr>
+nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
+nnoremap <silent><leader>ev :tabnew ~/.vimrc<CR>
 " Set the current file's path as the current working dir, in vim
-nnoremap <Leader><c-j> :cd %:p:h<CR>
+nnoremap <Leader><c-j> :cd %:p:h<CR> 
 
-" Make sure nothing conflicts with tmux ( c-a, is my tmux prefix )
-map <c-a> <nop>
-
-" Select inside function
-nmap <leader>v <esc>/{<cr>%v%<s-v>
-nmap <leader>x :cclose <bar> :lclose<cr>
-
-" Shortcut to toggle `:SyntasticToggleMode`
-nmap <Leader>sn :SyntasticToggleMode<CR>
-
-" Shortcut to rapidly toggle `set list`
-" nmap <Leader><tab>  :set list!<CR>
-
-" Some useful tips...
-" http://sheerun.net/2014/03/21/how-to-boost-your-vim-productivity/
-
-" For consistant behaviour with s-D and s-C
-nnoremap Y y$
-
-" Use the global clipboard, by default
-set clipboard=unnamedplus
-
-" Search
-" Search with selection
-vnoremap * y/<c-r>0<cr>
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
-" Count search instances
-nnoremap <leader>8 :%s///gn<cr>
-
+"""" Map CRUD
 "Map leader q to quit with saving
 nnoremap <leader>q :q<CR>
 "Map leader s to save file...
 nnoremap <leader>w :w<CR>
-
+" Close List view
+nmap <leader>x :cclose <bar> :lclose<cr>
 "Map 'so' to parse the vim source file
 nnoremap <leader>so :source %<CR>
-
 "Map 's.' to run the current shell script
 nnoremap <leader>s. :! . %<CR>
-
-" <Ctrl-l> redraws the screen and removes any search highlighting.
-nnoremap <leader>/ :nohl \| :redraw!<cr>
-
-" Vundle PluginInstall
-nmap <leader>pi :PlugInstall<CR>
-
-" Edit this file, shortcut...
-
-" Edit common files
-" .bashrc
-nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
-" .vrimrc
-nnoremap <silent><leader>ev :tabnew ~/.vimrc<CR>
-
-" Git status mapping
-nnoremap <silent><leader>gs :Gstatus<CR>
-nnoremap <silent><leader>gd :Gvdiff<CR>
-
 " open with xdg-open
 nnoremap <leader>o :!xdg-open %<CR>
 
-" Dispatch: in ex mode
+"""" Map General
+" Make sure nothing conflicts with tmux ( c-a, is my tmux prefix )
+map <c-a> <nop> 
+" For consistant behaviour with s-D and s-C
+nnoremap Y y$
+
+"""" Map Search
+map /  <Plug>(incsearch-forward)
+map ?  <Plug>(incsearch-backward)
+map g/ <Plug>(incsearch-stay)
+" Search with selection
+vnoremap * y/<c-r>0<cr>
+" Count search instances
+nnoremap <leader>8 :%s///gn<cr>
+" <Ctrl-l> redraws the screen and removes any search highlighting.
+nnoremap <leader>/ :nohl \| :redraw!<cr>
+
+"""" Map Plug
+" Plug PluginInstall
+nmap <leader>pi :PlugInstall<CR>
+
+"""" Map Dispatch: in ex mode
 nnoremap <leader>dd :Dispatch<SPACE>
 
+"""" Spelling
 " Autocomplete with dictionary words when spell check is on
 set complete+=kspell
-" Set region to British English
-set spelllang=en_gb
-nnoremap <leader>s :set spell!<cr>
+set spelllang=en_gb " Set region to British English
 " set spellfile=$HOME/.vim-spell-en.utf-8.add
 
+"""" Map Spelling
+nnoremap <leader>s :set spell!<cr>
 
-"""" Local .vimrc files
-" Local .vimrc files...
-set exrc            " enable per-directory .vimrc files
-set secure          " disable unsafe commands in local .vimrc files
+
+"""" Map Git
+" Git status mapping
+nnoremap <silent><leader>gs :Gstatus<CR>
+nnoremap <silent><leader>gd :Gvdiff<CR>
 
 """" Git Gutter
 let g:gitgutter_map_keys = 0
@@ -342,8 +320,7 @@ omap ag <Plug>GitGutterTextObjectOuterPending
 xmap ig <Plug>GitGutterTextObjectInnerVisual
 xmap ag <Plug>GitGutterTextObjectOuterVisual
 
-
-"""" Experimental
+"""" Bullets, markdown
 " Bullets.vim
 let g:bullets_enabled_file_types = [
     \ 'markdown',
@@ -352,19 +329,7 @@ let g:bullets_enabled_file_types = [
     \ 'scratch'
     \]
 
-
-" """" Line numbers
-" " Relative/Absolute lines numbers...
-" set relativenumber
-set number
-" augroup switchingbuffers
-"   autocmd InsertEnter * :set number
-"   autocmd InsertLeave * :set relativenumber
-"   autocmd FocusLost * :set number
-"   autocmd FocusGained * :set relativenumber
-" augroup END
-
-"""" AutoCommands ( syntaxes )
+"""" File Types
 " my filetype syntax definitions
 augroup filetypedetect
   au BufRead,BufNewFile *.hbs,*.volt	set filetype=html
@@ -376,16 +341,10 @@ augroup filetypedetect
   au BufRead,BufNewFile *.org   setlocal spell
   au BufRead,BufNewFile *.less set filetype=less
   au BufRead,BufNewFile .eslintrc set filetype=json
+  au BufRead,BufNewFile *vimrc setlocal foldmethod=marker
+  au BufWritePost       * Neomake 
   au FileType less set omnifunc=csscomplete#CompleteCSS
 augroup END
-
-""""" Cursor line
-" " The row where your cursor is, is highlighted. It's warming to me
-" set cursorline
-" augroup enter_leave
-"   autocmd  BufLeave * set nocursorline
-"   autocmd  BufEnter * set cursorline
-" augroup END
 
 """" Colours, colors
 syntax on
@@ -393,10 +352,10 @@ set background=dark
 set novisualbell
 " let base16colorspace=256
 " colorscheme base16-default-dark
+
 " Terminal color mode, if in a non-true-color term
-" set Vim-specific sequences for RGB colors
-let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
-let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"    " To make `termguicolors` work
+let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"    " To make `termguicolors` work
 set termguicolors
 " set t_Co=256
 colorscheme jellybeans
@@ -405,28 +364,30 @@ colorscheme jellybeans
 " highlight Normal ctermbg=NONE
 " highlight nonText ctermbg=NONE
 
-"""" List Chars
+"""" Variables
+set nocursorline          " Disable cursor highlight
+set nocursorcolumn        " Disable cursor highlight
+set clipboard=unnamedplus " Use the global clipboard, by default
+set lazyredraw
+set synmaxcol=180         " (only highlight syntax, up to this column )
+set noshowmatch           " Supposedly the showing the matching [({
+set path+=**              " Find files recursively, with :file
+set exrc                  " enable per-directory .vimrc files
+set secure                " disable unsafe commands in local .vimrc files
+set number                " Numbers in the gutter ( fixed )
 " Use the same symbols as TextMate for tabstops and EOLs
-set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
-
-"""" Saving
-" For saving sane sessions...
+set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#  
 set ssop-=options    " do not store global and local values in a session
 set ssop-=folds      " do not store folds
-
-"""" Autocomplete in ex readline...
-set wildmode=longest,list,full
-
-"""" Backspace, goes over everything
-set backspace=indent,eol,start
-
-"""" Backup files, who needs 'em?
-set nobackup
-set nowritebackup
-set noswapfile
+set wildmode=longest,list,full   " Autocomplete in ex readline...
+set backspace=indent,eol,start " Backspace, goes over everything
+set nobackup       " No backup files!
+set nowritebackup  " No backup files!
+set noswapfile     " No backup files!
+set hidden " Allow open buffers ( prevents warning about unsaved changes, when opening a new file
 
 """" Default Indents ( prefer to use .editorconfig, if you can )
-set shiftwidth=2
+set shiftwidth=2   " Rememb
 set softtabstop=2 
 set tabstop=2 
 set expandtab
@@ -445,12 +406,26 @@ set smartcase     " ignore case if search pattern is all lowercase,
 """" Statusline, 0=never, 1=if-other-windows, 2=always
 set laststatus=1
 
-"""" Allow open buffers ( prevents warning about unsaved changes, when
-"""""" opening a new file 
-set hidden
+"""" Functions
+function! HighlightRepeats() range
+  let lineCounts = {}
+  let lineNum = a:firstline
+  while lineNum <= a:lastline
+    let lineText = getline(lineNum)
+    if lineText != ""
+      let lineCounts[lineText] = (has_key(lineCounts, lineText) ? lineCounts[lineText] : 0) + 1
+    endif
+    let lineNum = lineNum + 1
+  endwhile
+  exe 'syn clear Repeat'
+  for lineText in keys(lineCounts)
+    if lineCounts[lineText] >= 2
+      exe 'syn match Repeat "^' . escape(lineText, '".\^$*[]') . '$"'
+    endif
+  endfor
+endfunction
 
-"""" Search
-" highlight Search term=underline cterm=underline ctermfg=18 gui=underline guifg=#ab4642
+command! -range=% HighlightRepeats <line1>,<line2>call HighlightRepeats()
 
 """" Greviences
 " I want comments to only extend, when I hit C-RET, not on RET
