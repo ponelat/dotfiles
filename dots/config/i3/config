@@ -15,6 +15,9 @@ set $mod Mod4
 # is used in the bar {} block below.
 font pango:monospace 8
 
+# Startup 
+exec --no-startup-id dex -a -e i3
+
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
 #font pango:DejaVu Sans Mono 8
@@ -50,7 +53,7 @@ bindsym $mod+k focus up
 bindsym $mod+l focus right
 
 # alternatively, you can use the cursor keys:
-bidsym $mod+Left focus left
+bindsym $mod+Left focus left
 bindsym $mod+Down focus down
 bindsym $mod+Up focus up
 bindsym $mod+Right focus right
@@ -91,7 +94,7 @@ bindsym $mod+space focus mode_toggle
 bindsym $mod+a focus parent
 
 # focus the child container
-#bindsym $mod+d focus child
+bindsym $mod+d focus child
 
 # switch to workspace
 bindsym $mod+1 workspace 1
@@ -158,6 +161,12 @@ mode "resize" {
 }
 
 bindsym $mod+r mode "resize"
+
+# Colours
+# client.focused #93a1a1 #93a1a1 #93a1a1 #b58900
+# client.focused_inactive #657b83 #657b83 #657b83 #657b83
+# client.unfocused #073642 #073642 #073642 #073642
+# client.urgent #b58900 #b58900 #b58900 #b58900
 
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
