@@ -2,8 +2,9 @@
   pager = cat
 [user]
   name = Josh Ponelat
-  email = josh@ponelat.com
+	email = josh@ponelat.com
 [alias]
+  sub = "!git submodule init && git submodule update"
   re = reset
   rh = reset HEAD~
   ref = reflog
@@ -36,8 +37,12 @@
   last = log --oneline -1
   l = "!. ~/.githelpers && pretty_git_log"
   cleanup = "!git branch --merged | grep  -v '\\*\\|master\\|develop' | xargs -n 1 git branch -d"
+  pullclean = "!git pull && git cleanup ; git remote prune origin"
   wipe = "!git checkout . ; git clean -f"
+  pushu ="!git-push-u-origin"
 [push]
   default = simple
 [github]
 	user = ponelat
+[credential]
+	helper = /usr/lib/git-core/git-credential-gnome-keyring

@@ -362,3 +362,5 @@ get_sha() {
 
 # added by travis gem
 [ -f /home/josh/.travis/travis.sh ] && source /home/josh/.travis/travis.sh
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash

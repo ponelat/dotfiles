@@ -1,4 +1,5 @@
-module.exports = { config: {
+module.exports = { 
+  config: {
 
     hyperclean: {
       hideTabs: true,
@@ -6,17 +7,17 @@ module.exports = { config: {
     },
 
     // default font size in pixels for all tabs
-    fontSize: 12,
+    fontSize: 11,
     frame: false,
 
     // font family with optional fallbacks
-    fontFamily: 'Menlo, "DejaVu Sans Mono", Inconsolata, "Lucida Console", monospace',
+    fontFamily: 'Fira Code, Monoid, Menlo, "DejaVu Sans Mono", Inconsolata, "Lucida Console", monospace',
 
     // terminal cursor background color and opacity (hex, rgb, hsl, hsv, hwb or cmyk)
     cursorColor: 'rgba(248,28,229,0.75)',
 
     // `BEAM` for |, `UNDERLINE` for _, `BLOCK` for █
-    cursorShape: 'BLOCK',
+    cursorShape: 'UNDERLINE',
 
     // color of the text
     foregroundColor: '#fff',
@@ -31,7 +32,11 @@ module.exports = { config: {
     css: '',
 
     // custom css to embed in the terminal window
-    termCSS: '',
+    termCSS: `
+      x-screen x-row {
+        font-variant-ligatures: initial;
+      }
+    `,
 
     // custom padding (css format, i.e.: `top right bottom left`)
     // padding: '12px 14px',

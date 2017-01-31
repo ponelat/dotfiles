@@ -1,6 +1,8 @@
 set nocompatible              " be iMproved, required
 filetype off                  
 
+set path+=**/*
+
 """" Plugins
 " Start the plugins! ( stored them at the given path )
 call plug#begin('~/.vim/plugged')
@@ -11,8 +13,14 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-unimpaired'
+Plug 'tpope/vim-classpath'
 Plug 'haya14busa/incsearch.vim'
 Plug 'Chiel92/vim-autoformat'
+" Repl
+Plug 'metakirby5/codi.vim'
+
+" Tabularize!
+Plug 'godlygeek/tabular'
 
 " Unix tools
 Plug 'tpope/vim-eunuch'
@@ -22,17 +30,22 @@ Plug 'editorconfig/editorconfig-vim'
 
 " Git
 Plug 'airblade/vim-gitgutter'
-" Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-fugitive'
+Plug 'jaxbot/github-issues.vim'
 
 " Color theme, from terminal
 " Plug 'chriskempson/base16-vim'
 Plug 'nanotech/jellybeans.vim'
+Plug 'guns/xterm-color-table.vim'
 
 " TMUX <c-{hjkl}> movements
 Plug 'christoomey/vim-tmux-navigator'
 
 " Tag matching ( with % )
-" Plug 'tmhedberg/matchit'
+Plug 'tmhedberg/matchit'
+
+" Toggle quickfix and location lists
+Plug 'Valloric/ListToggle'
 
 " Emmet 
 Plug 'mattn/emmet-vim'
@@ -63,6 +76,12 @@ Plug 'elzr/vim-json'
 Plug 'groenewege/vim-less'
 Plug 'hail2u/vim-css3-syntax'
 
+" Man pages
+Plug 'vim-utils/vim-man'
+
+" Show marks visually
+" Plug 'vim-scripts/ShowMarks'
+
 " Ansi colors, useful for when looking at console dumps with ansi-escape codes
 " ( ie: colors )
 " Plug 'powerman/vim-plugin-AnsiEsc'
@@ -91,6 +110,8 @@ Plug 'okcompute/vim-javascript-motions'
 
 " Parenthesis inflector
 " Plug 'snoe/nvim-parinfer.js'
+Plug 'bhurlow/vim-parinfer'
+Plug 'tpope/vim-fireplace'
 
 " Org mode
 " Plug 'tpope/vim-speeddating' " Required by org-mode
@@ -111,7 +132,7 @@ Plug 'dkarter/bullets.vim'
 call plug#end()
 
 """" Runtime, My own runtime ( For Ultisnips )
-set rtp+=~/projects/dotfiles/.vim
+set runtimepath+=~/projects/dotfiles/.vim
 
 
 """" Leader key
@@ -119,7 +140,7 @@ let mapleader = "\<Space>"
 let maplocalleader = ","
 
 
-" camelCaseMotion maps {{{
+"""" Map camelCaseMotion 
 map <silent> ,w <Plug>CamelCaseMotion_w
 map <silent> ,b <Plug>CamelCaseMotion_b
 map <silent> ,e <Plug>CamelCaseMotion_e
@@ -131,36 +152,40 @@ omap <silent> ,ie <Plug>CamelCaseMotion_ie
 xmap <silent> ,ie <Plug>CamelCaseMotion_ie
 map <silent> ,ib <Plug>CamelCaseMotion_ib
 xmap <silent> ,ib <Plug>CamelCaseMotion_ib
-"}}}
 
-" Ledger cli {{{
+let g:lt_location_list_toggle_map = '<leader>l'
+let g:lt_quickfix_list_toggle_map = '<leader>L'
+
+"""" Ledger cli
 " augroup ledger-cli
 "   inoremap <silent> <buffer> <Tab> <C-r>=ledger#autocomplete_and_align()<CR>
 "   vnoremap <silent> <buffer> <Tab> :LedgerAlign<CR>
 " augroup END
-"}}}
 
-"""" FZF
-nnoremap <leader>f :FzfFiles<cr>
-nnoremap <Leader>j :AgFiles<CR>
-nnoremap <Leader>l :FzfLines<CR>
-nnoremap <Leader>a :FzfAg<CR>
-nnoremap <Leader>b :FzfBuffer<CR>
-nnoremap <Leader>t :FzfTags<CR>
+"""" JSDoc,js-doc
+let g:javascript_plugin_jsdoc = 1
 
-"" End FZF
-
+"""" Fzf
 let g:fzf_command_prefix = 'Fzf'
-nnoremap <a-x> :FzfCommands<cr>
 let g:fzf_layout = { 'window': 'enew' }
 let g:fzf_layout = { 'window': '-tabnew' }
 
-" imap <c-x><c-f> <plug>(fzf-complete-file-ag)
-" imap <c-x><c-d> <plug>(fzf-complete-path)
-imap <c-x><c-l> <plug>(fzf-complete-line)
 
+"""" Map Fzf
+nnoremap <leader>f :FzfFiles<cr>
+nnoremap <Leader>j :AgFiles<CR>
+nnoremap <Leader>a :FzfAg<CR>
+nnoremap <Leader>b :FzfBuffer<CR>
+nnoremap <Leader>t :FzfTags<CR>
+nnoremap <a-x> :FzfCommands<cr>
+imap <c-x><c-l> <plug>(fzf-complete-line)
+" Set the current dir, based on fasd jump list
+nnoremap <Leader>p :Fasd<CR>
+
+
+"""" Functions Fzf
 function! s:echoline(line)
-  execute append(line("."), a:line)
+  execute append(line('.'), a:line)
 endfunction
 
 command! -nargs=1 -complete=file Lines call PasteLineFromFile(<q-args>) 
@@ -178,62 +203,37 @@ command! AgFiles call fzf#run(fzf#wrap({
       \ 'options': '-m --prompt "Ag Files> "',
       \}))
 
-" Set the current dir, based on fasd jump list
-nnoremap <Leader>p :Fasd<CR>
-
-" let g:fzf_colors =
-"   \ { 'fg':    ['fg', 'Normal'],
-"   \ 'bg':      ['bg', 'ColorColumn'],
-"   \ 'hl':      ['fg', 'Comment'],
-"   \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
-"   \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-"   \ 'hl+':     ['fg', 'Statement'],
-"   \ 'info':    ['fg', 'PreProc'],
-"   \ 'prompt':  ['fg', 'Conditional'],
-"   \ 'pointer': ['fg', 'Exception'],
-"   \ 'marker':  ['fg', 'Keyword'],
-"   \ 'spinner': ['fg', 'Label'],
-"   \ 'header':  ['fg', 'Comment'] }
-
-"""" Syntastic 
-" let g:syntastic_javascript_checkers = ["eslint"]
-" let g:syntastic_javascript_eslint_exec = "eslint_d"
-" let g:syntastic_mode_map = { "mode": "passive"}
-" let g:syntastic_error_symbol          = '✘'
-" let g:syntastic_mode_map = { "mode": "active"}
-
 """" Neomake
+" nnoremap <Leader>l :lopen<CR>
 let g:neomake_javascript_enabled_makers = ['eslint_d']
 let g:neomake_jsx_enabled_makers = ['eslint_d']
+let g:neomake_vim_enabled_makers = ['vint']
+let g:neomake_highlight_columns = 1
+let g:neomake_highlight_lines = 1
+" let g:neomake_open_list = 1
 
 """" Easy Tags ( ctags )
-let g:easytags_async = 1
+" let g:easytags_async = 1
 
 """" JSX for all both .js and .jsx
 let g:jsx_ext_required = 0
-
-" Now we're using ctags-exuberant
-" see: http://stackoverflow.com/questions/1790623/how-can-i-make-vims-taglist-plugin-show-useful-information-for-javascript
-" let g:tlist_javascript_settings = 'javascript;s:string;a:array;o:object;f:function'
 
 """" YCM You complete me
 let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
 let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
 
-" Show errors, 'syntastic'
-nnoremap <leader>er :Errors<CR>
+" Show errors
 " Show errors and move into window
 nnoremap <leader>err :w<CR>:Errors<CR><C-W>j<CR>
 nnoremap gen :lnext<cr>
 nnoremap gep :lprev<cr>
 
 
-
 """" Ultisnips
 " better key bindings for UltiSnipsExpandTrigger
-let g:UltiSnipsExpandTrigger = "<tab>"
-let g:UltiSnipsJumpForwardTrigger = "<tab>"
-let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
+let g:UltiSnipsExpandTrigger = '<tab>'
+let g:UltiSnipsJumpForwardTrigger = '<tab>'
+let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
 
 " 'snips' is in my dotfiles runtimepath dir
 let g:UltiSnipsSnippetsDir = "~/projects/dotfiles/.vim/snips"
@@ -248,11 +248,15 @@ set completeopt-=preview " Remove the scratch/preview window that pops up when I
 """" Map File Edits
 nnoremap <silent><leader>eu :UltiSnipsEdit<cr>
 nnoremap <silent><leader>eh :tabnew $HOME/.hyperterm.js<cr>
-nnoremap <silent><leader>ez :tabnew $HOME/.zsh<cr>
+nnoremap <silent><leader>ec :tabnew $HOME/.ctags<cr>
+nnoremap <silent><leader>ez :tabnew $HOME/.zshrc<cr>
 nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
 nnoremap <silent><leader>ev :tabnew ~/.vimrc<CR>
+nnoremap <silent><leader>ea :tabnew ~/.config/awesome/rc.lua<CR>
 " Set the current file's path as the current working dir, in vim
 nnoremap <Leader><c-j> :cd %:p:h<CR> 
+
+nnoremap <silent><leader>rc :!ctags<cr>
 
 """" Map CRUD
 "Map leader q to quit with saving
@@ -267,6 +271,11 @@ nnoremap <leader>so :source %<CR>
 nnoremap <leader>s. :! . %<CR>
 " open with xdg-open
 nnoremap <leader>o :!xdg-open %<CR>
+
+"""" Map surround
+" :echo char2nr("-"))
+" JSX comments, 56 = '8'
+let b:surround_56 = "/* \r */"
 
 """" Map General
 " Make sure nothing conflicts with tmux ( c-a, is my tmux prefix )
@@ -309,9 +318,9 @@ nnoremap <silent><leader>gd :Gvdiff<CR>
 
 """" Git Gutter
 let g:gitgutter_map_keys = 0
-noremap <leader>g :GitGutterLineHighlightsToggle <cr>
-nmap gbk <Plug>GitGutterPrevHunk
-nmap gbj <Plug>GitGutterNextHunk
+nnoremap <leader>g :GitGutterLineHighlightsToggle <cr>
+nmap [g <Plug>GitGutterPrevHunk
+nmap ]g <Plug>GitGutterNextHunk
 nmap gbs <Plug>GitGutterStageHunk
 nmap gbr <Plug>GitGutterUndoHunk
 
@@ -340,9 +349,10 @@ augroup filetypedetect
   au BufRead,BufNewFile *.gitcommit   setlocal spell
   au BufRead,BufNewFile *.org   setlocal spell
   au BufRead,BufNewFile *.less set filetype=less
-  au BufRead,BufNewFile .eslintrc set filetype=json
+  au BufRead,BufNewFile *eslintrc set filetype=json
   au BufRead,BufNewFile *vimrc setlocal foldmethod=marker
-  au BufWritePost       * Neomake 
+  au BufRead,BufNewFile *profile set ft=sh
+  " au BufWritePost       * Neomake 
   au FileType less set omnifunc=csscomplete#CompleteCSS
 augroup END
 
@@ -359,6 +369,9 @@ let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"    " To make `termguicolors` work
 set termguicolors
 " set t_Co=256
 colorscheme jellybeans
+
+hi StatusLine ctermfg=7 guifg=#c0c0c0 ctermbg=234 guibg=#1c1c1c
+hi StatusLineNC ctermfg=237 guifg=#3a3a3a ctermbg=234 guibg=#1c1c1c
 
 " Use the terminal's BG color, useful if the colorscheme does wierd things
 " highlight Normal ctermbg=NONE
@@ -403,10 +416,28 @@ set ignorecase    " ignore case when searching
 set smartcase     " ignore case if search pattern is all lowercase,
                   " case-sensitive otherwise
 
-"""" Statusline, 0=never, 1=if-other-windows, 2=always
-set laststatus=1
 
-"""" Functions
+"""" Statusline, 0=never, 1=if-other-windows, 2=always
+set laststatus=2
+
+"""" HACKs!!!!
+nnoremap <silent><localleader>t :!tmux send-keys -t test 'npm run test-server-watch' Enter<cr>
+nnoremap <silent><localleader>e :Eval<cr>
+
+function! Lint()
+  if &filetype =~ 'javascript'
+    Neomake eslint_d
+  else
+    Neomake
+  end
+endfunction
+
+augroup lint_events
+  autocmd!
+  autocmd BufWritePost * call Lint()
+augroup end
+
+"""" Functions, functions
 function! HighlightRepeats() range
   let lineCounts = {}
   let lineNum = a:firstline
@@ -424,9 +455,44 @@ function! HighlightRepeats() range
     endif
   endfor
 endfunction
-
 command! -range=% HighlightRepeats <line1>,<line2>call HighlightRepeats()
+
+" Newline each comma
+nnoremap <leader>cn :s/,/,/g<CR>
+
+function! SplitWithDevelop() 
+  exe 'vnew'
+  exe 'r! git cat-file -p develop:#'
+endfunction
+command! SplitWithDevelop call SplitWithDevelop()
+
+function! SplitWithMaster() 
+  exe 'vnew'
+  exe 'r! git cat-file -p master:#'
+endfunction
+command! SplitWithMaster call SplitWithMaster()
+
+function! SplitWith() 
+  let branch = input('Branch: ', 'master')
+  let file = input('File: ',expand('%p:h'))
+  exe 'vnew ' . file
+  exe 'r! git cat-file -p ' . branch . ':' . file
+endfunction
+command! SplitWith call SplitWith()
+
+function! Fork() 
+  let file = input('File: ',expand('%p:h'))
+  exe 'saveas ' . file
+endfunction
+command! Fork call Fork()
+
+
 
 """" Greviences
 " I want comments to only extend, when I hit C-RET, not on RET
 " ~I want my theme to use the underlying colors ( without base16 )~
+" toggle between `let { one, two } = this.props; to...
+" let {
+"   one,
+"   two
+" } = this.props

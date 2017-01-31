@@ -16,16 +16,37 @@ if [ -n "$BASH_VERSION" ]; then
     fi
 fi
 
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
+# ssh
+export SSH_KEY_PATH="~/.ssh/dsa_id"
+
+### Linuxbrew
+[ -d "$HOME/.linuxbrew" ] && PATH="$HOME/.linuxbrew/bin:$PATH"
+[ -d "$HOME/.linuxbrew" ] && PATH="$HOME/.linuxbrew/sbin:$PATH"
+export XDG_DATA_DIRS="$HOME/.linuxbrew/share:$XDG_DATA_DIRS"
+
+### N ( node.js manager )
+export N_PREFIX="$HOME/.linuxbrew/include"
+[ -d "$HOME/.linuxbrew/include/bin" ] && PATH="$HOME/.linuxbrew/include/bin:$PATH"
+
+### Path
+[ -d "$HOME/.local/bin" ] && PATH="$PATH:$HOME/.local/bin"
+[ -d "$HOME/bin" ] && PATH="$PATH:$HOME/bin"
+
+# Projects
+[ -d "$HOME/projects/dotfiles/bin" ] && PATH="$PATH:$HOME/projects/dotfiles/bin"
+[ -d "$HOME/projects/docker-cloud" ] && PATH="$PATH:$HOME/projects/docker-cloud"
+[ -d "$HOME/projects/scripts" ] && PATH="$PATH:$HOME/projects/scripts"
+
+# Custom apps
+for dir in $HOME/apps/*/bin ; do 
+  PATH="$PATH:$dir"
+done
+
+[ -d "$HOME/apps/hyperterm" ] && PATH="$PATH:$HOME/apps/hyperterm"
+
+if [ -n "$DESKTOP_SESSION" ];then
+  eval $(gnome-keyring-daemon --start)
+  export SSH_AUTH_SOCK
 fi
 
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
-
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-
-## Custom apps
-[[ -d "$HOME/apps/hyperterm" ]] && PATH="$PATH:$HOME/apps/hyperterm"
-
-export PATH
+export PATH=$PATH
