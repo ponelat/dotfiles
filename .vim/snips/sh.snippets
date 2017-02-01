@@ -32,3 +32,11 @@ for $1 in \$$2; do
 	${0:${VISUAL}}
 done
 endsnippet
+
+snippet path "[[ -d dir ]] && path=" b
+[[ -d "$HOME/${1:${VISUAL}}" ]] && PATH="$PATH:$HOME/$1"
+endsnippet
+
+snippet null ">/dev/null 2>&1" w
+>/dev/null 2>&1 $0
+endsnippet
