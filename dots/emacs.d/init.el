@@ -32,6 +32,10 @@
   :config
   (projectile-mode))
 
+;;;; Git
+(use-package magit
+  :ensure t)
+
 
 ;; ;;;; Get package function
 ;; ;;; from purcell/emacs.d
