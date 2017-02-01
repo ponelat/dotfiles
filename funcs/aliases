@@ -2,8 +2,10 @@
 . ~/.env
 
 ### Aliases
-alias n=vim
+# alias n=vim
 alias v=vim
+alias pserver="python -m SimpleHTTPServer"
+alias cjson="curl -sL -H 'accept: application/json' -H 'content-type: application/json'"
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias cs="clear; git status || ls "
 alias .z=". ~/.zshrc"
@@ -27,9 +29,15 @@ alias jq-apis-hash="jq '[.apis[] | .props = (reduce .properties[] as \$x ({}; . 
 alias jq-apis="jq-apis-hash | jq '[.[] + .[].props | del(.props)]'"
 alias jq-is-private="jq 'map(select(.props[\"x-private\"] == \"true\"))'"
 
+function docker-id() {
+  docker ps | fzf | awk '{ print $1 }'
+}
+
 # Add entry into .gitignore
 function ignore() {
   echo $@ >> .gitignore
 }
+
+alias hubup="git pushu && hub pull-request"
 
 
