@@ -283,26 +283,5 @@
 
 
 
-;;;; Custom variables
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-enabled-themes (quote (sanityinc-tomorrow-night)))
- '(custom-safe-themes
-   (quote
-    ("06f0b439b62164c6f8f84fdda32b62fb50b6d00e8b01c2208e55543a6337433a" "a164837cd2821475e1099911f356ed0d7bd730f13fa36907895f96a719e5ac3e" default)))
- '(git-gutter:window-width 1)
- '(magit-commit-arguments (quote ("--verbose"))))
-;;;; Custom faces ( fonts )
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 98 :width normal :foundry "misc" :family "Droid Sans Mono"))))
- '(term-color-white ((t (:background "dim gray" :foreground "dim gray")))))
-
 (provide 'init)
 ;;; init.el ends here
