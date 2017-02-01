@@ -4,6 +4,7 @@
 ### Aliases
 # alias n=vim
 alias v=vim
+alias e="emacs -nw"
 alias pserver="python -m SimpleHTTPServer"
 alias cjson="curl -sL -H 'accept: application/json' -H 'content-type: application/json'"
 alias ls='ls -A --color=always --group-directories-first -1 -v'
