@@ -1,8 +1,5 @@
 #!/bin/sh
 
-echo ****************************************************
 docker rm -v $(docker ps -a -q -f status=exited) || echo 'No containers to clean up with status=exited'
-echo ****************************************************
 docker rmi $(docker images -f "dangling=true" -q) || echo 'No images to clean up with dangling=true'
-echo ****************************************************
 docker volume rm $(docker volume ls -qf dangling=true) || echo "No dangling volumes to clean"
