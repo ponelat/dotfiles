@@ -28,7 +28,9 @@
 
 ;;;; Projects
 (use-package projectile
-  :ensure t)
+  :ensure t
+  :config
+  (projectile-mode))
 
 
 ;; ;;;; Get package function
