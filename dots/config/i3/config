@@ -9,7 +9,11 @@
 #
 # Please see http://i3wm.org/docs/userguide.html for a complete reference!
 
+# Meta/Windows key
 set $mod Mod4
+# Alt key
+set $alt mod1
+set $ctrl Control
 
 # Font for window titles. Will also be used by the bar unless a different font
 # is used in the bar {} block below.
@@ -46,8 +50,8 @@ bindsym $mod+q kill
 
 # start dmenu (a program launcher)
 # bindsym $mod+d exec dmenu_run
-bindsym mod1+space exec dmenu_run # mod1 == alt
-# bindsym mod1+space exec rofi -show run -lines 7 -eh 2 -width 1368 -padding 50 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 13"
+bindsym $alt+space exec dmenu_run 
+# bindsym $alt+space exec rofi -show run -lines 7 -eh 2 -width 1368 -padding 50 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 13"
 # There also is the (new) i3-dmenu-desktop which only displays applications
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
@@ -70,6 +74,10 @@ bindsym $mod+Shift+h move left
 bindsym $mod+Shift+j move down
 bindsym $mod+Shift+k move up
 bindsym $mod+Shift+l move right
+
+# Move through workspaces on the current screen
+bindsym $mod+$ctrl+j workspace next_on_output
+bindsym $mod+$ctrl+k workspace prev_on_output
 
 # alternatively, you can use the cursor keys:
 bindsym $mod+Shift+Left move left
@@ -98,10 +106,15 @@ bindsym $mod+Shift+f floating toggle
 bindsym $mod+space focus mode_toggle
 
 # focus the parent container
-bindsym $mod+a focus parent
+# bindsym $mod+a focus parent
 
 # focus the child container
 bindsym $mod+d focus child
+
+# set $work1 1:slack
+# set $work2 2:incog
+# set $work3 3:code
+# set $work4 4:browser
 
 # switch to workspace
 bindsym $mod+1 workspace 1
@@ -115,17 +128,19 @@ bindsym $mod+8 workspace 8
 bindsym $mod+9 workspace 9
 bindsym $mod+0 workspace 10
 
+bindsym $mod+a workspace back_and_forth
+
 # move focused container to workspace
-bindsym $mod+Shift+1 move container to workspace 1
-bindsym $mod+Shift+2 move container to workspace 2
-bindsym $mod+Shift+3 move container to workspace 3
-bindsym $mod+Shift+4 move container to workspace 4
-bindsym $mod+Shift+5 move container to workspace 5
-bindsym $mod+Shift+6 move container to workspace 6
-bindsym $mod+Shift+7 move container to workspace 7
-bindsym $mod+Shift+8 move container to workspace 8
-bindsym $mod+Shift+9 move container to workspace 9
-bindsym $mod+Shift+0 move container to workspace 10
+bindsym $mod+Shift+1 move container to workspace 1;  workspace 1
+bindsym $mod+Shift+2 move container to workspace 2;  workspace 2
+bindsym $mod+Shift+3 move container to workspace 3;  workspace 3
+bindsym $mod+Shift+4 move container to workspace 4;  workspace 4
+bindsym $mod+Shift+5 move container to workspace 5;  workspace 5
+bindsym $mod+Shift+6 move container to workspace 6;  workspace 6
+bindsym $mod+Shift+7 move container to workspace 7;  workspace 7
+bindsym $mod+Shift+8 move container to workspace 8;  workspace 8
+bindsym $mod+Shift+9 move container to workspace 9;  workspace 9
+bindsym $mod+Shift+0 move container to workspace 10; workspace 10
 
 # Pulse Audio controls
 bindsym XF86AudioRaiseVolume exec --no-startup-id amixer -q -D pulse sset Master 5%+ #increase sound volume
@@ -169,6 +184,7 @@ mode "resize" {
 
 
 bindsym $mod+r mode "resize"
+
 
 # Mode: Gaps
 # Requires, the use of the i3 fork... i3-gaps
@@ -216,10 +232,10 @@ for_window [class="^.*"] border pixel 1
 # }
 
 # Colours
-# client.focused #93a1a1 #93a1a1 #93a1a1 #b58900
-# client.focused_inactive #657b83 #657b83 #657b83 #657b83
-# client.unfocused #073642 #073642 #073642 #073642
-# client.urgent #b58900 #b58900 #b58900 #b58900
+client.focused #93a1a1 "$bg-color" #93a1a1 #b58900
+client.focused_inactive #657b83 "$bg-color" #657b83 #657b83
+client.unfocused #073642 "$bg-color" #073642 #073642
+client.urgent #b58900 "$urgent-bg-color" #b58900 #b58900
 
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
