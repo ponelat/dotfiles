@@ -14,10 +14,16 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-classpath'
+Plug 'tpope/vim-abolish'
 Plug 'haya14busa/incsearch.vim'
 Plug 'Chiel92/vim-autoformat'
 " Repl
 Plug 'metakirby5/codi.vim'
+
+" SQL
+Plug 'vim-scripts/dbext.vim'
+Plug 'vim-scripts/SQLComplete.vim'
+let g:sql_type_default = 'sqlite'
 
 " Tabularize!
 Plug 'godlygeek/tabular'
@@ -91,7 +97,7 @@ Plug 'gabesoft/vim-ags' " Faster ack, which is faster grep :)
 
 " Ctags
 Plug 'xolox/vim-misc'
-Plug 'xolox/vim-easytags'
+" Plug 'xolox/vim-easytags'
 
 " Docs
 Plug 'KabbAmine/zeavim.vim'
@@ -180,8 +186,8 @@ nnoremap <Leader>t :FzfTags<CR>
 nnoremap <a-x> :FzfCommands<cr>
 imap <c-x><c-l> <plug>(fzf-complete-line)
 " Set the current dir, based on fasd jump list
-nnoremap <Leader>p :Fasd<CR>
-
+nnoremap <Leader>p :Fasd<CR><CR>
+ 
 
 """" Functions Fzf
 function! s:echoline(line)
@@ -253,6 +259,7 @@ nnoremap <silent><leader>ez :tabnew $HOME/.zshrc<cr>
 nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
 nnoremap <silent><leader>ev :tabnew ~/.vimrc<CR>
 nnoremap <silent><leader>ea :tabnew ~/.config/awesome/rc.lua<CR>
+nnoremap <silent><leader>ei :tabnew ~/.config/i3/config<CR>
 " Set the current file's path as the current working dir, in vim
 nnoremap <Leader><c-j> :cd %:p:h<CR> 
 
@@ -296,7 +303,7 @@ nnoremap <leader>/ :nohl \| :redraw!<cr>
 
 """" Map Plug
 " Plug PluginInstall
-nmap <leader>pi :PlugInstall<CR>
+" nmap <leader>pi :PlugInstall<CR>
 
 """" Map Dispatch: in ex mode
 nnoremap <leader>dd :Dispatch<SPACE>
@@ -423,6 +430,7 @@ set laststatus=2
 """" HACKs!!!!
 nnoremap <silent><localleader>t :!tmux send-keys -t test 'npm run test-server-watch' Enter<cr>
 nnoremap <silent><localleader>e :Eval<cr>
+nnoremap <silent><localleader>r :w\|:!%<cr>
 
 function! Lint()
   if &filetype =~ 'javascript'
