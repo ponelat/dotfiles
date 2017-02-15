@@ -27,6 +27,9 @@ set $urgent-bg-color     #E53935
 
 # Startup 
 exec --no-startup-id dex -a -e i3
+exec --no-startup-id hsetroot -solid "$bg-color"
+
+
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
@@ -44,6 +47,10 @@ floating_modifier $mod
 
 # start a terminal
 bindsym $mod+Return exec i3-sensible-terminal
+# Hotkeys
+bindsym $mod+Shift+e exec "i3-sensible-terminal -e emacsclient -nw -c -a ''"
+bindsym $mod+Shift+w exec "i3-sensible-terminal -e vim"
+bindsym $mod+Shift+t exec "chrome"
 
 # kill focused window
 bindsym $mod+q kill
@@ -53,6 +60,7 @@ bindsym $mod+q kill
 bindsym $alt+space exec dmenu_run 
 # bindsym $alt+space exec rofi -show run -lines 7 -eh 2 -width 1368 -padding 50 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 13"
 # There also is the (new) i3-dmenu-desktop which only displays applications
+
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
 # bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
@@ -156,7 +164,7 @@ bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
 bindsym $mod+Shift+r restart
 # exit i3 (logs you out of your X session)
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
+bindsym $mod+Shift+q exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
 
 # resize window (you can also use the mouse for that)
 mode "resize" {
