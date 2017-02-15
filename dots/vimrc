@@ -15,6 +15,7 @@ Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-classpath'
 Plug 'tpope/vim-abolish'
+Plug 'tpope/vim-obsession'
 Plug 'haya14busa/incsearch.vim'
 Plug 'Chiel92/vim-autoformat'
 " Repl
@@ -24,6 +25,9 @@ Plug 'metakirby5/codi.vim'
 Plug 'vim-scripts/dbext.vim'
 Plug 'vim-scripts/SQLComplete.vim'
 let g:sql_type_default = 'sqlite'
+
+" Clojure
+Plug 'vim-scripts/paredit.vim'
 
 " Tabularize!
 Plug 'godlygeek/tabular'
@@ -61,8 +65,12 @@ Plug 'kana/vim-textobj-user'
 Plug 'kana/vim-textobj-function'
 Plug 'kana/vim-textobj-line'
 Plug 'kana/vim-textobj-indent'
-Plug 'glts/vim-textobj-comment'
+" Plug 'glts/vim-textobj-comment'
+Plug 'Chun-Yang/vim-textobj-chunk'
+Plug 'kana/vim-textobj-entire'
 Plug 'bkad/CamelCaseMotion'
+
+Plug 'easymotion/vim-easymotion'
 
 " Replace motion ( super useful )
 Plug 'vim-scripts/ReplaceWithRegister'
@@ -72,6 +80,7 @@ Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 
 Plug 'Valloric/YouCompleteMe', { 'do': './install.py --tern-completer' }
+
 Plug 'neomake/neomake'
 " Plug 'scrooloose/syntastic'
 
@@ -145,6 +154,19 @@ set runtimepath+=~/projects/dotfiles/.vim
 let mapleader = "\<Space>"
 let maplocalleader = ","
 
+"""" Motions, easymotion
+let g:EasyMotion_do_mapping = 0 " Disable default mappings
+
+
+" Turn on case insensitive feature
+let g:EasyMotion_smartcase = 1
+
+" `s{char}{char}{label}`
+map ss <Plug>(easymotion-overwin-f2)
+map sj <Plug>(easymotion-overwin-line)
+map sw <Plug>(easymotion-overwin-w)
+map sn <Plug>(easymotion-vim-n)
+map sN <Plug>(easymotion-vim-N)
 
 """" Map camelCaseMotion 
 map <silent> ,w <Plug>CamelCaseMotion_w
@@ -176,6 +198,11 @@ let g:fzf_command_prefix = 'Fzf'
 let g:fzf_layout = { 'window': 'enew' }
 let g:fzf_layout = { 'window': '-tabnew' }
 
+"""" Session, obsession
+map <leader>sn :Obsess ~/.vim/global-session.vim<cr>
+map <leader>sN :Obsess!<cr>
+""" Mnemonic, session go
+map <leader>sg :source ~/.vim/global-session.vim<cr>
 
 """" Map Fzf
 nnoremap <leader>f :FzfFiles<cr>
@@ -183,11 +210,25 @@ nnoremap <Leader>j :AgFiles<CR>
 nnoremap <Leader>a :FzfAg<CR>
 nnoremap <Leader>b :FzfBuffer<CR>
 nnoremap <Leader>t :FzfTags<CR>
-nnoremap <a-x> :FzfCommands<cr>
+
+execute "set <M-x>=\ex"
+nnoremap <M-x> :FzfCommands<cr>
+nnoremap <leader>h :FzfHelp<cr>
+
 imap <c-x><c-l> <plug>(fzf-complete-line)
 " Set the current dir, based on fasd jump list
 nnoremap <Leader>p :Fasd<CR><CR>
- 
+
+"""" Unicode fun
+inoremap <c-u>t ✓
+inoremap <c-u>c ☕
+inoremap <c-u>x ✗
+inoremap <c-u>s ☹
+
+
+"""" Silly dash, moves me up a line when in normal mode
+nnoremap - <nop>
+
 
 """" Functions Fzf
 function! s:echoline(line)
@@ -260,6 +301,7 @@ nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
 nnoremap <silent><leader>ev :tabnew ~/.vimrc<CR>
 nnoremap <silent><leader>ea :tabnew ~/.config/awesome/rc.lua<CR>
 nnoremap <silent><leader>ei :tabnew ~/.config/i3/config<CR>
+nnoremap <silent><leader>ee :tabnew ~/.env<CR>
 " Set the current file's path as the current working dir, in vim
 nnoremap <Leader><c-j> :cd %:p:h<CR> 
 
@@ -268,6 +310,7 @@ nnoremap <silent><leader>rc :!ctags<cr>
 """" Map CRUD
 "Map leader q to quit with saving
 nnoremap <leader>q :q<CR>
+nnoremap <leader>Q :xa<CR>
 "Map leader s to save file...
 nnoremap <leader>w :w<CR>
 " Close List view
@@ -405,7 +448,8 @@ set nobackup       " No backup files!
 set nowritebackup  " No backup files!
 set noswapfile     " No backup files!
 set hidden " Allow open buffers ( prevents warning about unsaved changes, when opening a new file
-
+"""" Fixes:  User defined completion (U N P) pattern not found
+set shortmess+=c
 """" Default Indents ( prefer to use .editorconfig, if you can )
 set shiftwidth=2   " Rememb
 set softtabstop=2 
@@ -430,7 +474,7 @@ set laststatus=2
 """" HACKs!!!!
 nnoremap <silent><localleader>t :!tmux send-keys -t test 'npm run test-server-watch' Enter<cr>
 nnoremap <silent><localleader>e :Eval<cr>
-nnoremap <silent><localleader>r :w\|:!%<cr>
+nnoremap <silent><localleader>r :w\|:Dispatch !%:p<cr>
 
 function! Lint()
   if &filetype =~ 'javascript'
