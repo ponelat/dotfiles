@@ -7,3 +7,6 @@
 [submodule ".emacs.d/karma.el"]
 	path = .emacs.d/karma.el
 	url = https://github.com/tonini/karma.el
+[submodule "dots/config/i3/i3blocks"]
+	path = dots/config/i3/i3blocks
+	url = git://github.com/Anachron/i3blocks.git

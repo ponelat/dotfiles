@@ -1,0 +1,9 @@
+#!/bin/bash
+
+pid=`pgrep -x openvpn`
+
+if [ -n "$pid" ] ; then
+  echo on
+else
+  echo off
+fi
