@@ -48,11 +48,16 @@ Plug 'jaxbot/github-issues.vim'
 Plug 'nanotech/jellybeans.vim'
 Plug 'guns/xterm-color-table.vim'
 
+" Color highlighter
+Plug 'ap/vim-css-color'
+
 " TMUX <c-{hjkl}> movements
 Plug 'christoomey/vim-tmux-navigator'
 
 " Tag matching ( with % )
 Plug 'tmhedberg/matchit'
+" Closing tags
+" Plug 'alvan/vim-closetag'
 
 " Toggle quickfix and location lists
 Plug 'Valloric/ListToggle'
@@ -69,6 +74,7 @@ Plug 'kana/vim-textobj-indent'
 Plug 'Chun-Yang/vim-textobj-chunk'
 Plug 'kana/vim-textobj-entire'
 Plug 'bkad/CamelCaseMotion'
+Plug 'gaving/vim-textobj-argument'
 
 Plug 'easymotion/vim-easymotion'
 
@@ -205,7 +211,7 @@ map <leader>sN :Obsess!<cr>
 map <leader>sg :source ~/.vim/global-session.vim<cr>
 
 """" Map Fzf
-nnoremap <leader>f :FzfFiles<cr>
+nnoremap <Leader>f :GitIndexFiles<CR>
 nnoremap <Leader>j :AgFiles<CR>
 nnoremap <Leader>a :FzfAg<CR>
 nnoremap <Leader>b :FzfBuffer<CR>
@@ -226,9 +232,14 @@ inoremap <c-u>x ✗
 inoremap <c-u>s ☹
 
 
+"""" Tags, xml, jsx
+let g:closetag_filenames = '*.html,*.xhtml,*.phtml, *.jsx'
+
 """" Silly dash, moves me up a line when in normal mode
 nnoremap - <nop>
 
+"""" Emmet
+imap   <C-e>   <plug>(emmet-expand-abbr)
 
 """" Functions Fzf
 function! s:echoline(line)
@@ -248,6 +259,11 @@ command! Fasd call fzf#run(
 command! AgFiles call fzf#run(fzf#wrap({
       \ 'source':  "ag -g '' -l --hidden ",
       \ 'options': '-m --prompt "Ag Files> "',
+      \}))
+
+command! GitIndexFiles call fzf#run(fzf#wrap({
+      \ 'source':  "git status --short | cut -f3 -d' '",
+      \ 'options': '-m --prompt "Git Index> "',
       \}))
 
 """" Neomake
@@ -306,6 +322,9 @@ nnoremap <silent><leader>ee :tabnew ~/.env<CR>
 nnoremap <Leader><c-j> :cd %:p:h<CR> 
 
 nnoremap <silent><leader>rc :!ctags<cr>
+
+nnoremap <leader>" :%s/'/"/g<cr>
+
 
 """" Map CRUD
 "Map leader q to quit with saving
@@ -474,7 +493,9 @@ set laststatus=2
 """" HACKs!!!!
 nnoremap <silent><localleader>t :!tmux send-keys -t test 'npm run test-server-watch' Enter<cr>
 nnoremap <silent><localleader>e :Eval<cr>
-nnoremap <silent><localleader>r :w\|:Dispatch !%:p<cr>
+nnoremap <silent><localleader>r :w\|:Dispatch %:p<cr>
+" A way to open the current line + basePath in the browser..
+"" map ,o :execute "!xdg-open 'http://localhost:3200" . getline('.') . "'"<cr>
 
 function! Lint()
   if &filetype =~ 'javascript'
