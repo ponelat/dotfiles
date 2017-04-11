@@ -1,0 +1,4 @@
+#!/bin/bash
+
+env | fzf | cut -f2 -d= | tee >(xclip -selection clipboard)
+

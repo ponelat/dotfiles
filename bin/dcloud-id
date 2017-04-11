@@ -1,0 +1,3 @@
+#!/bin/bash
+
+dcloud container ps --no-trunc | fzf | awk '{ print $2 }'
