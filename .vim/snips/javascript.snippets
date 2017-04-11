@@ -2,6 +2,14 @@ snippet i "import a from 'a'" b
 import $1 from '$2'
 endsnippet
 
+snippet gip "getInitialProps ( next.js )"
+static async getInitialProps ({${1:req, err, res, pathname, query}}) {
+	$0
+	return {
+	}
+}
+endsnippet
+
 snippet ir "import React" b
 import React$0 from 'react'
 endsnippet
@@ -25,6 +33,10 @@ Function.prototype
 endsnippet
 
 snippet e "export const" b
+export const $0
+endsnippet
+
+snippet ec "export const" b
 export const $0
 endsnippet
 
@@ -96,14 +108,6 @@ endsnippet
 
 snippet gis "getInitialState(){}" b
 getInitialState() {
-		return {
-				${0:${VISUAL}}
-		}
-},
-endsnippet
-
-snippet gip "getInitialProps(){}" b
-getInitalProps() {
 		return {
 				${0:${VISUAL}}
 		}
@@ -224,6 +228,12 @@ export function $1($2) {
 }
 endsnippet
 
+snippet ff "fn = () => {" b
+$1 = ($2) => {
+	${0:${VISUAL}}
+}
+endsnippet
+
 snippet fer "fn(err,res)" w
 function(err,res) {
 	${0:${VISUAL}}
@@ -264,37 +274,37 @@ expect(${1:${0:${VISUAL}}}).toEqual(false)
 endsnippet
 
 snippet describe "descibe('',f())" b
-describe('$1', function(){
+describe('$1', function () {
 	${0:${VISUAL}}
 })
 endsnippet
 
 snippet describe" "descibe('',f())" b
-describe("$1", function(){
+describe("$1", function () {
 	${0:${VISUAL}}
 })
 endsnippet
 
 snippet it "it('', f())" b
-it('$1', function(){
+it('$1', function () {
 		${0:${VISUAL}}
 })
 endsnippet
 
 snippet it" "it('', f())" b
-it("$1", function(){
+it("$1", function() {
 		${0:${VISUAL}}
 })
 endsnippet
 
 snippet its "it.skip('', f())" b
-it.skip('$1', function(){
+it.skip('$1', function () {
 		${0:${VISUAL}}
 })
 endsnippet
 
 snippet before "before(fn)" b
-before(function(){
+before(function() {
 		${0:${VISUAL}}
 })
 endsnippet
@@ -435,4 +445,8 @@ endsnippet
 
 snippet react "import react" b
 import React, { PropTypes } from "react"
+endsnippet
+
+snippet edm "export default morearty"
+export default MoreartyWrapper($1, [ $2 ])
 endsnippet

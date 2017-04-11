@@ -86,11 +86,6 @@ setopt nolistbeep     # No bell on ambiguous completion!!
 . ~/projects/dotfiles/funcs/aliases
 . ~/projects/dotfiles/funcs/funcs
 
-### Functions 
-function zenv() {
-  env | fzf | cut -f2 -d= | tee >(xclip -selection clipboard)
-}
-
 ## Ruby
 export RBENV_ROOT="$HOME/.linuxbrew/var/rbenv"
 rbenv >/dev/null 2>&1 && eval "`rbenv init -`"
@@ -107,4 +102,5 @@ BASE16_SHELL=$HOME/.config/base16-shell/
 ### FZF
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-export PATH="$HOME/.yarn/bin:$PATH"
+PATH="$HOME/.yarn/bin:$PATH"
+export PATH="$HOME/apps/julia/bin:$PATH"

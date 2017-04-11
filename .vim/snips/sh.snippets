@@ -6,6 +6,14 @@ case "${1:\$1}" in
 esac
 endsnippet
 
+snippet thisdir "The canonical path to the current bash script" b
+thisDir=\`cd $(dirname \$0) ; pwd -P\`
+endsnippet
+
+snippet slug "slugs out the slashes in path" b
+slug=\${${0:var}//\//_}
+endsnippet
+
 snippet case "a single case for a bash switch" b
 ("$1")
 	$0
@@ -39,4 +47,12 @@ endsnippet
 
 snippet null ">/dev/null 2>&1" w
 >/dev/null 2>&1 $0
+endsnippet
+
+
+snippet while "Description" b
+# IFS='' keeps trailing and leading whitespace
+while IFS='' read -r line || [[ -n "$$1" ]]; do
+    echo "Text read from file: $line"
+done < ${2:filename}
 endsnippet

@@ -38,7 +38,7 @@
   l = "!. ~/.githelpers && pretty_git_log"
   cleanup = "!git branch --merged | grep  -v '\\*\\|master\\|develop' | xargs -n 1 git branch -d"
   pullclean = "!git pull && git cleanup ; git remote prune origin"
-  wipe = "!git checkout . ; git clean -f"
+  wipe = "!git checkout . ; git clean -df"
   pushu ="!git-push-u-origin"
 [push]
   default = simple
