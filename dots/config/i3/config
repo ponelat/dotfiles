@@ -29,7 +29,6 @@ set $urgent-bg-color     #E53935
 exec --no-startup-id dex -a -e i3
 exec --no-startup-id hsetroot -solid "$bg-color"
 
-
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
 #font pango:DejaVu Sans Mono 8
@@ -47,9 +46,10 @@ floating_modifier $mod
 # start a terminal
 bindsym $mod+Return exec i3-sensible-terminal
 # Hotkeys
-bindsym $mod+Shift+e exec "i3-sensible-terminal -e emacsclient -nw -c -a ''"
+bindsym $mod+Shift+e exec "emacsclient -c -a ''"
 bindsym $mod+Shift+w exec "i3-sensible-terminal -e vim"
 bindsym $mod+Shift+t exec "chrome"
+bindsym $mod+Shift+y exec "~/.config/i3/layout.sh"
 
 # kill focused window
 bindsym $mod+q kill

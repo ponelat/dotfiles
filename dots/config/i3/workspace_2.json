@@ -1,0 +1,17 @@
+// vim:ts=4:sw=4:et
+{
+    "border": "pixel",
+    "current_border_width": 1,
+    "floating": "auto_off",
+    "name": "Google Chrome",
+    "percent": null,
+    "swallows": [
+       {
+       "class": "^Google\\-chrome\\-unstable$",
+       "instance": "^google\\-chrome\\-unstable\\ \\(\\/home\\/josh\\/\\.config\\/google\\-chrome\\-unstable\\)$",
+       "window_role": "^browser$"
+       }
+    ],
+    "type": "con"
+}
+

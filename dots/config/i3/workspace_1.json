@@ -1,0 +1,16 @@
+// vim:ts=4:sw=4:et
+{
+    "border": "pixel",
+    "current_border_width": 1,
+    "floating": "auto_off",
+    "name": "Emacs",
+    "percent": null,
+    "swallows": [
+       {
+       "class": "^Emacs$",
+       "instance": "^emacs$"
+       }
+    ],
+    "type": "con"
+}
+
