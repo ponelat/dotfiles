@@ -9,9 +9,14 @@
 (require 'package)
 (package-initialize)
 
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
 ;;;; init.el helpers
 (defmacro comment (&rest body)
-  "Comment out sexp"
+  "Comment out sexp."
   nil)
 
 (use-package macrostep
@@ -19,12 +24,14 @@
 
 ;;;; Config management
 (defun imenu-elisp-sections ()
+  "Create a list of sections from config file."
   (setq imenu-prev-index-position-function nil)
   (add-to-list 'imenu-generic-expression '("Sections" "^;;;; \\(.+\\)$" 1) t))
 
 (add-hook 'emacs-lisp-mode-hook 'imenu-elisp-sections)
 
 (defun init-imenu (p)
+  "Jump to section in init.el file.  Or straight to P."
   (interactive "P")
   (find-file-existing "~/.emacs.d/init.el")
   (widen)
@@ -32,32 +39,34 @@
   (if p (init-narrow-to-section)))
 
 (defun init-narrow-to-section ()
+  "Narrow to section within config file."
   (interactive)
   (save-excursion
     (beginning-of-line)
     (unless (looking-at "^;;;;")
       (re-search-backward "^;;;;" nil t))
     (push-mark)
-    (next-line)
+    (forward-line)
     (re-search-forward "^;;;;" nil t)
-    (previous-line)
+    (forward-line -1)
     (narrow-to-region (region-beginning) (region-end))))
 
 (global-set-key (kbd "M-i") 'init-imenu)
-(global-set-key (kbd "M-S-I") 'init-narrow-to-section)
+(global-set-key (kbd "M-I") 'init-narrow-to-section)
 
 ;;;; Term, bash, zsh
 (defun ponelat/term ()
-  "Create or jump to an ansi-term, running zsh"
+  "Create or jump to an 'ansi-term', running zsh."
   (interactive)
   (if (get-buffer "*terminal*")
       (switch-to-buffer "*terminal*")
       (ansi-term "/bin/zsh" "terminal")))
 
+(global-set-key (kbd "M-C-z") #'projectile-run-async-shell-command-in-root)
 (global-set-key (kbd "M-z") #'ponelat/term)
 
 ;;;; Dirs
-(setq today-dir "~/Dropbox/org")
+(setq ponelat/today-dir "~/Dropbox/org")
 
 ;;;; Startup
 (setq inhibit-splash-screen t
@@ -72,6 +81,20 @@
 (windmove-default-keybindings)
 (auto-image-file-mode 1)
 (setq vc-follow-symlinks t)
+(setq browse-url-browser-function 'browse-url-chromium)
+(setq truncate-lines t)
+
+(use-package diminish
+  :ensure t)
+
+(use-package ace-window
+  :disabled t
+  :bind (("M-p" . ace-window))
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  (setq aw-dispatch-always t)
+  :ensure t)
+
 
 (comment use-package dot-mode
   :ensure t
@@ -80,12 +103,33 @@
 
 (use-package editorconfig
   :ensure t
+  :diminish editorconfig-mode 
   :config
   (editorconfig-mode 1))
 
 ;;;; Markdown
+
 (use-package markdown-mode
   :ensure t)
+
+;;;; Evil, vim
+
+(use-package evil-leader
+  :ensure t
+  :config
+  (progn 
+    (global-evil-leader-mode)
+    (evil-leader/set-leader "<SPC>")
+    (evil-leader/set-key
+      "q" #'kill-buffer-and-window
+      "Q" #'save-buffers-kill-terminal
+      "p" #'helm-projectile-switch-project
+      "j" #'helm-browse-project
+      "a" #'helm-ag-project-root
+      "b" #'helm-buffers-list
+      "w" #'save-buffer
+      )))
+
 
 (use-package evil
    :ensure t
@@ -108,14 +152,25 @@
 ;;;; Lisp, paredit
 (show-paren-mode 1)
 
-(comment use-package paredit
-  :ensure t
-  :init
-  (add-hook 'cider-repl-mode-hook 'enable-paredit-mode)
-  (add-hook 'ielm-mode-hook 'enable-paredit-mode)
-  (add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
-  (add-hook 'json-mode-hook 'enable-paredit-mode)
-)
+;; (defun ponelat/non-lisp-paredit()
+;;   "Turn on paredit mode for non-lisps."
+;;   (interactive)
+;;   (set (make-local-variable 'paredit-space-for-delimiter-predicates)
+;;        '((lambda (endp delimiter) nil)))
+;;   (paredit-mode 1))
+
+;; (use-package paredit
+;;   :ensure t
+;;   :init
+;;   (add-hook 'rjsx-mode-hook 'ponelat/non-lisp-paredit))
+
+;; (use-package evil-paredit
+;;   :init
+;;   (add-hook 'cider-repl-mode-hook 'evil-paredit-mode)
+;;   (add-hook 'ielm-mode-hook 'evil-paredit-mode)
+;;   (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode)
+;;   (add-hook 'json-mode-hook 'enable-paredit-mode)
+;;   :ensure t)
 
 (comment use-package lispy
   :ensure t
@@ -124,7 +179,7 @@
   (add-hook 'emacs-lisp-mode-hook 'lispy-mode)
   (add-hook 'lisp-mode-hook 'lispy-mode)
   (define-key lispy-mode-map (kbd "M-n") nil))
-  
+
 ;;(setq show-paren-style 'expression)
 
 ;;;; Ag
@@ -177,25 +232,23 @@
 
 ;;;; Themes
 
-;; (load-theme 'wombat t)
+(use-package sublime-themes
+  :ensure t)
 
-;; (use-package ample-theme
-;;   :init (progn (load-theme 'ample t t)
-;; 	       (load-theme 'ample-flat t t)
-;; 	       (load-theme 'ample-light t t)
-;; 	       (enable-theme 'ample))
-;;   :defer t
-;;   :ensure t)
+(use-package badwolf-theme
+  :ensure t)
 
-(if window-system
-  (use-package sublime-themes
-      :ensure t
-      :config
-      (load-theme 'graham t))
-  (use-package badwolf-theme
-    :ensure t
-    :config (load-theme 'badwolf t)))
+(if (window-system)
+    (load-theme 'graham t)
+    (load-theme 'badwolf t))
 
+(set-face-attribute 'default  nil :height 100)
+
+(set-face-foreground 'mode-line "white")
+(set-face-background 'mode-line "purple")
+
+(set-face-foreground 'mode-line-inactive "#474747")
+(set-face-background 'mode-line-inactive "#161A1F")
 
 ;;;; Autosave
 ;; store all backup and autosave files in the tmp dir
@@ -207,19 +260,30 @@
 ;;;; Javascript
 (use-package js2-mode
   :ensure t
+  :diminish js2-mode
   :config
   (progn
-    (add-to-list 'auto-mode-alist '("\\.jsx?$" . js2-jsx-mode))
     (setq js2-mode-show-parse-errors nil)
-    (setq js2-mode-show-strict-warnings nil)
-    (setq js2-mode-in)))
+    (setq js2-mode-show-strict-warnings nil)))
 
 (use-package rjsx-mode
+  :config
+  (progn 
+    (add-to-list 'auto-mode-alist '("\\.jsx?$" . rjsx-mode)))
+  :ensure t)
+
+(use-package jade
+  :ensure t)
+
+;;;; Less/Css
+
+(use-package less-css-mode
   :ensure t)
 
 ;;;; Flycheck, syntax, lint
 (use-package flycheck
   :ensure t
+  :diminish flycheck-mode
   :config
   (progn
     (global-flycheck-mode)
@@ -279,26 +343,47 @@
  ;  (setq clojure-defun-style-default-indent t)
   )
 
-;;;; Autocomplete, company
+;;;; Autocomplete, company, snippets
 (use-package company
   :bind (("TAB"  . company-indent-or-complete-common))
   :ensure t
+  :diminish company-mode
   :config
   (setq company-idle-delay 0.1))
+
+(use-package yasnippet
+  :init (setq yas-snippet-dirs
+	      '("~/.emacs.d/snippets"))
+  
+  :config (yas-global-mode 1)
+  :ensure t)
+
+(use-package react-snippets
+  :ensure t)
+  
 
 ;;;; Projects
 
 (use-package projectile
   :ensure t
+  :diminish projectile-mode
   :config
   (projectile-mode))
 
 
 ;;;; Fuzzy, ido, helm
 (use-package helm
-  :ensure t
+  :defines helm-mode-fuzzy-match helm-completion-in-region-fuzzy-match helm-M-x-fuzzy-match
+  :diminish helm-mode
   :config
-  (helm-mode))
+  (progn
+    (setq helm-mode-fuzzy-match t)
+    (setq helm-completion-in-region-fuzzy-match t)
+    (helm-mode))
+  :ensure t)
+
+(use-package helm-ls-git
+  :ensure t)
 
 (use-package helm-projectile
   :bind (("M-x" . helm-M-x))
@@ -310,30 +395,44 @@
 (use-package helm-ag
   :ensure t)
   
-(use-package evil-leader
+(use-package flx
+  :ensure t)
+
+(use-package helm-flx
   :ensure t
   :config
-  (progn 
-    (global-evil-leader-mode)
-    (evil-leader/set-leader "<SPC>")
-    (evil-leader/set-key
-      "q" 'kill-buffer-and-window
-      "Q" 'save-buffers-kill-terminal
-      "p" 'helm-projectile-switch-project
-      "j" 'helm-projectile-find-file
-      "a" 'helm-ag-project-root
-      "w" 'save-buffer
-      )))
-
-;; (use-package helm-flx
-;;   :ensure t
-;;   :config
-;;   (helm-flx-mode))
+  (helm-flx-mode +1))
 
 (use-package helm-fuzzier
   :ensure t
   :config
-  (helm-fuzzier-mode 1))
+  (progn
+    (setq helm-flx-for-helm-find-files t)
+    (setq helm-flx-for-helm-locate t)
+    (helm-fuzzier-mode 1)))
+
+(defun helm-buffer-switch-to-new-window (_candidate)
+  "Display buffers in new windows."
+  ;; Select the bottom right window
+  (require 'winner)
+  (select-window (car (last (winner-sorted-window-list))))
+  ;; Display buffers in new windows
+  (dolist (buf (helm-marked-candidates))
+    (select-window (split-window-right))
+    (switch-to-buffer buf))
+  ;; Adjust size of windows
+  (balance-windows))
+
+(add-to-list 'helm-type-buffer-actions
+             '("Display buffer(s) in new window(s) `C-v'" .
+               helm-buffer-switch-new-window) 'append)
+
+(defun helm-buffer-switch-new-window ()
+  (interactive)
+  (with-helm-alive-p
+    (helm-quit-and-execute-action 'helm-buffer-switch-to-new-window)))
+
+(define-key helm-buffer-map (kbd "M-v") #'helm-buffer-switch-new-window)
 
 ;; (use-package ido
 ;;   :ensure t
@@ -349,10 +448,32 @@
   :bind (("C-c g" . magit-status))
   :ensure t)
 
+;;;; GitHub
+(use-package magit-gh-pulls
+  :config (add-hook 'magit-mode-hook 'turn-on-magit-gh-pulls)
+  :ensure t)
+
+(use-package github-browse-file
+  :ensure t)
+
 ;;;; Ledger
 (use-package ledger-mode
   :ensure t)
 
+(use-package git-gutter+
+  :ensure t
+  :init (global-git-gutter+-mode)
+  :config (progn
+            (define-key git-gutter+-mode-map (kbd "C-x n") 'git-gutter+-next-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x p") 'git-gutter+-previous-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x v =") 'git-gutter+-show-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x r") 'git-gutter+-revert-hunks)
+            (define-key git-gutter+-mode-map (kbd "C-x t") 'git-gutter+-stage-hunks)
+            (define-key git-gutter+-mode-map (kbd "C-x c") 'git-gutter+-commit)
+            (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
+            (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
+            (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer))
+  :diminish (git-gutter+-mode . "gut"))
 
 ;;;; Org-mode
 (use-package org
@@ -367,19 +488,31 @@
 	   "* TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
 	  ("d" "Today" entry (file org-default-notes-file)
 	   "* TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
+	  ("i" "Ireland" entry (file org-default-notes-file)
+	   "*%?\n  ")
 	  ("n" "Notes" entry (file+headline org-default-notes-file "Notes")
 	   "** %? \nEntered on %U\n %i\n %a"))))
 
+(use-package evil-org
+  :ensure t)
 
+(use-package redtick
+  :disabled
+  :ensure t)
 
-(setq org-agenda-files (list today-dir))
+(use-package org-pomodoro
+  :ensure t
+  :commands (org-pomodoro)
+  :config
+    (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))))
+
+(setq org-agenda-files (list ponelat/today-dir))
 
 (use-package org-projectile
-  :bind (("M-p" . org-projectile:project-todo-completing-read))
   :config
   (progn
     (setq org-projectile:projects-file 
-          (concat today-dir "/projects.org"))
+          (concat ponelat/today-dir "/projects.org"))
     (setq org-agenda-files (append org-agenda-files (org-projectile:todo-files)))
     (add-to-list 'org-capture-templates (org-projectile:project-todo-entry "p")))
   :ensure t)
@@ -453,9 +586,12 @@ Version 2017-02-10"
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("579e9950513524d8739e08eae289419cfcb64ed9b7cc910dd2e66151c77975c4" "e0d42a58c84161a0744ceab595370cbe290949968ab62273aed6212df0ea94b4" default)))
+    ("987b709680284a5858d5fe7e4e428463a20dfabe0a6f2a6146b3b8c7c529f08b" "58c6711a3b568437bab07a30385d34aacf64156cc5137ea20e799984f4227265" "579e9950513524d8739e08eae289419cfcb64ed9b7cc910dd2e66151c77975c4" "e0d42a58c84161a0744ceab595370cbe290949968ab62273aed6212df0ea94b4" default)))
  '(org-agenda-files (quote ("~/Dropbox/org/notes.org")))
- '(org-export-backends (quote (ascii html icalendar latex md deck))))
+ '(org-export-backends (quote (ascii html icalendar latex md deck)))
+ '(package-selected-packages
+   (quote
+    (redtick org-pomodoro less-css-mode less less-mode evil-paredit react-snippets helm-flx helm-ls-git evil-org key-chord git-gutter+ github-browse-file emacs-helm-open-github emacs-open-github-from-here magit-gh-pulls yasnippet use-package sublime-themes rjsx-mode org-projectile markdown-mode magit macrostep ledger-mode jq-mode jade helm-projectile helm-fuzzier helm-ag flycheck-pos-tip evil-replace-with-register evil-leader evil-commentary editorconfig cider badwolf-theme ag add-node-modules-path))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
