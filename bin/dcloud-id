@@ -1,3 +1,8 @@
 #!/bin/bash
 
-dcloud container ps --no-trunc | fzf | awk '{ print $2 }'
+if [[ ! -f ~/.dockercloud/swaggerhub-dev.txt ]] ; then
+  mkdir ~/.dockercloud || echo ''
+  dcloud container ps --no-trunc > ~/.dockercloud/swaggerhub-dev.txt
+fi
+
+cat ~/.dockercloud/swaggerhub-dev.txt | fzf | awk '{ print $2 }'
