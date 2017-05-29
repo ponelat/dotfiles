@@ -1,4 +1,3 @@
-
 (setq package-archives
       (quote
        (("gnu"          . "http://elpa.gnu.org/packages/")
@@ -16,9 +15,10 @@
 
 ;;;; init.el helpers
 (defmacro comment (&rest body)
-  "Comment out sexp."
+  "Comment out sexp (BODY)."
   nil)
 
+;;;; Macrostep
 (use-package macrostep
   :ensure t)
 

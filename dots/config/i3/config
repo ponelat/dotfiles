@@ -25,7 +25,7 @@ set $text-color          #f3f4f5
 set $inactive-text-color #676E7D
 set $urgent-bg-color     #E53935
 
-# Startup 
+# Startup
 exec --no-startup-id dex -a -e i3
 exec --no-startup-id hsetroot -solid "$bg-color"
 
@@ -56,7 +56,7 @@ bindsym $mod+q kill
 
 # start dmenu (a program launcher)
 # bindsym $mod+d exec dmenu_run
-bindsym $alt+space exec dmenu_run 
+bindsym $alt+space exec dmenu_run
 # bindsym $alt+space exec rofi -show run -lines 7 -eh 2 -width 1368 -padding 50 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 13"
 # There also is the (new) i3-dmenu-desktop which only displays applications
 
@@ -263,4 +263,3 @@ bar {
 
 exec_always --no-startup-id "sleep 1; xmod"
 exec --no-startup-id compton -f
-

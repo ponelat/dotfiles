@@ -1,2 +1,2 @@
 #!/bin/sh
-scrot -s -e 'xclip -selection clipboard -t image/png $f'
+scrot -s -s 'screenshot_%Y%m%d_%H%M%S.png' -e 'xclip -selection clipboard -t image/png $f && mv $f ~/printscreens/'
