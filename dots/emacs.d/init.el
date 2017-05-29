@@ -30,6 +30,14 @@
 
 (add-hook 'emacs-lisp-mode-hook 'imenu-elisp-sections)
 
+(defun ponelat/emacs-lisp-imenu-init (p)
+  "Jump to section in init.el file.  Or straight to P."
+  (interactive "P")
+  (find-file-existing "~/.emacs.d/init.el")
+  (widen)
+  (helm-imenu)
+  (if p (init-narrow-to-section)))
+
 (defun init-imenu (p)
   "Jump to section in init.el file.  Or straight to P."
   (interactive "P")
@@ -51,8 +59,10 @@
     (forward-line -1)
     (narrow-to-region (region-beginning) (region-end))))
 
-(global-set-key (kbd "M-i") 'init-imenu)
-(global-set-key (kbd "M-I") 'init-narrow-to-section)
+(global-set-key (kbd "C-c l e") 'ponelat/emacs-lisp-imenu-init)
+(global-set-key (kbd "C-c l n") 'ponelat/org-mode-imenu-init)
+(define-key emacs-lisp-mode-map (kbd "C-c n") 'init-narrow-to-section)
+(define-key emacs-lisp-mode-map (kbd "C-c w") 'widen)
 
 ;;;; Term, bash, zsh
 (defun ponelat/term ()
@@ -76,13 +86,20 @@
 (menu-bar-mode -1)
 (toggle-scroll-bar -1)
 (tool-bar-mode -1)
+(setq make-backup-files nil)
+(setq-default truncate-lines t)
 
 ;;;; General, editor, config
+(defun browse-url-chrome-unstable (url &optional new-window)
+  "Open URL in Chrome unstable, possibly in NEW-WINDOW."
+  (shell-command (concat "google-chrome-unstable" " " "\"" url "\"")))
+
 (windmove-default-keybindings)
 (auto-image-file-mode 1)
 (setq vc-follow-symlinks t)
-(setq browse-url-browser-function 'browse-url-chromium)
-(setq truncate-lines t)
+(setq browse-url-browser-function #'browse-url-chrome-unstable)
+(electric-pair-mode t)
+;; (set-face-attribute 'default t :font "isoveska-13" )
 
 (use-package diminish
   :ensure t)
@@ -103,7 +120,7 @@
 
 (use-package editorconfig
   :ensure t
-  :diminish editorconfig-mode 
+  :diminish editorconfig-mode
   :config
   (editorconfig-mode 1))
 
@@ -117,23 +134,27 @@
 (use-package evil-leader
   :ensure t
   :config
-  (progn 
+  (progn
     (global-evil-leader-mode)
     (evil-leader/set-leader "<SPC>")
+      (setq evil-normal-state-modes (append evil-motion-state-modes evil-normal-state-modes))
+  (setq evil-motion-state-modes nil)
     (evil-leader/set-key
       "q" #'kill-buffer-and-window
       "Q" #'save-buffers-kill-terminal
       "p" #'helm-projectile-switch-project
       "j" #'helm-browse-project
-      "a" #'helm-ag-project-root
+      "a" #'helm-do-ag-project-root
       "b" #'helm-buffers-list
       "w" #'save-buffer
       )))
 
 
 (use-package evil
-   :ensure t
-   :config (evil-mode))
+  :ensure t
+  :config
+    (evil-mode)
+    (define-key evil-normal-state-map "\C-d" nil))
 
 (use-package evil-replace-with-register
   :ensure t
@@ -145,6 +166,19 @@
 (use-package evil-commentary
   :ensure t
   :config (evil-commentary-mode))
+
+(use-package evil-surround
+  :config (global-evil-surround-mode t)
+  :ensure t)
+
+;;;; Hard core escape, super powerful keywords
+(defun ed/escape-normal-mode ()
+  "Stop any recursive edit and go into normal mode."
+  (interactive)
+  (keyboard-escape-quit)
+  (evil-normal-state))
+(global-set-key (kbd "C-g") #'ed/escape-normal-mode)
+(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
 
 ;;;; Global Bindings, keys
 (bind-key "C-x C-k" 'kill-this-buffer)
@@ -171,6 +205,17 @@
 ;;   (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode)
 ;;   (add-hook 'json-mode-hook 'enable-paredit-mode)
 ;;   :ensure t)
+
+;;;; html,xml, markup
+(use-package emmet-mode
+  :diminish emmet-mode
+  :config
+  (progn
+    (setq emmet-expand-jsx-className? t)
+    (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'rjsx-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'css-mode-hook  'emmet-mode)) ;; enable Emmet's css abbreviation.
+  :ensure t)
 
 (comment use-package lispy
   :ensure t
@@ -232,15 +277,28 @@
 
 ;;;; Themes
 
+;; Disable previous theme, before enabling new one. Not full proof.
+;; Themes have a lot of power, and some of it cannot be reversed here
+(defadvice load-theme (before theme-dont-propagate activate)
+ (mapcar #'disable-theme custom-enabled-themes))
+
+;; (use-package badwolf-theme
+;;   :ensure t)
+
+;; (use-package zenburn-theme
+;;   :ensure t)
+
 (use-package sublime-themes
   :ensure t)
 
-(use-package badwolf-theme
-  :ensure t)
+;; This will probably break terminal theme
+;; Great for outdoors
+(load-theme 'spolsky t)
 
-(if (window-system)
-    (load-theme 'graham t)
-    (load-theme 'badwolf t))
+;; (if (window-system)
+;;     (load-theme 'leuven t)
+;;     ;; (load-theme 'graham t)
+;;     (load-theme 'badwolf t))
 
 (set-face-attribute 'default  nil :height 100)
 
@@ -257,20 +315,58 @@
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
-;;;; Javascript
+;;;; Cuccumber, test, geherkin
+(use-package feature-mode
+  :ensure t)
+
+;;;; Yaml, swagger
+(use-package yaml-mode
+  :ensure t)
+
+;;;; Typescript
+(defun ponelat/setup-tide-mode ()
+  "Setup the typescript IDE mode ( tide )."
+  (interactive)
+  (tide-setup)
+  (eldoc-mode +1)
+  (tide-hl-identifier-mode +1))
+
+(use-package tide
+  :config
+    (add-hook 'typescript-mode-hook #'ponelat/setup-tide-mode)
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . rjsx-mode))
+  (add-hook 'rjsx-mode-hook
+    (lambda ()
+      (when (string-equal "tsx" (file-name-extension buffer-file-name))
+        (ponelat/setup-tide-mode))))
+  :ensure t)
+
+;; aligns annotation to the right hand side
+(setq company-tooltip-align-annotations t)
+;; (setq flycheck-check-syntax-automatically '(save mode-enabled))
+
+;; formats the buffer before saving
+;; (add-hook 'before-save-hook 'tide-format-before-save)
+
+
+;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
   :ensure t
   :diminish js2-mode
   :config
   (progn
-    (setq js2-mode-show-parse-errors nil)
+    (setq js2-mode-show-parse-errors t)
     (setq js2-mode-show-strict-warnings nil)))
 
 (use-package rjsx-mode
   :config
-  (progn 
-    (add-to-list 'auto-mode-alist '("\\.jsx?$" . rjsx-mode)))
+  (add-to-list 'auto-mode-alist '("\\.jsx?$" . rjsx-mode))
   :ensure t)
+
+; Disable the rjsx magic with tags
+(with-eval-after-load 'rjsx
+  (define-key rjsx-mode-map "<" nil)
+  (define-key rjsx-mode-map (kbd "C-d") nil))
 
 (use-package jade
   :ensure t)
@@ -285,18 +381,18 @@
   :ensure t
   :diminish flycheck-mode
   :config
-  (progn
+    (setq flycheck-highlighting-mode 'lines)
     (global-flycheck-mode)
     (set-face-attribute 'flycheck-warning nil
 			:foreground "black"
 			:background "yellow")
     (set-face-attribute 'flycheck-error nil
 			:foreground "black"
-			:background "pink")))
+			:background "pink"))
 
 (use-package pos-tip
   :ensure t)
-  
+
 (use-package flycheck-pos-tip
   :ensure t
   :config
@@ -319,9 +415,9 @@
   :init
   (progn
     (eval-after-load 'js2-mode
-      '(add-hook 'js2-mode-hook #'add-node-modules-path))) 
+      '(add-hook 'js2-mode-hook #'add-node-modules-path)))
     (eval-after-load 'js2-jsx-mode
-      '(add-hook 'js2-mode-hook #'add-node-modules-path))) 
+      '(add-hook 'js2-mode-hook #'add-node-modules-path)))
 
 ;;;; Jq
 (use-package jq-mode
@@ -331,7 +427,7 @@
 (use-package cider
   :ensure t
   :config
-  (progn 
+  (progn
     (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
     (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
     (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion))
@@ -354,13 +450,13 @@
 (use-package yasnippet
   :init (setq yas-snippet-dirs
 	      '("~/.emacs.d/snippets"))
-  
+
   :config (yas-global-mode 1)
   :ensure t)
 
 (use-package react-snippets
   :ensure t)
-  
+
 
 ;;;; Projects
 
@@ -394,7 +490,7 @@
 
 (use-package helm-ag
   :ensure t)
-  
+
 (use-package flx
   :ensure t)
 
@@ -478,20 +574,27 @@
 ;;;; Org-mode
 (use-package org
   :ensure t
-  :bind (("M-n" . org-capture)
-	 ("C-c C-a" . org-agenda))
+  :bind
+  (("M-n" . org-capture)
+	 ("C-c a" . org-agenda)
+   ("C-c n" . ponelat/open-notes))
   :config
   (setq org-directory "~/Dropbox/org")
   (setq org-default-notes-file "notes.org")
   (setq org-capture-templates
 	'(("t" "Todo" entry (file org-default-notes-file)
 	   "* TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
-	  ("d" "Today" entry (file org-default-notes-file)
-	   "* TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
+	  ("d" "Today" entry (file+headline org-default-notes-file "Today")
+	   "** TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
 	  ("i" "Ireland" entry (file org-default-notes-file)
 	   "*%?\n  ")
 	  ("n" "Notes" entry (file+headline org-default-notes-file "Notes")
 	   "** %? \nEntered on %U\n %i\n %a"))))
+
+(defun ponelat/open-notes ()
+  "Open the default notes (org-mode) file."
+  (interactive)
+  (find-file (concat org-directory "/" org-default-notes-file)))
 
 (use-package evil-org
   :ensure t)
@@ -499,6 +602,17 @@
 (use-package redtick
   :disabled
   :ensure t)
+
+(use-package org-alert
+  :config
+  (setq alert-default-style 'libnotify)
+  (org-alert-enable)
+  :ensure t)
+
+(defun my-org-archive-done-tasks ()
+  "Archive all TODOs with DONE."
+  (interactive)
+  (org-map-entries 'org-archive-subtree "/DONE" 'file))
 
 (use-package org-pomodoro
   :ensure t
@@ -511,12 +625,12 @@
 (use-package org-projectile
   :config
   (progn
-    (setq org-projectile:projects-file 
+    (setq org-projectile:projects-file
           (concat ponelat/today-dir "/projects.org"))
     (setq org-agenda-files (append org-agenda-files (org-projectile:todo-files)))
     (add-to-list 'org-capture-templates (org-projectile:project-todo-entry "p")))
   :ensure t)
-	 
+
 
 ;;;; Run current file
 
@@ -576,6 +690,7 @@ Version 2017-02-10"
               (shell-command -cmd-str "*xah-run-current-file output*" ))
           (message "No recognized program file suffix for this file."))))))
 
+
 (provide 'init)
 
 ;;; init.el ends here
@@ -584,14 +699,14 @@ Version 2017-02-10"
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-    ("987b709680284a5858d5fe7e4e428463a20dfabe0a6f2a6146b3b8c7c529f08b" "58c6711a3b568437bab07a30385d34aacf64156cc5137ea20e799984f4227265" "579e9950513524d8739e08eae289419cfcb64ed9b7cc910dd2e66151c77975c4" "e0d42a58c84161a0744ceab595370cbe290949968ab62273aed6212df0ea94b4" default)))
+  '(custom-safe-themes
+     (quote
+       ("0c29db826418061b40564e3351194a3d4a125d182c6ee5178c237a7364f0ff12" "72a81c54c97b9e5efcc3ea214382615649ebb539cb4f2fe3a46cd12af72c7607" "604648621aebec024d47c352b8e3411e63bdb384367c3dd2e8db39df81b475f5" "987b709680284a5858d5fe7e4e428463a20dfabe0a6f2a6146b3b8c7c529f08b" "58c6711a3b568437bab07a30385d34aacf64156cc5137ea20e799984f4227265" "579e9950513524d8739e08eae289419cfcb64ed9b7cc910dd2e66151c77975c4" "e0d42a58c84161a0744ceab595370cbe290949968ab62273aed6212df0ea94b4" default)))
  '(org-agenda-files (quote ("~/Dropbox/org/notes.org")))
  '(org-export-backends (quote (ascii html icalendar latex md deck)))
- '(package-selected-packages
-   (quote
-    (redtick org-pomodoro less-css-mode less less-mode evil-paredit react-snippets helm-flx helm-ls-git evil-org key-chord git-gutter+ github-browse-file emacs-helm-open-github emacs-open-github-from-here magit-gh-pulls yasnippet use-package sublime-themes rjsx-mode org-projectile markdown-mode magit macrostep ledger-mode jq-mode jade helm-projectile helm-fuzzier helm-ag flycheck-pos-tip evil-replace-with-register evil-leader evil-commentary editorconfig cider badwolf-theme ag add-node-modules-path))))
+  '(package-selected-packages
+     (quote
+       (tide yaml-mode feature-mode cucumber zenburn-theme org-alert electric-pair electric-pair-mode evil-surround emmet-mode emmet redtick org-pomodoro less-css-mode less less-mode evil-paredit react-snippets helm-flx helm-ls-git evil-org key-chord git-gutter+ github-browse-file emacs-helm-open-github emacs-open-github-from-here magit-gh-pulls yasnippet use-package sublime-themes rjsx-mode org-projectile markdown-mode magit macrostep ledger-mode jq-mode jade helm-projectile helm-fuzzier helm-ag flycheck-pos-tip evil-replace-with-register evil-leader evil-commentary editorconfig cider badwolf-theme ag add-node-modules-path))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
