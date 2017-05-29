@@ -2,7 +2,7 @@
   pager = cat
 [user]
   name = Josh Ponelat
-	email = josh@ponelat.com
+	email = jponelat@gmail.com
 [alias]
   sub = "!git submodule init && git submodule update"
   re = reset
@@ -28,8 +28,8 @@
   bm = branch --move
   ff = merge --ff-only
   lr = log --oneline --left-right
-  right = log --oneline --right-only 
-  left = log --oneline --left-only 
+  right = log --oneline --right-only
+  left = log --oneline --left-only
   ri = rebase -i
   ra = rebase --abort
   rc = rebase --continue
