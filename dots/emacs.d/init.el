@@ -124,6 +124,12 @@
   :config
   (editorconfig-mode 1))
 
+;;;; Autoindent
+(use-package auto-indent-mode
+  :config
+  (add-hook 'js2-mode 'auto-indent-mode)
+  :ensure t)
+
 ;;;; Markdown
 
 (use-package markdown-mode
@@ -147,6 +153,7 @@
       "a" #'helm-do-ag-project-root
       "b" #'helm-buffers-list
       "w" #'save-buffer
+      "i" #'helm-imenu
       )))
 
 
@@ -293,7 +300,7 @@
 
 ;; This will probably break terminal theme
 ;; Great for outdoors
-(load-theme 'spolsky t)
+(load-theme 'zenburn t)
 
 ;; (if (window-system)
 ;;     (load-theme 'leuven t)
@@ -540,8 +547,13 @@
 ;;   :ensure t)
 
 ;;;; Git, magit
+(setq smerge-command-prefix "\C-cv")
+
 (use-package magit
   :bind (("C-c g" . magit-status))
+  :ensure t)
+
+(use-package evil-magit
   :ensure t)
 
 ;;;; GitHub
@@ -555,6 +567,7 @@
 ;;;; Ledger
 (use-package ledger-mode
   :ensure t)
+
 
 (use-package git-gutter+
   :ensure t
@@ -571,6 +584,7 @@
             (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer))
   :diminish (git-gutter+-mode . "gut"))
 
+
 ;;;; Org-mode
 (use-package org
   :ensure t
@@ -581,6 +595,7 @@
   :config
   (setq org-directory "~/Dropbox/org")
   (setq org-default-notes-file "notes.org")
+  (setq org-src-fontify-natively t)
   (setq org-capture-templates
 	'(("t" "Todo" entry (file org-default-notes-file)
 	   "* TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
@@ -599,15 +614,51 @@
 (use-package evil-org
   :ensure t)
 
-(use-package redtick
-  :disabled
-  :ensure t)
+;; Create a code block in org mode
+(defun d12-org/insert-block-template ()
+  "Insert block template at point."
+  (interactive)
+  (if (org-at-table-p)
+    (call-interactively 'org-table-rotate-recalc-marks)
+    (let* ((choices '(("s" . "SRC")
+                       ("e" . "EXAMPLE")
+                       ("h" . "HTML")
+                       ("q" . "QUOTE")
+                       ("c" . "CENTER")))
+            (key
+              (key-description
+                (vector
+                  (read-key
+                    (concat (propertize "Template type: " 'face 'minibuffer-prompt)
+                      (mapconcat (lambda (choice)
+                                   (concat (propertize (car choice) 'face 'font-lock-type-face)
+                                     ": "
+                                     (cdr choice)))
+                        choices
+                        ", ")))))))
+      (let ((result (assoc key choices)))
+        (when result
+          (let ((choice (cdr result)))
+            (cond
+              ((region-active-p)
+                (let ((start (region-beginning))
+                       (end (region-end)))
+                  (goto-char end)
+                  (insert "\n#+END_" choice)
+                  (goto-char start)
+                  (insert "#+BEGIN_" choice "\n")))
+              (t
+                (insert "#+BEGIN_" choice "\n")
+                (save-excursion (insert "\n#+END_" choice))))))))))
+;; (use-package redtick
+;;   :disabled
+;;   :ensure t)
 
-(use-package org-alert
-  :config
-  (setq alert-default-style 'libnotify)
-  (org-alert-enable)
-  :ensure t)
+;; (use-package org-alert
+;;   :config
+;;   (setq alert-default-style 'libnotify)
+;;   (org-alert-enable)
+;;   :ensure t)
 
 (defun my-org-archive-done-tasks ()
   "Archive all TODOs with DONE."
@@ -701,12 +752,13 @@ Version 2017-02-10"
  ;; If there is more than one, they won't work right.
   '(custom-safe-themes
      (quote
-       ("0c29db826418061b40564e3351194a3d4a125d182c6ee5178c237a7364f0ff12" "72a81c54c97b9e5efcc3ea214382615649ebb539cb4f2fe3a46cd12af72c7607" "604648621aebec024d47c352b8e3411e63bdb384367c3dd2e8db39df81b475f5" "987b709680284a5858d5fe7e4e428463a20dfabe0a6f2a6146b3b8c7c529f08b" "58c6711a3b568437bab07a30385d34aacf64156cc5137ea20e799984f4227265" "579e9950513524d8739e08eae289419cfcb64ed9b7cc910dd2e66151c77975c4" "e0d42a58c84161a0744ceab595370cbe290949968ab62273aed6212df0ea94b4" default)))
+       ("b3775ba758e7d31f3bb849e7c9e48ff60929a792961a2d536edec8f68c671ca5" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a0dc0c1805398db495ecda1994c744ad1a91a9455f2a17b59b716f72d3585dde" "0c29db826418061b40564e3351194a3d4a125d182c6ee5178c237a7364f0ff12" "72a81c54c97b9e5efcc3ea214382615649ebb539cb4f2fe3a46cd12af72c7607" "604648621aebec024d47c352b8e3411e63bdb384367c3dd2e8db39df81b475f5" "987b709680284a5858d5fe7e4e428463a20dfabe0a6f2a6146b3b8c7c529f08b" "58c6711a3b568437bab07a30385d34aacf64156cc5137ea20e799984f4227265" "579e9950513524d8739e08eae289419cfcb64ed9b7cc910dd2e66151c77975c4" "e0d42a58c84161a0744ceab595370cbe290949968ab62273aed6212df0ea94b4" default)))
+ '(linum-format " %7i ")
  '(org-agenda-files (quote ("~/Dropbox/org/notes.org")))
  '(org-export-backends (quote (ascii html icalendar latex md deck)))
   '(package-selected-packages
      (quote
-       (tide yaml-mode feature-mode cucumber zenburn-theme org-alert electric-pair electric-pair-mode evil-surround emmet-mode emmet redtick org-pomodoro less-css-mode less less-mode evil-paredit react-snippets helm-flx helm-ls-git evil-org key-chord git-gutter+ github-browse-file emacs-helm-open-github emacs-open-github-from-here magit-gh-pulls yasnippet use-package sublime-themes rjsx-mode org-projectile markdown-mode magit macrostep ledger-mode jq-mode jade helm-projectile helm-fuzzier helm-ag flycheck-pos-tip evil-replace-with-register evil-leader evil-commentary editorconfig cider badwolf-theme ag add-node-modules-path))))
+       (magit-evil evil-magit auto-indent-mode tide yaml-mode feature-mode cucumber zenburn-theme org-alert electric-pair electric-pair-mode evil-surround emmet-mode emmet redtick org-pomodoro less-css-mode less less-mode evil-paredit react-snippets helm-flx helm-ls-git evil-org key-chord git-gutter+ github-browse-file emacs-helm-open-github emacs-open-github-from-here magit-gh-pulls yasnippet use-package sublime-themes rjsx-mode org-projectile markdown-mode magit macrostep ledger-mode jq-mode jade helm-projectile helm-fuzzier helm-ag flycheck-pos-tip evil-replace-with-register evil-leader evil-commentary editorconfig cider badwolf-theme ag add-node-modules-path))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
