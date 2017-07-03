@@ -1,12 +1,18 @@
+;;; init.el --- Just my dot file.
+;;; -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
 (setq package-archives
-      (quote
-       (("gnu"          . "http://elpa.gnu.org/packages/")
-	("melpa-stable" . "http://stable.melpa.org/packages/")
-	("melpa"        . "http://melpa.org/packages/")
-	("marmalade"    . "http://marmalade-repo.org/packages/"))))
+  (quote (("gnu"          . "http://elpa.gnu.org/packages/")
+          ("melpa-stable" . "http://stable.melpa.org/packages/")
+          ("melpa"        . "http://melpa.org/packages/")
+           ("marmalade"    . "http://marmalade-repo.org/packages/"))))
 
 (require 'package)
 (package-initialize)
+
+;; Allows use to create closures for functions ( in my case, for sentinel callbacks )
+(setq lexical-binding t)
 
 ;; Bootstrap `use-package'
 (unless (package-installed-p 'use-package)
@@ -76,7 +82,7 @@
 (global-set-key (kbd "M-z") #'ponelat/term)
 
 ;;;; Dirs
-(setq ponelat/today-dir "~/Dropbox/org")
+(defvar ponelat/today-dir "~/Dropbox/org")
 
 ;;;; Startup
 (setq inhibit-splash-screen t
@@ -156,12 +162,15 @@
       "i" #'helm-imenu
       )))
 
-
 (use-package evil
   :ensure t
   :config
-    (evil-mode)
-    (define-key evil-normal-state-map "\C-d" nil))
+  (evil-mode)
+  (define-key evil-normal-state-map "\C-d" nil))
+
+;; Make sure words are treated correctly in evil mode
+(with-eval-after-load 'evil
+  (defalias #'forward-evil-word #'forward-evil-symbol))
 
 (use-package evil-replace-with-register
   :ensure t
@@ -224,13 +233,26 @@
     (add-hook 'css-mode-hook  'emmet-mode)) ;; enable Emmet's css abbreviation.
   :ensure t)
 
-(comment use-package lispy
-  :ensure t
+(use-package web-mode
+  :ensure t)
+
+;; (comment use-package lispy
+;;   :ensure t
+;;   :config
+;;   (add-hook 'clojure-mode-hook 'lispy-mode)
+;;   (add-hook 'emacs-lisp-mode-hook 'lispy-mode)
+;;   (add-hook 'lisp-mode-hook 'lispy-mode)
+;;   (define-key lispy-mode-map (kbd "M-n") nil))
+
+(use-package evil-lispy
+  :init
+  (add-hook 'clojure-mode-hook 'evil-lispy-mode)
+  (add-hook 'emacs-lisp-mode-hook 'evil-lispy-mode)
+  (add-hook 'lisp-mode-hook 'evil-lispy-mode)
   :config
-  (add-hook 'clojure-mode-hook 'lispy-mode)
-  (add-hook 'emacs-lisp-mode-hook 'lispy-mode)
-  (add-hook 'lisp-mode-hook 'lispy-mode)
-  (define-key lispy-mode-map (kbd "M-n") nil))
+  (evil-define-key 'insert evil-lispy-mode-map "[" nil)
+  (evil-define-key 'insert evil-lispy-mode-map "]" nil)
+  :ensure t)
 
 ;;(setq show-paren-style 'expression)
 
@@ -287,7 +309,8 @@
 ;; Disable previous theme, before enabling new one. Not full proof.
 ;; Themes have a lot of power, and some of it cannot be reversed here
 (defadvice load-theme (before theme-dont-propagate activate)
- (mapcar #'disable-theme custom-enabled-themes))
+  "Try to completely revert a theme, befor applying a new one."
+  (mapc #'disable-theme custom-enabled-themes))
 
 ;; (use-package badwolf-theme
 ;;   :ensure t)
@@ -298,22 +321,28 @@
 (use-package sublime-themes
   :ensure t)
 
+(use-package zerodark-theme
+  :config
+  (load-theme 'zerodark t)
+  (zerodark-setup-modeline-format)
+  :ensure t)
+
+
 ;; This will probably break terminal theme
 ;; Great for outdoors
-(load-theme 'zenburn t)
 
 ;; (if (window-system)
-;;     (load-theme 'leuven t)
+;;     (load-theme "leuven t)
 ;;     ;; (load-theme 'graham t)
 ;;     (load-theme 'badwolf t))
 
-(set-face-attribute 'default  nil :height 100)
+;; (set-face-attribute 'default  nil :height 100)
 
-(set-face-foreground 'mode-line "white")
-(set-face-background 'mode-line "purple")
+;; (set-face-foreground 'mode-line "black")
+;; (set-face-background 'mode-line "#B1CC6F")
 
-(set-face-foreground 'mode-line-inactive "#474747")
-(set-face-background 'mode-line-inactive "#161A1F")
+;; (set-face-foreground 'mode-line-inactive "#474747")
+;; (set-face-background 'mode-line-inactive "#161A1F")
 
 ;;;; Autosave
 ;; store all backup and autosave files in the tmp dir
@@ -326,8 +355,12 @@
 (use-package feature-mode
   :ensure t)
 
-;;;; Yaml, swagger
+;;;; Yaml
 (use-package yaml-mode
+  :ensure t)
+
+;;;; HTTP, REST, Swagger
+(use-package restclient
   :ensure t)
 
 ;;;; Typescript
@@ -368,15 +401,33 @@
 (use-package rjsx-mode
   :config
   (add-to-list 'auto-mode-alist '("\\.jsx?$" . rjsx-mode))
-  :ensure t)
-
-; Disable the rjsx magic with tags
-(with-eval-after-load 'rjsx
   (define-key rjsx-mode-map "<" nil)
-  (define-key rjsx-mode-map (kbd "C-d") nil))
-
-(use-package jade
+  (define-key rjsx-mode-map (kbd "C-d") nil)
   :ensure t)
+
+(use-package indium
+  :disabled t
+  :ensure t)
+
+;;;; Scaffolding, scaffolds
+;;  Writing CPS style code
+
+;; (defmacro with-process-shell-command (name buffer command &rest sentinel-forms)
+;;   "Run a process, with the given sentinel.\nProccess args are NAME BUFFER COMMAND and SENTINEL-FORMS."
+;;   `(let ((proc (start-process-shell-command ,name ,buffer ,command)))
+;;      (let ((sentinel-cb (lambda (process signal)
+;;                           ,@sentinel-forms)))
+;;        (set-process-sentinel proc sentinel-cb))))
+
+(defun create-react-app ()
+  "Create a react app, by unzipping a .tar.gz into ~/projects/NAME, firing up the server and opening src/App.js."
+  (interactive)
+  (let* ((name (read-from-minibuffer "App name: "))
+          (project-path (format "~/projects/%s" name)))
+    (shell-command (format "mkdir -p %s" project-path))
+    (shell-command (format "tar zvxf ~/projects/scaffolds/create-react-app.tar.gz -C %s" project-path))
+    (find-file-other-window (format "%s/src/App.js" project-path))
+    (async-shell-command "npm start")))
 
 ;;;; Less/Css
 
@@ -389,13 +440,13 @@
   :diminish flycheck-mode
   :config
     (setq flycheck-highlighting-mode 'lines)
-    (global-flycheck-mode)
-    (set-face-attribute 'flycheck-warning nil
-			:foreground "black"
-			:background "yellow")
-    (set-face-attribute 'flycheck-error nil
-			:foreground "black"
-			:background "pink"))
+    (global-flycheck-mode))
+    ;; (set-face-attribute 'flycheck-warning nil
+		;; 	:foreground "black"
+		;; 	:background "yellow")
+    ;; (set-face-attribute 'flycheck-error nil
+		;; 	:foreground "black"
+		;; 	:background "pink"))
 
 (use-package pos-tip
   :ensure t)
@@ -440,11 +491,20 @@
     (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion))
   (global-company-mode))
 
+
 (use-package clojure-mode
   :ensure t
   :config
  ;  (setq clojure-defun-style-default-indent t)
   )
+
+(use-package clj-refactor
+  :ensure t)
+
+; Auto load buffer, when in jacked-in
+(add-hook 'cider-mode-hook
+  (lambda ()
+    (add-hook 'after-save-hook 'cider-load-buffer nil 'make-it-local)))
 
 ;;;; Autocomplete, company, snippets
 (use-package company
@@ -469,7 +529,7 @@
 
 (use-package projectile
   :ensure t
-  :diminish projectile-mode
+  :diminish projectile
   :config
   (projectile-mode))
 
@@ -566,6 +626,8 @@
 
 ;;;; Ledger
 (use-package ledger-mode
+  :config
+  (add-to-list 'auto-mode-alist '("\\.ledger\\'" . ledger-mode))
   :ensure t)
 
 
@@ -582,7 +644,7 @@
             (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
             (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
             (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer))
-  :diminish (git-gutter+-mode . "gut"))
+  :diminish (git-gutter+-mode . "+="))
 
 
 ;;;; Org-mode
@@ -590,21 +652,29 @@
   :ensure t
   :bind
   (("M-n" . org-capture)
-	 ("C-c a" . org-agenda)
-   ("C-c n" . ponelat/open-notes))
+    ("C-c a" . org-agenda)
+    ("C-c n" . ponelat/open-notes))
   :config
   (setq org-directory "~/Dropbox/org")
   (setq org-default-notes-file "notes.org")
   (setq org-src-fontify-natively t)
   (setq org-capture-templates
-	'(("t" "Todo" entry (file org-default-notes-file)
-	   "* TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
-	  ("d" "Today" entry (file+headline org-default-notes-file "Today")
-	   "** TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
-	  ("i" "Ireland" entry (file org-default-notes-file)
-	   "*%?\n  ")
-	  ("n" "Notes" entry (file+headline org-default-notes-file "Notes")
-	   "** %? \nEntered on %U\n %i\n %a"))))
+    '(("t" "Todo" entry (file org-default-notes-file)
+        "* TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
+       ("d" "Today" entry (file+headline org-default-notes-file "Today")
+         "** TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
+       ("i" "Ireland" entry (file org-default-notes-file)
+         "*%?\n  ")
+       ("n" "Notes" entry (file+headline org-default-notes-file "Notes")
+         "** %? \nEntered on %U\n %i\n %a"))))
+
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+(use-package org-beautify-theme
+  :ensure t)
 
 (defun ponelat/open-notes ()
   "Open the default notes (org-mode) file."
@@ -745,24 +815,6 @@ Version 2017-02-10"
 (provide 'init)
 
 ;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
-  '(custom-safe-themes
-     (quote
-       ("b3775ba758e7d31f3bb849e7c9e48ff60929a792961a2d536edec8f68c671ca5" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a0dc0c1805398db495ecda1994c744ad1a91a9455f2a17b59b716f72d3585dde" "0c29db826418061b40564e3351194a3d4a125d182c6ee5178c237a7364f0ff12" "72a81c54c97b9e5efcc3ea214382615649ebb539cb4f2fe3a46cd12af72c7607" "604648621aebec024d47c352b8e3411e63bdb384367c3dd2e8db39df81b475f5" "987b709680284a5858d5fe7e4e428463a20dfabe0a6f2a6146b3b8c7c529f08b" "58c6711a3b568437bab07a30385d34aacf64156cc5137ea20e799984f4227265" "579e9950513524d8739e08eae289419cfcb64ed9b7cc910dd2e66151c77975c4" "e0d42a58c84161a0744ceab595370cbe290949968ab62273aed6212df0ea94b4" default)))
- '(linum-format " %7i ")
- '(org-agenda-files (quote ("~/Dropbox/org/notes.org")))
- '(org-export-backends (quote (ascii html icalendar latex md deck)))
-  '(package-selected-packages
-     (quote
-       (magit-evil evil-magit auto-indent-mode tide yaml-mode feature-mode cucumber zenburn-theme org-alert electric-pair electric-pair-mode evil-surround emmet-mode emmet redtick org-pomodoro less-css-mode less less-mode evil-paredit react-snippets helm-flx helm-ls-git evil-org key-chord git-gutter+ github-browse-file emacs-helm-open-github emacs-open-github-from-here magit-gh-pulls yasnippet use-package sublime-themes rjsx-mode org-projectile markdown-mode magit macrostep ledger-mode jq-mode jade helm-projectile helm-fuzzier helm-ag flycheck-pos-tip evil-replace-with-register evil-leader evil-commentary editorconfig cider badwolf-theme ag add-node-modules-path))))
-
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(default ((t (:background nil)))))
+;;;; Custom variables stored here...
+(setq custom-file "~/.emacs.d/custom.el")
+(load custom-file 'noerror)
