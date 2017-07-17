@@ -44,7 +44,7 @@ ZSH_CUSTOM=~/projects/dotfiles/zsh
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(fasd npm docker unaliases zsh-autosuggestions vi-mode-copy-paste)
+plugins=(fasd npm docker unaliases zsh-autosuggestions vi-mode-copy-paste aws)
 
 # Preferred editor for local and remote sessions
 # export EDITOR="emacsclient -t"
@@ -91,7 +91,7 @@ export RBENV_ROOT="$HOME/.linuxbrew/var/rbenv"
 rbenv >/dev/null 2>&1 && eval "`rbenv init -`"
 
 ### Yarn
-if which yarn > /dev/null; then 
+if which yarn > /dev/null; then
   PATH="$PATH:`yarn global bin`"
 fi
 
@@ -103,5 +103,6 @@ BASE16_SHELL=$HOME/.config/base16-shell/
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 PATH="$HOME/.yarn/bin:$PATH"
+PATH="$HOME/projects/accounts/bin:$PATH"
 export PATH="$HOME/apps/julia/bin:$PATH"
 [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
