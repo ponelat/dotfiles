@@ -5,6 +5,7 @@
 # alias n=vim
 alias v=vim
 alias e="emacsclient -nw -c -a ''"
+alias E="SUDO_EDITOR=\"emacsclient -t -a emacs\" sudoedit"
 alias pserver="python -m SimpleHTTPServer"
 alias cjson="curl -sL -H 'accept: application/json' -H 'content-type: application/json'"
 alias ls='ls -A --color=always --group-directories-first -1 -v'
@@ -14,7 +15,7 @@ alias j="fasd_cd -d"
 alias o='a -e xdg-open' # quick opening files with xdg-open
 alias open="xdg-open"
 alias ne="PATH=$PATH:./node_modules/.bin; " # Run a npm command, with the local npm bins
-alias be="bundle exec" 
+alias be="bundle exec"
 alias bf=nvim
 alias poston="pg_ctl start -D ~/.linuxbrew/var/postgres/ -l ~/.linuxbrew/var/postgres/log"
 alias postoff="pg_ctl stop -D ~/.linuxbrew/var/postgres/"
@@ -25,7 +26,7 @@ alias fonts="fc-list | cut -f2 -d: | fzf"
 alias post="curl -X POST"
 alias put="curl -X PUT"
 
-# jq aliases 
+# jq aliases
 alias jq-apis-hash="jq '[.apis[] | .props = (reduce .properties[] as \$x ({}; . + {(\$x.type | ascii_downcase): (\$x.value // \$x.url)})) | del(.properties)']"
 alias jq-apis="jq-apis-hash | jq '[.[] + .[].props | del(.props)]'"
 alias jq-is-private="jq 'map(select(.props[\"x-private\"] == \"true\"))'"
@@ -40,5 +41,3 @@ function ignore() {
 }
 
 alias hubup="git pushu && hub pull-request"
-
-

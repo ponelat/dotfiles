@@ -32,6 +32,7 @@
 (defun imenu-elisp-sections ()
   "Create a list of sections from config file."
   (setq imenu-prev-index-position-function nil)
+  (add-to-list 'imenu-generic-expression '("use" "^ *( *use-package *\\(.+\\)$" 1) t)
   (add-to-list 'imenu-generic-expression '("Sections" "^;;;; \\(.+\\)$" 1) t))
 
 (add-hook 'emacs-lisp-mode-hook 'imenu-elisp-sections)
@@ -66,7 +67,7 @@
     (narrow-to-region (region-beginning) (region-end))))
 
 (global-set-key (kbd "C-c l e") 'ponelat/emacs-lisp-imenu-init)
-(global-set-key (kbd "C-c l n") 'ponelat/org-mode-imenu-init)
+(global-set-key (kbd "C-c l o") 'helm-org-agenda-files-headings)
 (define-key emacs-lisp-mode-map (kbd "C-c n") 'init-narrow-to-section)
 (define-key emacs-lisp-mode-map (kbd "C-c w") 'widen)
 
@@ -76,7 +77,19 @@
   (interactive)
   (if (get-buffer "*terminal*")
       (switch-to-buffer "*terminal*")
-      (ansi-term "/bin/zsh" "terminal")))
+    (ansi-term "/bin/zsh" "terminal")))
+
+(use-package shell-pop
+  :init
+  (progn
+    (setq shell-pop-default-directory "~/projects")
+    (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
+    (setq shell-pop-term-shell "/bin/zsh")
+    (setq shell-pop-universal-key "C-t")
+    (setq shell-pop-window-size 30)
+    (setq shell-pop-full-span t)
+    (setq shell-pop-window-position "bottom"))
+  :ensure t)
 
 (global-set-key (kbd "M-C-z") #'projectile-run-async-shell-command-in-root)
 (global-set-key (kbd "M-z") #'ponelat/term)
@@ -99,25 +112,52 @@
 (defun browse-url-chrome-unstable (url &optional new-window)
   "Open URL in Chrome unstable, possibly in NEW-WINDOW."
   (shell-command (concat "google-chrome-unstable" " " "\"" url "\"")))
+(setq x-selection-timeout 300)
 
 (windmove-default-keybindings)
 (auto-image-file-mode 1)
 (setq vc-follow-symlinks t)
 (setq browse-url-browser-function #'browse-url-chrome-unstable)
 (electric-pair-mode t)
+
 ;; (set-face-attribute 'default t :font "isoveska-13" )
+
+(use-package avy
+  :config
+  (setq avy-timeout-seconds 0.4)
+  :ensure t)
+
+;;;; Strings
+(use-package string-inflection
+  :ensure t)
+
+;;;; Hydra, menus
+(use-package hydra
+  :ensure t)
+
+(defhydra hydra-zoom (global-map "C-x =")
+  "zoom"
+  ("k" text-scale-increase "in")
+  ("j" text-scale-decrease "out"))
+
+(defhydra hydra-string-case (global-map "C-c C-s")
+  "string case"
+  ("c" string-inflection-all-cycle "all cycle"))
 
 (use-package diminish
   :ensure t)
 
 (use-package ace-window
-  :disabled t
+  :disabled
   :bind (("M-p" . ace-window))
   :config
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   (setq aw-dispatch-always t)
   :ensure t)
 
+(use-package ranger
+  :disabled t
+  :ensure t)
 
 (comment use-package dot-mode
   :ensure t
@@ -133,7 +173,7 @@
 ;;;; Autoindent
 (use-package auto-indent-mode
   :config
-  (add-hook 'js2-mode 'auto-indent-mode)
+  (add-hook 'rjsx-mode 'auto-indent-mode)
   :ensure t)
 
 ;;;; Markdown
@@ -149,8 +189,8 @@
   (progn
     (global-evil-leader-mode)
     (evil-leader/set-leader "<SPC>")
-      (setq evil-normal-state-modes (append evil-motion-state-modes evil-normal-state-modes))
-  (setq evil-motion-state-modes nil)
+    (setq evil-normal-state-modes (append evil-motion-state-modes evil-normal-state-modes))
+    (setq evil-motion-state-modes nil)
     (evil-leader/set-key
       "q" #'kill-buffer-and-window
       "Q" #'save-buffers-kill-terminal
@@ -159,8 +199,11 @@
       "a" #'helm-do-ag-project-root
       "b" #'helm-buffers-list
       "w" #'save-buffer
-      "i" #'helm-imenu
-      )))
+      "s" #'avy-goto-char-timer
+      "k" #'avy-goto-char-2
+      ":" #'delete-other-windows
+      "l" #'find-library
+      "i" #'helm-imenu)))
 
 (use-package evil
   :ensure t
@@ -198,10 +241,20 @@
 
 ;;;; Global Bindings, keys
 (bind-key "C-x C-k" 'kill-this-buffer)
+(bind-key "C-h l" #'find-library)
+(bind-key "C-x q" #'eval-buffer)
 
 ;;;; Lisp, paredit
 (show-paren-mode 1)
 
+;;;; Pretty symbols, lambda
+(add-hook 'emacs-lisp-mode-hook (lambda () (setq prettify-symbols-alist '(("lambda" . 955)))))
+(add-hook 'clojure-mode-hook (lambda () (setq prettify-symbols-alist '(("fn" . 955)))))
+(global-prettify-symbols-mode 1)
+
+(use-package highlight-sexp
+  :disabled
+  :ensure t)
 ;; (defun ponelat/non-lisp-paredit()
 ;;   "Turn on paredit mode for non-lisps."
 ;;   (interactive)
@@ -269,7 +322,7 @@
 ;; I prefer using the "clipboard" selection (the one the
 ;; typically is used by c-c/c-v) before the primary selection
 ;; (that uses mouse-select/middle-button-click)
-(setq x-select-enable-clipboard t)
+(setq select-enable-clipboard t)
 
 ;; If emacs is run in a terminal, the clipboard- functions have no
 ;; effect. Instead, we use of xsel, see
@@ -304,46 +357,6 @@
     ))
 
 
-;;;; Themes
-
-;; Disable previous theme, before enabling new one. Not full proof.
-;; Themes have a lot of power, and some of it cannot be reversed here
-(defadvice load-theme (before theme-dont-propagate activate)
-  "Try to completely revert a theme, befor applying a new one."
-  (mapc #'disable-theme custom-enabled-themes))
-
-;; (use-package badwolf-theme
-;;   :ensure t)
-
-;; (use-package zenburn-theme
-;;   :ensure t)
-
-(use-package sublime-themes
-  :ensure t)
-
-(use-package zerodark-theme
-  :config
-  (load-theme 'zerodark t)
-  (zerodark-setup-modeline-format)
-  :ensure t)
-
-
-;; This will probably break terminal theme
-;; Great for outdoors
-
-;; (if (window-system)
-;;     (load-theme "leuven t)
-;;     ;; (load-theme 'graham t)
-;;     (load-theme 'badwolf t))
-
-;; (set-face-attribute 'default  nil :height 100)
-
-;; (set-face-foreground 'mode-line "black")
-;; (set-face-background 'mode-line "#B1CC6F")
-
-;; (set-face-foreground 'mode-line-inactive "#474747")
-;; (set-face-background 'mode-line-inactive "#161A1F")
-
 ;;;; Autosave
 ;; store all backup and autosave files in the tmp dir
 (setq backup-directory-alist
@@ -361,6 +374,11 @@
 
 ;;;; HTTP, REST, Swagger
 (use-package restclient
+  :ensure t)
+
+(use-package company-restclient
+  :config
+  (add-to-list 'company-backends 'company-restclient)
   :ensure t)
 
 ;;;; Typescript
@@ -388,6 +406,10 @@
 ;; formats the buffer before saving
 ;; (add-hook 'before-save-hook 'tide-format-before-save)
 
+;;;; CSV
+(use-package csv-mode
+  :disabled t
+  :ensure t)
 
 ;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
@@ -458,7 +480,6 @@
     (flycheck-pos-tip-mode)))
 
 ;; From http://www.cyrusinnovation.com/initial-emacs-setup-for-reactreactnative/
-
 ;; (defun ponelat/setup-local-eslint ()
 ;;     "If ESLint found in node_modules directory - use that for flycheck.
 ;; Intended for use in PROJECTILE-AFTER-SWITCH-PROJECT-HOOK."
@@ -491,12 +512,13 @@
     (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion))
   (global-company-mode))
 
-
 (use-package clojure-mode
   :ensure t
   :config
- ;  (setq clojure-defun-style-default-indent t)
-  )
+  (add-hook 'clojure-mode-hook (lambda ()
+                                 (clj-refactor-mode)
+                                 (yas-minor-mode 1)
+                                 (cljr-add-keybindings-with-prefix "C-c C-m"))))
 
 (use-package clj-refactor
   :ensure t)
@@ -524,6 +546,45 @@
 (use-package react-snippets
   :ensure t)
 
+;;;; npm
+(require 'json)
+(defun alist-keys (alist)
+  "Return the keys of ALIST."
+  (mapcar 'car alist))
+
+(defun ponelat/last-dir (path) "
+get the last directory from PATH.
+eg: /one/two => two
+    C:\One\Two => Two
+."
+  (file-name-nondirectory
+    (directory-file-name
+      (file-name-directory path))))
+
+(defun ponelat/npm-run (project-dir)
+  "Fetch a list of npm scripts from PROJECT-DIR/package.json and async execute it."
+  (let* ((file-path (concat project-dir "package.json"))
+          (json-data (json-read-file file-path))
+          (scripts (alist-get 'scripts json-data))
+          (script-keys (alist-keys scripts))
+          (choice (completing-read "Npm: " script-keys))
+          (project-name (ponelat/last-dir project-dir)))
+    (async-shell-command (format "cd %s && npm run %s" project-dir choice) (format "*npm* - %s - %s" choice project-name))))
+
+(defun ponelat/helm-npm-run ()
+  "Run npm-run, from the helm projectile buffer."
+  (interactive)
+  (helm-exit-and-execute-action #'ponelat/npm-run))
+
+(defun ponelat/projectile-npm-run ()
+  "Run an npm command in the current project."
+  (interactive)
+  (ponelat/npm-run (projectile-project-root)))
+
+(defun ponelat/helm-ag-do ()
+  "Run npm-run, from the helm projectile buffer."
+  (interactive)
+  (helm-exit-and-execute-action #'helm-do-ag))
 
 ;;;; Projects
 
@@ -531,8 +592,9 @@
   :ensure t
   :diminish projectile
   :config
-  (projectile-mode))
-
+  (progn
+    (projectile-mode)
+    (define-key projectile-command-map (kbd "n") #'ponelat/projectile-npm-run)))
 
 ;;;; Fuzzy, ido, helm
 (use-package helm
@@ -551,9 +613,11 @@
 (use-package helm-projectile
   :bind (("M-x" . helm-M-x))
   :ensure t
-  :defer 2
+  :defer 1
   :config
-  (helm-projectile-on))
+  (helm-projectile-on)
+  (define-key helm-projectile-projects-map (kbd "C-l") #'ponelat/helm-npm-run)
+  (define-key helm-projectile-projects-map (kbd "C-a") #'ponelat/helm-ag-do))
 
 (use-package helm-ag
   :ensure t)
@@ -585,17 +649,6 @@
     (switch-to-buffer buf))
   ;; Adjust size of windows
   (balance-windows))
-
-(add-to-list 'helm-type-buffer-actions
-             '("Display buffer(s) in new window(s) `C-v'" .
-               helm-buffer-switch-new-window) 'append)
-
-(defun helm-buffer-switch-new-window ()
-  (interactive)
-  (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-buffer-switch-to-new-window)))
-
-(define-key helm-buffer-map (kbd "M-v") #'helm-buffer-switch-new-window)
 
 ;; (use-package ido
 ;;   :ensure t
@@ -666,15 +719,11 @@
        ("i" "Ireland" entry (file org-default-notes-file)
          "*%?\n  ")
        ("n" "Notes" entry (file+headline org-default-notes-file "Notes")
+         "** %? \nEntered on %U\n %i\n %a")
+       ("s" "Dream Stack" entry (file+headline org-default-notes-file "Dream Stack")
+         "** %? \nEntered on %U\n %i\n %a")
+       ("m" "Meetup Notes" entry (file+headline org-default-notes-file "Meetup Notes")
          "** %? \nEntered on %U\n %i\n %a"))))
-
-(use-package org-bullets
-  :ensure t
-  :config
-  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-
-(use-package org-beautify-theme
-  :ensure t)
 
 (defun ponelat/open-notes ()
   "Open the default notes (org-mode) file."
@@ -682,9 +731,14 @@
   (find-file (concat org-directory "/" org-default-notes-file)))
 
 (use-package evil-org
+  :config
+  (evil-define-key 'normal evil-org-mode-map
+    "J" nil
+    "K" nil)
   :ensure t)
 
 ;; Create a code block in org mode
+
 (defun d12-org/insert-block-template ()
   "Insert block template at point."
   (interactive)
@@ -721,9 +775,8 @@
                 (insert "#+BEGIN_" choice "\n")
                 (save-excursion (insert "\n#+END_" choice))))))))))
 ;; (use-package redtick
-;;   :disabled
+;;   :disabled t
 ;;   :ensure t)
-
 ;; (use-package org-alert
 ;;   :config
 ;;   (setq alert-default-style 'libnotify)
@@ -750,7 +803,7 @@
           (concat ponelat/today-dir "/projects.org"))
     (setq org-agenda-files (append org-agenda-files (org-projectile:todo-files)))
     (add-to-list 'org-capture-templates (org-projectile:project-todo-entry "p")))
-  :ensure t)
+   :ensure t)
 
 
 ;;;; Run current file
@@ -810,6 +863,63 @@ Version 2017-02-10"
               (message "Running…")
               (shell-command -cmd-str "*xah-run-current-file output*" ))
           (message "No recognized program file suffix for this file."))))))
+
+;;;; Themes
+;; Disable previous theme, before enabling new one. Not full proof.
+;; Themes have a lot of power, and some of it cannot be reversed here
+
+(defadvice load-theme (before theme-dont-propagate activate)
+  "Try to completely revert a theme, befor applying a new one."
+  (mapc #'disable-theme custom-enabled-themes))
+(use-package svg-mode-line-themes
+  :ensure t)
+
+(use-package ocodo-svg-modelines
+  :ensure t)
+
+;; (use-package badwolf-theme
+;;   :ensure t)
+
+;; (use-package zenburn-theme
+;;   :ensure t)
+
+(use-package sublime-themes
+  :ensure t)
+
+;; (with-eval-after-load 'zerodark-theme ())
+(use-package org-beautify-theme
+  :disabled t
+  :ensure t)
+
+
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+(use-package zerodark-theme
+  :config
+  (progn
+    (load-theme 'zerodark t)
+    (zerodark-setup-modeline-format))
+  :ensure t)
+
+
+;; This will probably break terminal theme
+;; Great for outdoors
+
+;; (if (window-system)
+;;     (load-theme "leuven t)
+;;     ;; (load-theme 'graham t)
+;;     (load-theme 'badwolf t))
+
+;; (set-face-attribute 'default  nil :height 100)
+
+;; (set-face-foreground 'mode-line "black")
+;; (set-face-background 'mode-line "#B1CC6F")
+
+;; (set-face-foreground 'mode-line-inactive "#474747")
+;; (set-face-background 'mode-line-inactive "#161A1F")
 
 
 (provide 'init)
