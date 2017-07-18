@@ -242,15 +242,22 @@
 ;;;; Global Bindings, keys
 (bind-key "C-x C-k" 'kill-this-buffer)
 (bind-key "C-h l" #'find-library)
-(bind-key "C-x q" #'eval-buffer)
+(bind-key "C-x y" #'eval-buffer)
 
 ;;;; Lisp, paredit
 (show-paren-mode 1)
 
 ;;;; Pretty symbols, lambda
-(add-hook 'emacs-lisp-mode-hook (lambda () (setq prettify-symbols-alist '(("lambda" . 955)))))
-(add-hook 'clojure-mode-hook (lambda () (setq prettify-symbols-alist '(("fn" . 955)))))
-(global-prettify-symbols-mode 1)
+
+(add-hook 'emacs-lisp-mode-hook
+  (lambda ()
+    (setq prettify-symbols-alist '(("lambda" . 955)))
+    (prettify-symbols-mode)))
+
+(add-hook 'clojure-mode-hook
+  (lambda ()
+    (setq prettify-symbols-alist '(("fn" . 955)))
+    (prettify-symbols-mode)))
 
 (use-package highlight-sexp
   :disabled
@@ -706,7 +713,7 @@ eg: /one/two => two
   :bind
   (("M-n" . org-capture)
     ("C-c a" . org-agenda)
-    ("C-c n" . ponelat/open-notes))
+    ("C-c o" . ponelat/open-notes))
   :config
   (setq org-directory "~/Dropbox/org")
   (setq org-default-notes-file "notes.org")
@@ -732,57 +739,13 @@ eg: /one/two => two
 
 (use-package evil-org
   :config
+  (add-hook 'org-mode-hook (lambda () (evil-org-mode t)))
   (evil-define-key 'normal evil-org-mode-map
     "J" nil
     "K" nil)
   :ensure t)
 
-;; Create a code block in org mode
-
-(defun d12-org/insert-block-template ()
-  "Insert block template at point."
-  (interactive)
-  (if (org-at-table-p)
-    (call-interactively 'org-table-rotate-recalc-marks)
-    (let* ((choices '(("s" . "SRC")
-                       ("e" . "EXAMPLE")
-                       ("h" . "HTML")
-                       ("q" . "QUOTE")
-                       ("c" . "CENTER")))
-            (key
-              (key-description
-                (vector
-                  (read-key
-                    (concat (propertize "Template type: " 'face 'minibuffer-prompt)
-                      (mapconcat (lambda (choice)
-                                   (concat (propertize (car choice) 'face 'font-lock-type-face)
-                                     ": "
-                                     (cdr choice)))
-                        choices
-                        ", ")))))))
-      (let ((result (assoc key choices)))
-        (when result
-          (let ((choice (cdr result)))
-            (cond
-              ((region-active-p)
-                (let ((start (region-beginning))
-                       (end (region-end)))
-                  (goto-char end)
-                  (insert "\n#+END_" choice)
-                  (goto-char start)
-                  (insert "#+BEGIN_" choice "\n")))
-              (t
-                (insert "#+BEGIN_" choice "\n")
-                (save-excursion (insert "\n#+END_" choice))))))))))
-;; (use-package redtick
-;;   :disabled t
-;;   :ensure t)
-;; (use-package org-alert
-;;   :config
-;;   (setq alert-default-style 'libnotify)
-;;   (org-alert-enable)
-;;   :ensure t)
-
+;; TODO: fix this
 (defun my-org-archive-done-tasks ()
   "Archive all TODOs with DONE."
   (interactive)
@@ -871,18 +834,8 @@ Version 2017-02-10"
 (defadvice load-theme (before theme-dont-propagate activate)
   "Try to completely revert a theme, befor applying a new one."
   (mapc #'disable-theme custom-enabled-themes))
-(use-package svg-mode-line-themes
-  :ensure t)
 
-(use-package ocodo-svg-modelines
-  :ensure t)
-
-;; (use-package badwolf-theme
-;;   :ensure t)
-
-;; (use-package zenburn-theme
-;;   :ensure t)
-
+;; Provides leuven which is good for daylight coding
 (use-package sublime-themes
   :ensure t)
 
@@ -891,36 +844,17 @@ Version 2017-02-10"
   :disabled t
   :ensure t)
 
-
 (use-package org-bullets
   :ensure t
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
 (use-package zerodark-theme
-  :config
-  (progn
-    (load-theme 'zerodark t)
-    (zerodark-setup-modeline-format))
   :ensure t)
 
-
-;; This will probably break terminal theme
-;; Great for outdoors
-
-;; (if (window-system)
-;;     (load-theme "leuven t)
-;;     ;; (load-theme 'graham t)
-;;     (load-theme 'badwolf t))
-
-;; (set-face-attribute 'default  nil :height 100)
-
-;; (set-face-foreground 'mode-line "black")
-;; (set-face-background 'mode-line "#B1CC6F")
-
-;; (set-face-foreground 'mode-line-inactive "#474747")
-;; (set-face-background 'mode-line-inactive "#161A1F")
-
+;;;; Load theme
+(load-theme 'zerodark t)
+(zerodark-setup-modeline-format)
 
 (provide 'init)
 
