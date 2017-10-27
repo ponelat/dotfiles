@@ -37,10 +37,16 @@
 
 (add-hook 'emacs-lisp-mode-hook 'imenu-elisp-sections)
 
+;;;; Firsts, macro
+(defmacro ponelat/first-macro (&rest body)
+  "The first macro (it use BODY)!!!"
+  `(progn ,@(mapcar (lambda (form) `(message (format "%s" ,form))) body)))
+
+;; Emacs, Lisp
 (defun ponelat/emacs-lisp-imenu-init (p)
   "Jump to section in init.el file.  Or straight to P."
   (interactive "P")
-  (find-file-existing "~/.emacs.d/init.el")
+  (find-file-existing "~/projects/dotfiles/dots/emacs.d/init.el")
   (widen)
   (helm-imenu)
   (if p (init-narrow-to-section)))
@@ -66,8 +72,6 @@
     (forward-line -1)
     (narrow-to-region (region-beginning) (region-end))))
 
-(global-set-key (kbd "C-c l e") 'ponelat/emacs-lisp-imenu-init)
-(global-set-key (kbd "C-c l o") 'helm-org-agenda-files-headings)
 (define-key emacs-lisp-mode-map (kbd "C-c n") 'init-narrow-to-section)
 (define-key emacs-lisp-mode-map (kbd "C-c w") 'widen)
 
@@ -120,11 +124,9 @@
 (setq browse-url-browser-function #'browse-url-chrome-unstable)
 (electric-pair-mode t)
 
-;; (set-face-attribute 'default t :font "isoveska-13" )
-
 (use-package avy
   :config
-  (setq avy-timeout-seconds 0.4)
+  (setq avy-timeout-seconds 0.3)
   :ensure t)
 
 ;;;; Strings
@@ -176,12 +178,25 @@
   (add-hook 'rjsx-mode 'auto-indent-mode)
   :ensure t)
 
+;;;; Sudo, root, sudowrite, dired, tramp
+(require 'tramp)
+(defun ponelat/sudo-dired ()
+  "Opens a Dired buffer with sudo priviledges."
+  (interactive)
+  (dired "/sudo::/"))
+
 ;;;; Markdown
 
 (use-package markdown-mode
   :ensure t)
 
 ;;;; Evil, vim
+ (defun ponelat/expand-lines ()
+    (interactive)
+    (let ((hippie-expand-try-functions-list
+           '(try-expand-line-all-buffers)))
+      (call-interactively 'hippie-expand)))
+
 
 (use-package evil-leader
   :ensure t
@@ -191,6 +206,7 @@
     (evil-leader/set-leader "<SPC>")
     (setq evil-normal-state-modes (append evil-motion-state-modes evil-normal-state-modes))
     (setq evil-motion-state-modes nil)
+    (define-key evil-insert-state-map (kbd "C-x C-l") 'ponelat/expand-lines)
     (evil-leader/set-key
       "q" #'kill-buffer-and-window
       "Q" #'save-buffers-kill-terminal
@@ -201,7 +217,6 @@
       "w" #'save-buffer
       "s" #'avy-goto-char-timer
       "k" #'avy-goto-char-2
-      ":" #'delete-other-windows
       "l" #'find-library
       "i" #'helm-imenu)))
 
@@ -241,8 +256,16 @@
 
 ;;;; Global Bindings, keys
 (bind-key "C-x C-k" 'kill-this-buffer)
-(bind-key "C-h l" #'find-library)
 (bind-key "C-x y" #'eval-buffer)
+
+(bind-key "C-c l e" 'ponelat/emacs-lisp-imenu-init)
+(bind-key "C-c l o" (lambda () (interactive) (helm-org-agenda-files-headings "a")))
+
+(bind-key "C-c ;" 'delete-other-windows)
+(bind-key "C-c :" 'delete-window)
+(bind-key "C-c C-a" 'helm-do-ag-project-root)
+
+(bind-key "C-h l" #'find-library)
 
 ;;;; Lisp, paredit
 (show-paren-mode 1)
@@ -256,7 +279,8 @@
 
 (add-hook 'clojure-mode-hook
   (lambda ()
-    (setq prettify-symbols-alist '(("fn" . 955)))
+    (setq prettify-symbols-alist '(("fn" . 955)
+                                    (";;" . 955)))
     (prettify-symbols-mode)))
 
 (use-package highlight-sexp
@@ -418,6 +442,14 @@
   :disabled t
   :ensure t)
 
+;;;; Ruby, rspec
+(use-package ruby-mode
+  :ensure t)
+
+(use-package rspec-mode
+  :ensure t)
+
+
 ;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
   :ensure t
@@ -426,6 +458,34 @@
   (progn
     (setq js2-mode-show-parse-errors t)
     (setq js2-mode-show-strict-warnings nil)))
+
+
+;; ag projects
+(defun assoc-recursive (alist &rest keys)
+  "Recursively find KEYs in ALIST."
+  (while keys
+    (setq alist (cdr (assoc (pop keys) alist))))
+  alist)
+
+;; TODO finish this
+(comment defun ponelat/ag (filename folder)
+  "Search for uses of FILENAME, within FOLDER."
+  (ag-regexp (format "import .* from *['\"]%s(.js|.jsx)?['\"]" filename) folder))
+
+(comment defun ponelat/get-babel-aliases (project-dir)
+(let* ((file-path (concat project-dir "package.json"))
+          (json-data (json-read-file file-path))
+          (scripts (assoc-recursive json-data 'babel ))
+          (script-keys (alist-keys scripts))
+          (choice (completing-read "Npm: " script-keys))
+          (project-name (ponelat/last-dir project-dir)))
+    (async-shell-command (format "cd %s && npm run %s" project-dir choice) (format "*npm* - %s - %s" choice project-name))))
+
+
+;; (ponelat/ag "actions/user" "/home/josh/projects/swaggerhub-frontend/")
+
+(use-package web-beautify
+  :ensure t)
 
 (use-package rjsx-mode
   :config
@@ -437,6 +497,15 @@
 (use-package indium
   :disabled t
   :ensure t)
+
+(defun ponelat/find-incoming-js-imports (project filename)
+  "Find all files within PROJECT, that import the FILENAME, and present a helm buffer to jump to."
+  (interactive)
+  ;; get regexp results ( from within project )
+  ;; (Combine multiple results?)
+  ;; Display in helm buffer
+  ;; TODO Sunday-funday
+  t)
 
 ;;;; Scaffolding, scaffolds
 ;;  Writing CPS style code
@@ -457,6 +526,15 @@
     (shell-command (format "tar zvxf ~/projects/scaffolds/create-react-app.tar.gz -C %s" project-path))
     (find-file-other-window (format "%s/src/App.js" project-path))
     (async-shell-command "npm start")))
+
+(defun creat-project ()
+  "Create a simple project folder with .git/."
+  (interactive)
+  (let* ((name (read-from-minibuffer "Project name: "))
+          (project-path (format "~/projects/%s" name)))
+    (shell-command (format "mkdir -p %s" project-path))
+    (shell-command (format "git init" project-path))
+    (shell-command (read-from-minibuffer "Your next command? "))))
 
 ;;;; Less/Css
 
@@ -626,6 +704,7 @@ eg: /one/two => two
   (define-key helm-projectile-projects-map (kbd "C-l") #'ponelat/helm-npm-run)
   (define-key helm-projectile-projects-map (kbd "C-a") #'ponelat/helm-ag-do))
 
+
 (use-package helm-ag
   :ensure t)
 
@@ -667,10 +746,25 @@ eg: /one/two => two
 ;;   :ensure t)
 
 ;;;; Git, magit
+
 (setq smerge-command-prefix "\C-cv")
+
+(defun ponelat/reset-commit-soft ()
+  "Reset to the last commit, softly."
+  (interactive)
+  (magit-reset-soft "HEAD^"))
+
+(global-set-key (kbd "M-o s") #'ponelat/reset-commit-soft)
 
 (use-package magit
   :bind (("C-c g" . magit-status))
+  :config
+  (progn
+    (magit-define-popup-switch 'magit-log-popup ?f "first parent" "--first-parent")
+    (setq magit-list-refs-sortby "-creatordate"))
+  :ensure t)
+
+(use-package git-modes
   :ensure t)
 
 (use-package evil-magit
@@ -679,6 +773,15 @@ eg: /one/two => two
 ;;;; GitHub
 (use-package magit-gh-pulls
   :config (add-hook 'magit-mode-hook 'turn-on-magit-gh-pulls)
+  :ensure t)
+
+(use-package gist
+  :ensure t)
+
+(use-package github-clone
+  :ensure t)
+
+(use-package git-link
   :ensure t)
 
 (use-package github-browse-file
@@ -708,41 +811,76 @@ eg: /one/two => two
 
 
 ;;;; Org-mode
-(use-package org
-  :ensure t
-  :bind
-  (("M-n" . org-capture)
-    ("C-c a" . org-agenda)
-    ("C-c o" . ponelat/open-notes))
-  :config
-  (setq org-directory "~/Dropbox/org")
-  (setq org-default-notes-file "notes.org")
-  (setq org-src-fontify-natively t)
-  (setq org-capture-templates
-    '(("t" "Todo" entry (file org-default-notes-file)
-        "* TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
-       ("d" "Today" entry (file+headline org-default-notes-file "Today")
-         "** TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
-       ("i" "Ireland" entry (file org-default-notes-file)
-         "*%?\n  ")
-       ("n" "Notes" entry (file+headline org-default-notes-file "Notes")
-         "** %? \nEntered on %U\n %i\n %a")
-       ("s" "Dream Stack" entry (file+headline org-default-notes-file "Dream Stack")
-         "** %? \nEntered on %U\n %i\n %a")
-       ("m" "Meetup Notes" entry (file+headline org-default-notes-file "Meetup Notes")
-         "** %? \nEntered on %U\n %i\n %a"))))
-
 (defun ponelat/open-notes ()
   "Open the default notes (org-mode) file."
   (interactive)
   (find-file (concat org-directory "/" org-default-notes-file)))
 
+(defun ponelat/open-journal ()
+  "Open the journal file."
+  (interactive)
+  (find-file (concat org-directory "/journal.org")))
+
+;; (use-package ox-reveal
+;;   :ensure t)
+
+;; (use-package org-reveal
+;;   :ensure t)
+
+(use-package htmlize
+  :ensure t)
+
+(defun ponelat/open-project-org ()
+  "Open the default notes (org-mode) file."
+  (interactive)
+  (find-file (concat ponelat/today-dir "/projects.org")))
+
+(defun ponelat/org-open-link-shub (link)
+  "Open LINK as JIRA issue, if it matches shub-xxxx."
+  (cond ((string-match "\\(shub-[0-9]\\{4\\}\\)" link) ; [[shub-xxxx]]
+         (let* ((shub (match-string 1 link))
+                (url (concat "https://smartbear.atlassian.net/browse/" (url-encode-url (upcase shub)))))
+           (browse-url url)))))
+
+(add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
+
+(use-package org
+  :ensure t
+  :bind
+  (("M-n" . org-capture)
+    ("C-c a" . org-agenda)
+    ("C-c o" . ponelat/open-notes)
+    ("C-c j" . ponelat/open-journal)
+    ("C-c i" . ponelat/open-project-org))
+  :config
+  (setq org-directory "~/Dropbox/org")
+  (setq org-default-notes-file "notes.org")
+  (setq org-src-fontify-natively t)
+  (setq notes-file-absolute (concat org-directory "/" org-default-notes-file))
+  (setq journal-file-absolute (concat org-directory "/journal.org"))
+  (setq org-capture-templates
+    '(("t" "Todo" entry (file+headline notes-file-absolute "TODOs")
+        "** TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
+       ("d" "Today" entry (file+headline notes-file-absolute "Today")
+         "** TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
+       ("j" "Journal" entry (file+headline journal-file-absolute "")
+         "* %?\n  SCHEDULED: %t\n  %i\n  %a")
+       ("b" "Buy!" entry (file+headline notes-file-absolute "Buy")
+         "** TODO Buy:  %?\n  SCHEDULED: %t\n  %i\n  %a")
+       ("i" "Ireland" entry (file notes-file-absolute)
+         "*%?\n  ")
+       ("n" "Notes" entry (file+headline notes-file-absolute "Notes")
+         "** %? \nEntered on %U\n %i\n %a")
+       ("s" "Dream Stack" entry (file+headline notes-file-absolute "Dream Stack")
+         "** %? \nEntered on %U\n %i\n %a")
+       ("m" "Meetup Notes" entry (file+headline notes-file-absolute "Meetup Notes")
+         "** %? \nEntered on %U\n %i\n %a"))))
+
 (use-package evil-org
   :config
   (add-hook 'org-mode-hook (lambda () (evil-org-mode t)))
   (evil-define-key 'normal evil-org-mode-map
-    "J" nil
-    "K" nil)
+    "t" 'org-todo)
   :ensure t)
 
 ;; TODO: fix this
@@ -759,12 +897,16 @@ eg: /one/two => two
 
 (setq org-agenda-files (list ponelat/today-dir))
 
+(setq org-refile-targets
+      '((nil :maxlevel . 3)
+         (org-agenda-files :maxlevel . 3)))
+
 (use-package org-projectile
   :config
   (progn
     (setq org-projectile:projects-file
           (concat ponelat/today-dir "/projects.org"))
-    (setq org-agenda-files (append org-agenda-files (org-projectile:todo-files)))
+    ;; (setq org-agenda-files (append org-agenda-files (org-projectile:todo-files)))
     (add-to-list 'org-capture-templates (org-projectile:project-todo-entry "p")))
    :ensure t)
 
@@ -849,16 +991,26 @@ Version 2017-02-10"
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
+(use-package solarized-theme
+  :ensure t)
+
 (use-package zerodark-theme
   :ensure t)
 
-;;;; Load theme
-(load-theme 'zerodark t)
-(zerodark-setup-modeline-format)
-
-(provide 'init)
-
-;;; init.el ends here
 ;;;; Custom variables stored here...
+
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
+
+;;;; Load theme;;;; Load theme
+;; (load-theme 'solarized-light t)
+(load-theme 'badwolf)
+(zerodark-setup-modeline-format)
+
+;;;; Font,face
+;; (set-face-attribute 'default nil :font "Monaco-10")
+(set-face-attribute 'default nil :family "Ubuntu Mono" :height 120 :weight 'normal)
+;; (setq default-frame-alist '((font . "Source Code Pro-14")))
+
+;;; init.el ends here
+(provide 'init)

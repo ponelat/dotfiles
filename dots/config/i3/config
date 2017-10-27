@@ -19,15 +19,17 @@ set $ctrl Control
 # is used in the bar {} block below.
 font pango:System San Francisco Display 9
 
-set $bg-color 	         #2F2F2F
-set $inactive-bg-color   #2F2F2F
+
+set $bg-color 	         #10050D
+set $inactive-bg-color   #C1ADFF
 set $text-color          #f3f4f5
 set $inactive-text-color #676E7D
 set $urgent-bg-color     #E53935
 
 # Startup
 exec --no-startup-id dex -a -e i3
-exec --no-startup-id hsetroot -solid "$bg-color"
+# exec --no-startup-id hsetroot -solid "$bg-color"
+exec --no-startup-id "~/.fehbg &"
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
@@ -50,6 +52,7 @@ bindsym $mod+Shift+e exec "emacsclient -c -a ''"
 bindsym $mod+Shift+w exec "i3-sensible-terminal -e vim"
 bindsym $mod+Shift+t exec "chrome"
 bindsym $mod+Shift+y exec "~/.config/i3/layout.sh"
+bindsym $mod+c exec zenity --calendar
 
 # kill focused window
 bindsym $mod+q kill
@@ -240,8 +243,8 @@ for_window [class="^.*"] border pixel 1
 
 # Colours
 client.focused #93a1a1 "$bg-color" #93a1a1 #b58900
-client.focused_inactive #657b83 "$bg-color" #657b83 #657b83
-client.unfocused #073642 "$bg-color" #073642 #073642
+client.focused_inactive #657b83 "$inactive-bg-color" #657b83 #657b83
+client.unfocused #073642 "$inactive-bg-color" #073642 #073642
 client.urgent #b58900 "$urgent-bg-color" #b58900 #b58900
 
 # Start i3bar to display a workspace bar (plus the system information i3status

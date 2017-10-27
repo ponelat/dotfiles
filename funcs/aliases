@@ -12,6 +12,7 @@ alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias cs="clear; git status || ls "
 alias .z=". ~/.zshrc"
 alias j="fasd_cd -d"
+alias d="fasd -dl1"
 alias o='a -e xdg-open' # quick opening files with xdg-open
 alias open="xdg-open"
 alias ne="PATH=$PATH:./node_modules/.bin; " # Run a npm command, with the local npm bins
@@ -25,6 +26,7 @@ alias fonts="fc-list | cut -f2 -d: | fzf"
 
 alias post="curl -X POST"
 alias put="curl -X PUT"
+alias curlt="curl -w 'time_namelookup:  %{time_namelookup}\n time_connect:  %{time_connect}\n time_appconnect:  %{time_appconnect}\n time_pretransfer:  %{time_pretransfer}\n time_redirect:  %{time_redirect}\n time_starttransfer:  %{time_starttransfer}\n ----------\n time_total:  %{time_total}\n'"
 
 # jq aliases
 alias jq-apis-hash="jq '[.apis[] | .props = (reduce .properties[] as \$x ({}; . + {(\$x.type | ascii_downcase): (\$x.value // \$x.url)})) | del(.properties)']"
@@ -41,3 +43,24 @@ function ignore() {
 }
 
 alias hubup="git pushu && hub pull-request"
+
+# c - browse chrome history
+c() {
+  local cols sep google_history open
+  cols=$(( COLUMNS / 3 ))
+  sep='{::}'
+
+  if [ "$(uname)" = "Darwin" ]; then
+    google_history="$HOME/Library/Application Support/Google/Chrome/Default/History"
+    open=open
+  else
+    google_history="$HOME/.config/google-chrome-unstable/Default/History"
+    open=xdg-open
+  fi
+  cp -f "$google_history" /tmp/h
+  sqlite3 -separator $sep /tmp/h \
+    "select substr(title, 1, $cols), url
+     from urls order by last_visit_time desc" |
+  awk -F $sep '{printf "%-'$cols's  \x1b[36m%s\x1b[m\n", $1, $2}' |
+  fzf --ansi --multi | sed 's#.*\(https*://\)#\1#' | xargs $open > /dev/null 2> /dev/null
+}

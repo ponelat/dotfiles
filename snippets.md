@@ -33,3 +33,10 @@
 - git log -L /regex/:filespec
 
 
+### Show each ref's last commit, sorted by most recent
+- git for-each-ref --format='<what-to-output>' --sort='<by?>' refs/ | sort -r | column -t -s ',' 
+- eg: `git for-each-ref --format='%(committerdate:short),%(objectname:short),(%(committerdate:relative)),%(authorname),%(refname:short)' --sort=authorname refs/ | sort -r | column -t -s ',' | grep Josh`
+
+### ffmpeg
+Share your screen via webcam in Linux...
+- `ffmpeg -f x11grab -r 15 -s 1920x1080 -i :0.0+0,0 -vcodec rawvideo -pix_fmt yuv420p -threads 0 -f v4l2 /dev/video1`
