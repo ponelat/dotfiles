@@ -11,6 +11,10 @@
 (require 'package)
 (package-initialize)
 
+;; Add custom files
+;; Be sure to run "rcup" for stuff you've added to projects/dotfiles to show up here
+(add-to-list 'load-path "~/.emacs.d/custom")
+
 ;; Allows use to create closures for functions ( in my case, for sentinel callbacks )
 (setq lexical-binding t)
 
@@ -141,10 +145,62 @@
   "zoom"
   ("k" text-scale-increase "in")
   ("j" text-scale-decrease "out"))
+(defhydra ponelat/hydra/open-notes (:idle 1.0)
+  "Org files"
+  ("o" (ponelat/open-notes "office.org") "office")
+  ("f" (ponelat/open-notes "money.org") "money")
+  ("m" (ponelat/open-notes "meetups.org") "meetups")
+  ("p" (ponelat/open-notes "projects.org") "projects")
+  ("t" (ponelat/open-notes "thoughts.org") "thoughts")
+  ("n" (ponelat/open-notes "notes.org") "notes")
+  ("j" (ponelat/open-notes "jokes.org") "jokes")
+  ("d" (ponelat/open-notes "docs.org") "docs")
+  ("e" (ponelat/open-notes "personal.org") "personal"))
 
-(defhydra hydra-string-case (global-map "C-c C-s")
+  (defhydra hydra-string-case (global-map "C-c C-s")
   "string case"
   ("c" string-inflection-all-cycle "all cycle"))
+
+(global-set-key (kbd "C-c o") 'ponelat/hydra/open-notes/body)
+
+(defhydra hydra-helm (:hint nil :color pink)
+        "
+                                                                          ╭──────┐
+   Navigation   Other  Sources     Mark             Do             Help   │ Helm │
+  ╭───────────────────────────────────────────────────────────────────────┴──────╯
+         ^_k_^         _K_        _p_    [_m_] mark         [_v_] view         [_H_] helm help
+        ^^↑^^         ^↑^       ^↑^   [_t_] toggle all   [_d_] delete       [_s_] source help
+    _h_ ←   → _l_    _c_        ^ ^    [_u_] unmark all   [_f_] follow: %(helm-attr 'follow)
+        ^^↓^^         ^↓^       ^↓^    ^ ^               [_y_] yank selection
+         ^_j_^         _J_        _n_      ^ ^               [_w_] toggle windows
+  --------------------------------------------------------------------------------
+        "
+        ("<tab>" helm-keyboard-quit "back" :exit t)
+        ("<escape>" nil "quit")
+        ("\\" (insert "\\") "\\" :color blue)
+        ("h" helm-beginning-of-buffer)
+        ("j" helm-next-line)
+        ("k" helm-previous-line)
+        ("l" helm-end-of-buffer)
+        ("g" helm-beginning-of-buffer)
+        ("G" helm-end-of-buffer)
+        ("n" helm-next-source)
+        ("p" helm-previous-source)
+        ("K" helm-scroll-other-window-down)
+        ("J" helm-scroll-other-window)
+        ("c" helm-recenter-top-bottom-other-window)
+        ("m" helm-toggle-visible-mark)
+        ("t" helm-toggle-all-marks)
+        ("u" helm-unmark-all)
+        ("H" helm-help)
+        ("s" helm-buffer-help)
+        ("v" helm-execute-persistent-action)
+        ("d" helm-persistent-delete-marked)
+        ("y" helm-yank-selection)
+        ("w" helm-toggle-resplit-and-swap-windows)
+  ("f" helm-follow-mode))
+
+
 
 (use-package diminish
   :ensure t)
@@ -180,6 +236,7 @@
 
 ;;;; Sudo, root, sudowrite, dired, tramp
 (require 'tramp)
+(setq dired-dwim-target t)
 (defun ponelat/sudo-dired ()
   "Opens a Dired buffer with sudo priviledges."
   (interactive)
@@ -206,18 +263,20 @@
     (evil-leader/set-leader "<SPC>")
     (setq evil-normal-state-modes (append evil-motion-state-modes evil-normal-state-modes))
     (setq evil-motion-state-modes nil)
+    (evil-set-initial-state 'Info-mode 'normal)
     (define-key evil-insert-state-map (kbd "C-x C-l") 'ponelat/expand-lines)
     (evil-leader/set-key
       "q" #'kill-buffer-and-window
       "Q" #'save-buffers-kill-terminal
       "p" #'helm-projectile-switch-project
-      "j" #'helm-browse-project
+      "j" #'helm-M-x
       "a" #'helm-do-ag-project-root
       "b" #'helm-buffers-list
       "w" #'save-buffer
-      "s" #'avy-goto-char-timer
-      "k" #'avy-goto-char-2
-      "l" #'find-library
+      "l" #'avy-goto-line
+      "s" #'avy-goto-char-2
+      ;; "s" #'avy-goto-char-timer
+      ";" #'delete-other-windows
       "i" #'helm-imenu)))
 
 (use-package evil
@@ -245,6 +304,9 @@
   :config (global-evil-surround-mode t)
   :ensure t)
 
+;;;; Evil Rebellion
+(require 'evil-org-rebellion)
+
 ;;;; Hard core escape, super powerful keywords
 (defun ed/escape-normal-mode ()
   "Stop any recursive edit and go into normal mode."
@@ -259,7 +321,7 @@
 (bind-key "C-x y" #'eval-buffer)
 
 (bind-key "C-c l e" 'ponelat/emacs-lisp-imenu-init)
-(bind-key "C-c l o" (lambda () (interactive) (helm-org-agenda-files-headings "a")))
+(bind-key "C-c l o" (lambda () (interactive) (helm-org-agenda-files-headings)))
 
 (bind-key "C-c ;" 'delete-other-windows)
 (bind-key "C-c :" 'delete-window)
@@ -334,8 +396,9 @@
   (add-hook 'emacs-lisp-mode-hook 'evil-lispy-mode)
   (add-hook 'lisp-mode-hook 'evil-lispy-mode)
   :config
-  (evil-define-key 'insert evil-lispy-mode-map "[" nil)
-  (evil-define-key 'insert evil-lispy-mode-map "]" nil)
+  (progn
+    (evil-define-key 'insert evil-lispy-mode-map "[" nil)
+    (evil-define-key 'insert evil-lispy-mode-map "]" nil))
   :ensure t)
 
 ;;(setq show-paren-style 'expression)
@@ -436,6 +499,9 @@
 
 ;; formats the buffer before saving
 ;; (add-hook 'before-save-hook 'tide-format-before-save)
+
+;;;; Mermaid
+;; It should be added to .emacs.d/custom: see 'load-path
 
 ;;;; CSV
 (use-package csv-mode
@@ -652,9 +718,13 @@ eg: /one/two => two
           (json-data (json-read-file file-path))
           (scripts (alist-get 'scripts json-data))
           (script-keys (alist-keys scripts))
-          (choice (completing-read "Npm: " script-keys))
-          (project-name (ponelat/last-dir project-dir)))
-    (async-shell-command (format "cd %s && npm run %s" project-dir choice) (format "*npm* - %s - %s" choice project-name))))
+          (script-keys-with-base (append script-keys '((install . install) (build . build))))
+          (choice (completing-read "Npm: " script-keys-with-base))
+          (project-name (ponelat/last-dir project-dir))
+          (run-prefix (cond ((equal choice "install") "")
+                        ((equal choice "test") "")
+                        (t "run"))))
+    (async-shell-command (format "cd %s && npm %s %s" project-dir run-prefix choice) (format "*npm* - %s - %s" choice project-name))))
 
 (defun ponelat/helm-npm-run ()
   "Run npm-run, from the helm projectile buffer."
@@ -689,6 +759,7 @@ eg: /one/two => two
   (progn
     (setq helm-mode-fuzzy-match t)
     (setq helm-completion-in-region-fuzzy-match t)
+    (define-key helm-map (kbd "<escape>") 'hydra-helm/body)
     (helm-mode))
   :ensure t)
 
@@ -764,10 +835,18 @@ eg: /one/two => two
     (setq magit-list-refs-sortby "-creatordate"))
   :ensure t)
 
-(use-package git-modes
+(use-package evil-magit
   :ensure t)
 
-(use-package evil-magit
+;;;; GhostText, browser, live
+(use-package atomic-chrome
+  :ensure t)
+;;;; Jira
+(use-package jira-markup-mode
+  :config
+  (add-to-list 'auto-mode-alist '("\\.confluence$" . jira-markup-mode))
+  (add-to-list 'auto-mode-alist '("\\.jira" . jira-markup-mode))
+  (add-to-list 'auto-mode-alist '("/itsalltext/.*jira.*\\.txt$" . jira-markup-mode))
   :ensure t)
 
 ;;;; GitHub
@@ -810,22 +889,70 @@ eg: /one/two => two
   :diminish (git-gutter+-mode . "+="))
 
 
-;;;; Org-mode
-(defun ponelat/open-notes ()
-  "Open the default notes (org-mode) file."
+;;;; org-mode
+(use-package org
+  :ensure t
+  :bind
+  (("M-n" . org-capture)
+    ("C-c a" . org-agenda)
+    ("C-c i" . org-narrow-to-subtree)
+    ("C-c I" . widen)
+    ("C-c j" . ponelat/open-journal))
+  :config
+  (progn
+    (setq org-directory "~/Dropbox/org")
+    (setq org-default-notes-file "notes.org")
+    (setq org-confirm-elisp-link-function nil)
+    (setq org-src-fontify-natively t)
+    (define-key org-mode-map (kbd "C-c ;") nil)
+    (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
+    (setq org-agenda-start-day "1d")
+    (setq org-agenda-span 5)
+    (setq org-agenda-start-on-weekday nil)
+    (setq org-deadline-warning-days 1)
+
+;;;; TODOs labels
+    (setq org-todo-keywords
+      '((sequence "NEXT(n)" "TODO(t)" "|" "DONE(d!)")
+         (sequence "LOOSE(l)" "SOMEDAY(s)" "|" "HABIT(h)")
+         (sequence "BLOCKED(b@)" "|" "CANCELLED(c@)")
+         (sequence "DISCUSS(i/@)" "|" "DONE(d!)")))
+;;;; org templates
+    (setq org-capture-templates
+      '(("t" "Todo" entry (file (lambda () (concat org-directory "/notes.org")))
+          "* TODO %?\n  %i\n  %a")
+         ("b" "Blank Point" entry (file (lambda () (concat org-directory "/notes.org")))
+           "* %?")
+         ("j" "Jokes" entry (file (lambda () (concat org-directory "/jokes.org")))
+           "* %?")
+         ("n" "Notes" entry (file (lambda () (concat org-directory "/notes.org")))
+           "* %?\n  %i\n  %a")
+         ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
+           "* LOOSE %?\n  %i\n  %a")))))
+
+(use-package helm-org-rifle
+  :ensure t)
+
+;;;; MS Graph functions
+(require 'ms-graph)
+(defun ponelat/get-office-data ()
   (interactive)
-  (find-file (concat org-directory "/" org-default-notes-file)))
+  "Get Office evnets for the week"
+  (shell-command "node /home/josh/projects/microsoft-graph-client/get-event-data.js"))
+
+
+(use-package ox-jira
+  :ensure t)
+
+(defun ponelat/open-notes (filename)
+  "Open the default FILENAME from default org dir."
+  (interactive)
+  (find-file (concat org-directory "/" filename)))
 
 (defun ponelat/open-journal ()
   "Open the journal file."
   (interactive)
   (find-file (concat org-directory "/journal.org")))
-
-;; (use-package ox-reveal
-;;   :ensure t)
-
-;; (use-package org-reveal
-;;   :ensure t)
 
 (use-package htmlize
   :ensure t)
@@ -842,39 +969,7 @@ eg: /one/two => two
                 (url (concat "https://smartbear.atlassian.net/browse/" (url-encode-url (upcase shub)))))
            (browse-url url)))))
 
-(add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
 
-(use-package org
-  :ensure t
-  :bind
-  (("M-n" . org-capture)
-    ("C-c a" . org-agenda)
-    ("C-c o" . ponelat/open-notes)
-    ("C-c j" . ponelat/open-journal)
-    ("C-c i" . ponelat/open-project-org))
-  :config
-  (setq org-directory "~/Dropbox/org")
-  (setq org-default-notes-file "notes.org")
-  (setq org-src-fontify-natively t)
-  (setq notes-file-absolute (concat org-directory "/" org-default-notes-file))
-  (setq journal-file-absolute (concat org-directory "/journal.org"))
-  (setq org-capture-templates
-    '(("t" "Todo" entry (file+headline notes-file-absolute "TODOs")
-        "** TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
-       ("d" "Today" entry (file+headline notes-file-absolute "Today")
-         "** TODO %?\n  SCHEDULED: %t\n  %i\n  %a")
-       ("j" "Journal" entry (file+headline journal-file-absolute "")
-         "* %?\n  SCHEDULED: %t\n  %i\n  %a")
-       ("b" "Buy!" entry (file+headline notes-file-absolute "Buy")
-         "** TODO Buy:  %?\n  SCHEDULED: %t\n  %i\n  %a")
-       ("i" "Ireland" entry (file notes-file-absolute)
-         "*%?\n  ")
-       ("n" "Notes" entry (file+headline notes-file-absolute "Notes")
-         "** %? \nEntered on %U\n %i\n %a")
-       ("s" "Dream Stack" entry (file+headline notes-file-absolute "Dream Stack")
-         "** %? \nEntered on %U\n %i\n %a")
-       ("m" "Meetup Notes" entry (file+headline notes-file-absolute "Meetup Notes")
-         "** %? \nEntered on %U\n %i\n %a"))))
 
 (use-package evil-org
   :config
@@ -889,7 +984,7 @@ eg: /one/two => two
   (interactive)
   (org-map-entries 'org-archive-subtree "/DONE" 'file))
 
-(use-package org-pomodoro
+(comment use-package org-pomodoro
   :ensure t
   :commands (org-pomodoro)
   :config
@@ -897,23 +992,41 @@ eg: /one/two => two
 
 (setq org-agenda-files (list ponelat/today-dir))
 
+(setq org-refile-use-outline-path "full-file-path")
 (setq org-refile-targets
       '((nil :maxlevel . 3)
          (org-agenda-files :maxlevel . 3)))
 
 (use-package org-projectile
+  :bind
+  (("C-c p t" . org-projectile-project-todo-completing-read))
   :config
   (progn
-    (setq org-projectile:projects-file
-          (concat ponelat/today-dir "/projects.org"))
-    ;; (setq org-agenda-files (append org-agenda-files (org-projectile:todo-files)))
-    (add-to-list 'org-capture-templates (org-projectile:project-todo-entry "p")))
-   :ensure t)
+    (setq org-projectile-projects-file
+      (concat ponelat/today-dir "/projects.org"))
+    (comment setq org-agenda-files (append org-agenda-files (org-projectile-todo-files)))
+    (push (org-projectile-project-todo-entry) org-capture-templates)
+    :ensure t))
 
+;;;; Package stuff
+(defun package-menu-find-marks ()
+  "Find packages marked for action in *Packages*."
+  (interactive)
+  (occur "^[A-Z]"))
 
+;; Only in Emacs 25.1+
+(defun package-menu-filter-by-status (status)
+  "Filter the *Packages* buffer by status."
+  (interactive
+   (list (completing-read
+          "Status: " '("new" "installed" "dependency" "obsolete"))))
+  (package-menu-filter (concat "status:" status)))
+
+(define-key package-menu-mode-map "s" #'package-menu-filter-by-status)
+(define-key package-menu-mode-map "a" #'package-menu-find-marks)
 ;;;; Run current file
 
-(defun xah-run-current-file ()
+(defun ponelat/run-this-file ()
   "Execute the current file.
 For example, if the current buffer is x.py, then it'll call 「python x.py」 in a shell.
 The file can be Emacs Lisp, PHP, Perl, Python, Ruby, JavaScript, TypeScript, Bash, Ocaml, Visual Basic, TeX, Java, Clojure.
@@ -973,17 +1086,18 @@ Version 2017-02-10"
 ;; Disable previous theme, before enabling new one. Not full proof.
 ;; Themes have a lot of power, and some of it cannot be reversed here
 
-(defadvice load-theme (before theme-dont-propagate activate)
-  "Try to completely revert a theme, befor applying a new one."
-  (mapc #'disable-theme custom-enabled-themes))
-
 ;; Provides leuven which is good for daylight coding
-(use-package sublime-themes
+(use-package zerodark-theme
+  :ensure)
+(use-package solarized-theme
+  :disabled t
+  :ensure t)
+;; (with-eval-after-load 'zerodark-theme ())
+;; This can only run in window mode...
+(comment use-package org-beautify-theme
   :ensure t)
 
-;; (with-eval-after-load 'zerodark-theme ())
-(use-package org-beautify-theme
-  :disabled t
+(use-package sublime-themes
   :ensure t)
 
 (use-package org-bullets
@@ -991,26 +1105,81 @@ Version 2017-02-10"
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-(use-package solarized-theme
-  :ensure t)
+;; ;;;; Load themes
+;; (defadvice load-theme (before theme-dont-propagate activate)
+;;   "Try to completely revert a theme, befor applying a new one."
+;;   (mapc #'disable-theme custom-enabled-themes))
 
-(use-package zerodark-theme
-  :ensure t)
+ (defun load-theme-only ()
+  "Load a theme, and disable all others."
+  (interactive)
+  (mapc #'disable-theme custom-enabled-themes)
+   (command-execute 'load-theme))
+
+;; Load theme on first frame ( only once )
+(defvar ponelat:theme-window-loaded nil "A flag used to indicate that the GUI theme got loaded.")
+(defvar ponelat:theme-terminal-loaded nil "A flag used to indicate that the Terminal theme got loaded.")
+
+;; Due to starting a daemon at the same time as our client
+;; The follow code exists to ensure that the theme is loaded at the right time.
+(defun ponelat/setup-theme ()
+  "Enable or load gui/window theme."
+  (if ponelat:theme-window-loaded
+    (progn
+      (enable-theme 'zerodark)
+      (zerodark-setup-modeline-format))
+    (progn
+      (load-theme 'zerodark)
+      (setq org-beautify-theme-use-box-hack nil)
+      (load-theme 'org-beautify)
+      (zerodark-setup-modeline-format)
+      (setq ponelat:theme-window-loaded t))))
+
+(defun ponelat/setup-theme-terminal ()
+  "Enable or load terminal theme."
+  (if ponelat:theme-terminal-loaded
+    (enable-theme 'solarized-light)
+    (progn
+      (load-theme 'solarized-light)
+      (setq ponelat:theme-terminal-loaded t))))
+
+(defun ponelat/after-make-frame-functions-setup-theme (frame)
+  "To be called from 'after-make-frame-functions which will provide FRAME.  This will setup theme."
+  (with-selected-frame frame
+    (if (window-system frame)
+      (ponelat/setup-theme)
+      (ponelat/setup-theme-terminal))))
+
+;; Either defer loading theme if this is a server
+;; or load the apropriate theme
+(if (daemonp)
+  (add-hook 'after-make-frame-functions #'ponelat/after-make-frame-functions-setup-theme)
+  (progn
+    (if (display-graphic-p)
+      (ponelat/setup-theme)
+      (ponelat/setup-theme-terminal))))
 
 ;;;; Custom variables stored here...
-
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
 
-;;;; Load theme;;;; Load theme
-;; (load-theme 'solarized-light t)
-(load-theme 'badwolf)
-(zerodark-setup-modeline-format)
-
 ;;;; Font,face
-;; (set-face-attribute 'default nil :font "Monaco-10")
-(set-face-attribute 'default nil :family "Ubuntu Mono" :height 120 :weight 'normal)
-;; (setq default-frame-alist '((font . "Source Code Pro-14")))
+(defvar ponelat/fonts
+  '(    ("Big" (:family "Ubuntu Mono" :height 160 :weight normal))
+     ("Normal" (:family "Ubuntu Mono" :height 120 :weight normal))))
+
+(defun ponelat/default-font (font-name)
+  "
+Set the font.  FONT-NAME is the key found in ponelat/fonts.
+Interactively you can choose the FONT-NAME"
+  (interactive
+    (list
+      (completing-read "Choose font: " (alist-keys ponelat/fonts))))
+  (let ((font-props (car (assoc-default font-name ponelat/fonts))))
+    (apply 'set-face-attribute (append '(default nil) font-props))))
+
+;; What is this???...
+;; (put 'narrow-to-region 'disabled nil)
 
 ;;; init.el ends here
 (provide 'init)
