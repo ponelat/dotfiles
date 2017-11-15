@@ -32,6 +32,17 @@
 (use-package macrostep
   :ensure t)
 
+;;;; Copy filename helper
+(defun copy-file-name-to-clipboard ()
+  "Copy the current buffer file name to the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+    (when filename
+      (kill-new filename)
+      (message "Copied buffer file name '%s' to the clipboard." filename))))
+
 ;;;; Config management
 (defun imenu-elisp-sections ()
   "Create a list of sections from config file."
@@ -145,7 +156,8 @@
   "zoom"
   ("k" text-scale-increase "in")
   ("j" text-scale-decrease "out"))
-(defhydra ponelat/hydra/open-notes (:idle 1.0)
+
+(defhydra ponelat/hydra/open-notes (:idle 1.0 :color blue)
   "Org files"
   ("o" (ponelat/open-notes "office.org") "office")
   ("f" (ponelat/open-notes "money.org") "money")
@@ -255,6 +267,7 @@
       (call-interactively 'hippie-expand)))
 
 
+
 (use-package evil-leader
   :ensure t
   :config
@@ -318,6 +331,7 @@
 
 ;;;; Global Bindings, keys
 (bind-key "C-x C-k" 'kill-this-buffer)
+(bind-key "C-x Q" 'save-buffers-kill-emacs)
 (bind-key "C-x y" #'eval-buffer)
 
 (bind-key "C-c l e" 'ponelat/emacs-lisp-imenu-init)
@@ -684,8 +698,11 @@
   :bind (("TAB"  . company-indent-or-complete-common))
   :ensure t
   :diminish company-mode
+  :defer 1
   :config
-  (setq company-idle-delay 0.1))
+  (progn
+    (global-company-mode)
+    (setq company-idle-delay 0.1)))
 
 (use-package yasnippet
   :init (setq yas-snippet-dirs
@@ -726,6 +743,12 @@ eg: /one/two => two
                         (t "run"))))
     (async-shell-command (format "cd %s && npm %s %s" project-dir run-prefix choice) (format "*npm* - %s - %s" choice project-name))))
 
+(defun ponelat/npm-link ()
+  "It'll link some project into some other ( defauling to current )"
+  (interactive)
+  (async-shell-command (format "cd %s && npm link && cd %s && npm link %s" project-target-dir project-base-path project-target)))
+
+
 (defun ponelat/helm-npm-run ()
   "Run npm-run, from the helm projectile buffer."
   (interactive)
@@ -759,7 +782,14 @@ eg: /one/two => two
   (progn
     (setq helm-mode-fuzzy-match t)
     (setq helm-completion-in-region-fuzzy-match t)
+    (setq helm-autoresize-mode t)
+    (setq helm-buffer-max-length 40)
     (define-key helm-map (kbd "<escape>") 'hydra-helm/body)
+    (defvar helm-source-file-not-found
+      (helm-build-dummy-source
+        "Create file"
+        :action 'find-file))
+    (add-to-list 'helm-projectile-sources-list helm-source-file-not-found t)
     (helm-mode))
   :ensure t)
 
@@ -896,20 +926,32 @@ eg: /one/two => two
   (("M-n" . org-capture)
     ("C-c a" . org-agenda)
     ("C-c i" . org-narrow-to-subtree)
+    ("C-c w" . org-agenda-refile)
     ("C-c I" . widen)
     ("C-c j" . ponelat/open-journal))
   :config
   (progn
-    (setq org-directory "~/Dropbox/org")
+    (define-key org-mode-map (kbd "C-c ;") nil)
+    (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
+
+    (setq org-directory ponelat/today-dir)
+    (setq org-agenda-files (list ponelat/today-dir))
     (setq org-default-notes-file "notes.org")
     (setq org-confirm-elisp-link-function nil)
     (setq org-src-fontify-natively t)
-    (define-key org-mode-map (kbd "C-c ;") nil)
-    (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
+    (setq org-insert-heading-respect-content t)
     (setq org-agenda-start-day "1d")
     (setq org-agenda-span 5)
     (setq org-agenda-start-on-weekday nil)
     (setq org-deadline-warning-days 1)
+
+    ;;;; Org refile
+    (setq org-refile-use-outline-path 'file)
+    (setq org-refile-allow-creating-parent-nodes 'confirm)
+    (setq org-outline-path-complete-in-steps nil)
+    (setq org-refile-targets
+          '((nil :maxlevel . 3)
+             (org-agenda-files :maxlevel . 3)))
 
 ;;;; TODOs labels
     (setq org-todo-keywords
@@ -933,13 +975,35 @@ eg: /one/two => two
 (use-package helm-org-rifle
   :ensure t)
 
-;;;; MS Graph functions
-(require 'ms-graph)
+;;;; External Org mode, Office, Gmail
 (defun ponelat/get-office-data ()
   (interactive)
   "Get Office evnets for the week"
-  (shell-command "node /home/josh/projects/microsoft-graph-client/get-event-data.js"))
+  (async-shell-command "n use 8.9.1 ~/projects/microsoft-graph-client/get-event-data.js" "*Import Office365 Events*"))
 
+(defun ponelat/get-all-data ()
+  "Gets all external org data."
+  (interactive)
+  (ponelat/get-gmail-data)
+  (ponelat/get-office-data))
+
+(defun ponelat/get-gmail-data ()
+  "Download ical from Gmail."
+  (interactive)
+  (async-shell-command "source ~/.env && ical2org-gmail.awk <(curl -Ls -o - $ICAL_GMAIL) > ~/Dropbox/org/gmail.org" "*Importing Gmail Calendar*"))
+
+(defun ponelat/get-PTO-calendar ()
+  "The iCal for the PTO calendar at work"
+  (interactive)
+  (async-shell-command "source ~/.env && ical2org-pto.awk <(curl -Ls -o - $ICAL_PTO) > ~/Dropbox/org/ical-pto.org" "*Importing Confluence PTO Calendar*"))
+
+;;;; Org mode helpers
+(defun ponelat/org-insert-child-headline ()
+  "It inserts a child headline ( ie: Lower than the current."
+  (interactive)
+  (org-insert-heading-respect-content)
+  (org-demote)
+  (call-interactively 'evil-insert))
 
 (use-package ox-jira
   :ensure t)
@@ -970,12 +1034,16 @@ eg: /one/two => two
            (browse-url url)))))
 
 
-
 (use-package evil-org
   :config
   (add-hook 'org-mode-hook (lambda () (evil-org-mode t)))
-  (evil-define-key 'normal evil-org-mode-map
-    "t" 'org-todo)
+  (progn
+    (evil-define-key 'normal evil-org-mode-map
+      "t" 'org-todo)
+    (evil-define-key 'normal evil-org-mode-map
+      (kbd "C-S-<return>") 'ponelat/org-insert-child-headline)
+    (evil-define-key 'insert evil-org-mode-map
+      (kbd "C-S-<return>") 'ponelat/org-insert-child-headline))
   :ensure t)
 
 ;; TODO: fix this
@@ -989,13 +1057,6 @@ eg: /one/two => two
   :commands (org-pomodoro)
   :config
     (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))))
-
-(setq org-agenda-files (list ponelat/today-dir))
-
-(setq org-refile-use-outline-path "full-file-path")
-(setq org-refile-targets
-      '((nil :maxlevel . 3)
-         (org-agenda-files :maxlevel . 3)))
 
 (use-package org-projectile
   :bind
