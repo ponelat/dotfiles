@@ -800,11 +800,19 @@
   :bind (("TAB" . company-complete-common-or-cycle))
   :config
   (progn
+    (setq evil-complete-next-func 'company-complete-common-or-cycle)
+    (setq evil-complete-previous-func 'company-complete-common-or-cycle)
+
     (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
-    (define-key company-active-map (kbd "C-s") 'company-search-mode)
     (define-key company-active-map (kbd "C-n") 'company-select-next-or-abort)
-    (define-key company-active-map (kbd "C-p") 'company-select-previous-or-abort)
+    (define-key company-active-map (kbd "C-s") 'company-search-mode)
     (define-key company-active-map (kbd "C-h") nil)
+    (define-key company-active-map (kbd "C-p") 'company-select-previous-or-abort)
+    (define-key company-active-map (kbd "C-s") 'company-filter-candidates)
+
+    (define-key company-search-map (kbd "C-n") 'company-select-next-or-abort)
+    (define-key company-search-map (kbd "C-p") 'company-select-previous-or-abort)
+
     (global-company-mode)
     (setq company-idle-delay 1)))
 
@@ -1306,18 +1314,127 @@ Version 2017-02-10"
           (`(,id . ,f) (funcall f id)))))))
 
 (advice-add 'load-theme :around #'gh/load-theme-advice)
+
+(defun ponelat/theme-soothe-extras (theme-id)
+  "Add extra theme settings to THEME-ID theme."
+  (interactive)
+  (let*  ((class '((class color) (min-colors 89)))
+           ;; Palette
+           (foam             "#E0E4CC")
+           (snow-code        "#ECE5CE")
+           (crem             "#F4EAD5")
+           (dirty-crem       "#DBD2BF")
+           (dirty-crem-bg    "#2B2A26")
+           (gray-1           "#AAAAAA")
+           (gray-2           "#828282")
+           (gray-3           "#333333")
+           (gray-4           "#2A2A2A")
+           (gray-5           "#252525")
+           (gray-6           "#202020")
+           (gray-1bg         "#0A0A0A")
+           (gray-2bg         "#111111")
+           (gray-3bg         "#141414")
+           (gray-4bg         "#171717")
+           (gray-5bg         "#1A1A1A")
+           (gray-6bg         "#1E1E1E")
+           (red-1            "#B13120")
+           (red-2            "#A23F1E")
+           (red-3            "#AA1100")
+           (red-4            "#660000")
+           (red-1bg          "#1D1515")
+           (red-2bg          "#251C1E")
+           (brown-1          "#8F621D")
+           (brown-1bg        "#2A1F1F")
+           (orange-1         "#D94A05")
+           (orange-2         "#FF5211")
+           (orange-1bg       "#1F1710")
+           (yellow-1         "#CEAE3E")
+           (yellow-1bg       "#18140C")
+           (green-1          "#719F34")
+           (green-2          "#3E8F75")
+           (green-3          "#839F5E")
+           (green-1bg        "#1A2321")
+           (green-2bg        "#1A2321")
+           (turquoise-1      "#01535F")
+           (turquoise-2      "#073E46")
+           (turquoise-1bg    "#04181C")
+           (turquoise-2bg    "#031316")
+           (blue-1           "#7C9FC9")
+           (blue-2           "#317598")
+           (blue-3           "#009090")
+           (blue-4           "#364E7A")
+           (blue-1bg         "#1E252F")
+           (blue-2bg         "#1B333E")
+           (blue-3bg         "#132228")
+           (blue-4bg         "#172028")
+           (purple-1         "#7868B5")
+           (purple-2         "#8A7FB5")
+           (purple-3         "#483E6C")
+           (purple-4         "#342B58")
+           (purple-1bg       "#1D1B25")
+           (purple-2bg       "#302948")
+           (purple-3bg       "#241F36")
+           (foreground       "#F4EAD5")
+           (hl-line          "#11252A")
+           (selection        "#11253A")
+           (background       "#110F13")
+           (background-dark  "#0F0D11")
+           (alt-background   "#111013"))
+
+  (custom-theme-set-faces
+      'soothe
+    `(company-echo-common ((,class (:foreground ,gray-1 :background ,gray-1bg))))
+    `(company-preview ((,class (:foreground ,gray-1 :background ,gray-1bg))))
+      `(company-preview-common ((,class (:foreground ,gray-1 :background ,gray-1bg))))
+    `(company-preview-search ((,class (:foreground ,orange-1 :background ,gray-2bg))))
+      `(company-scrollbar-bg ((,class (:foreground ,gray-1 :background ,gray-1bg))))
+      `(company-scrollbar-fg ((,class (:foreground ,gray-1 :background ,gray-1bg))))
+      `(company-template-field ((,class (:foreground ,gray-1 :background ,gray-1bg))))
+      `(company-tooltip ((,class (:foreground ,gray-1 :background ,gray-1bg))))
+      `(company-tooltip-annotation ((,class (:foreground ,gray-1))))
+      `(company-tooltip-annotation-selection ((,class (:foreground ,gray-1 :weight bold))))
+      `(company-tooltip-common ((,class (:foreground ,gray-1))))
+    `(company-tooltip-common-selection ((,class (:foreground ,gray-1 :background ,gray-1bg))))
+    `(company-tooltip-mouse ((,class (:inherit highlight))))
+    `(company-tooltip-selection ((,class (:background ,gray-3bg :weight bold)))))))
 ;; Provides leuven which is good for daylight coding
+
 (use-package zerodark-theme
+  :defer t
+  :ensure t)
+
+(use-package soothe-theme
+  :config
+  (te)
+  (progn
+    (gh/add-theme-hook
+      'soothe
+      #'ponelat/theme-soothe-extras))
+  :ensure t)
+
+(use-package badwolf-theme
+  :disabled t
+  :defer t
   :ensure)
+
+;; (use-package nord-theme
+;;   :defer t
+;;   :disabled t
+;;   :ensure)
+
 (use-package solarized-theme
+  :defer t
   :disabled t
   :ensure t)
 ;; (with-eval-after-load 'zerodark-theme ())
 ;; This can only run in window mode...
 (comment use-package org-beautify-theme
+  :defer t
   :ensure t)
 
 (use-package sublime-themes
+  :defer t
+  :disabled t
   :ensure t)
 
 (use-package org-bullets
@@ -1329,6 +1446,7 @@ Version 2017-02-10"
   "Set up the modeline."
   (interactive)
   (progn
+    (setq zerodark-use-paddings-in-mode-line nil)
     (zerodark-setup-modeline-format)
     (setq-default mode-line-format
       `("%e"
