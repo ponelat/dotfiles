@@ -23,10 +23,25 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(setq load-prefer-newer t)
 ;;;; init.el helpers
 (defmacro comment (&rest body)
   "Comment out sexp (BODY)."
   nil)
+
+;;;; Sum numbers
+(require 'cl-lib)
+(defun ponelat/sum-numbers-in-region (start end)
+  (interactive "r")
+  (message "%s"
+           (cl-reduce #'+
+              (split-string
+                (replace-regexp-in-string "[^0-9]+" " "
+                  (buffer-substring start end)))
+             :key #'string-to-number)))
+;; ;;;; SSH mode
+;; (use-package ssh-mode
+;;   :ensure t)
 
 ;;;; Macrostep
 (use-package macrostep
@@ -115,6 +130,7 @@
 
 ;;;; Dirs
 (defvar ponelat/today-dir "~/Dropbox/org")
+(defvar ponelat/projects-dir "~/projects")
 
 ;;;; Startup
 (setq inhibit-splash-screen t
@@ -122,7 +138,7 @@
       inhibit-startup-echo-area-message t)
 
 (menu-bar-mode -1)
-(toggle-scroll-bar -1)
+(scroll-bar-mode -1)
 (tool-bar-mode -1)
 (setq make-backup-files nil)
 (setq-default truncate-lines t)
@@ -167,6 +183,7 @@
   ("n" (ponelat/open-notes "notes.org") "notes")
   ("j" (ponelat/open-notes "jokes.org") "jokes")
   ("d" (ponelat/open-notes "docs.org") "docs")
+  ("l" (org-capture-goto-last-stored) "(last)")
   ("e" (ponelat/open-notes "personal.org") "personal"))
 
   (defhydra hydra-string-case (global-map "C-c C-s")
@@ -218,11 +235,18 @@
   :ensure t)
 
 (use-package ace-window
-  :disabled
   :bind (("M-p" . ace-window))
   :config
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   (setq aw-dispatch-always t)
+  :ensure t)
+
+;;;; Mode discovery
+(use-package discover-my-major
+  :config
+  (progn
+    (global-set-key (kbd "C-h C-m") 'discover-my-major)
+    (global-set-key (kbd "C-h M-m") 'discover-my-mode))
   :ensure t)
 
 (use-package ranger
@@ -266,8 +290,6 @@
            '(try-expand-line-all-buffers)))
       (call-interactively 'hippie-expand)))
 
-
-
 (use-package evil-leader
   :ensure t
   :config
@@ -278,6 +300,10 @@
     (setq evil-motion-state-modes nil)
     (evil-set-initial-state 'Info-mode 'normal)
     (define-key evil-insert-state-map (kbd "C-x C-l") 'ponelat/expand-lines)
+    (global-set-key (kbd "C-S-l") #'evil-window-right)
+    (global-set-key (kbd "C-S-h") #'evil-window-left)
+    (global-set-key (kbd "C-S-k") #'evil-window-up)
+    (global-set-key (kbd "C-S-j") #'evil-window-down)
     (evil-leader/set-key
       "q" #'kill-buffer-and-window
       "Q" #'save-buffers-kill-terminal
@@ -295,8 +321,10 @@
 (use-package evil
   :ensure t
   :config
-  (evil-mode)
-  (define-key evil-normal-state-map "\C-d" nil))
+  (progn
+    (evil-mode)
+    (define-key evil-normal-state-map "\C-d" nil)
+    (define-key evil-normal-state-map "\M-." nil)))
 
 ;; Make sure words are treated correctly in evil mode
 (with-eval-after-load 'evil
@@ -335,7 +363,7 @@
 (bind-key "C-x y" #'eval-buffer)
 
 (bind-key "C-c l e" 'ponelat/emacs-lisp-imenu-init)
-(bind-key "C-c l o" (lambda () (interactive) (helm-org-agenda-files-headings)))
+(bind-key "C-c l o" 'helm-org-rifle-agenda-files)
 
 (bind-key "C-c ;" 'delete-other-windows)
 (bind-key "C-c :" 'delete-window)
@@ -404,6 +432,21 @@
 ;;   (add-hook 'lisp-mode-hook 'lispy-mode)
 ;;   (define-key lispy-mode-map (kbd "M-n") nil))
 
+(defun ponelat/lispy-kill-sexp ()
+  "It'll kill the next balanced sexp and then jump back into lispy mode."
+  (interactive)
+  (kill-sexp)
+  (delete-blank-lines)
+  (next-line)
+  (evil-lispy/enter-state-left))
+
+(defun ponelat/lispy-clone ()
+  "It'll clone the sexp, then run."
+  (interactive)
+  (special-lispy-clone)
+  (special-lispy-down)
+  (special-lispy-ace-symbol-replace))
+
 (use-package evil-lispy
   :init
   (add-hook 'clojure-mode-hook 'evil-lispy-mode)
@@ -412,6 +455,10 @@
   :config
   (progn
     (evil-define-key 'insert evil-lispy-mode-map "[" nil)
+    (evil-define-key 'insert evil-lispy-mode-map ")" nil)
+    (define-key lispy-mode-map (kbd "C-d") 'ponelat/lispy-kill-sexp)
+    (define-key lispy-mode-map (kbd "c") 'ponelat/lispy-clone)
+    (define-key lispy-mode-map (kbd "\"") nil)
     (evil-define-key 'insert evil-lispy-mode-map "]" nil))
   :ensure t)
 
@@ -482,7 +529,10 @@
 
 ;;;; HTTP, REST, Swagger
 (use-package restclient
-  :ensure t)
+  :config
+  (progn
+    (add-to-list 'auto-mode-alist '("\\.rest\\'" . restclient-mode)))
+:ensure t)
 
 (use-package company-restclient
   :config
@@ -529,6 +579,32 @@
 (use-package rspec-mode
   :ensure t)
 
+;;;; Rust, cargo
+(use-package rust-mode
+  :config
+  (progn
+    (define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
+    (setq company-tooltip-align-annotations t)
+    (setq rust-cargo-bin "~/.cargo/bin/cargo"))
+  :ensure t)
+
+(use-package toml-mode
+  :ensure t)
+
+(use-package racer
+  :config
+  (progn
+    (add-hook 'rust-mode-hook #'racer-mode)
+    (add-hook 'racer-mode-hook #'eldoc-mode)
+    (setq racer-rust-src-path "~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src"))
+  :ensure t)
+
+;;;; Docker, Dockerfile
+(use-package dockerfile-mode
+  :config
+  (progn
+    (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
+  :ensure t)
 
 ;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
@@ -537,7 +613,31 @@
   :config
   (progn
     (setq js2-mode-show-parse-errors t)
-    (setq js2-mode-show-strict-warnings nil)))
+    (setq js2-mode-show-strict-warnings nil)
+    (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
+
+(defun ponelat/beautify-json ()
+  (interactive)
+  (let ((b (if mark-active (min (point) (mark)) (point-min)))
+        (e (if mark-active (max (point) (mark)) (point-max))))
+    (shell-command-on-region b e
+      "python -mjson.tool" (current-buffer) t)))
+
+(use-package xref-js2
+  :config
+  (progn
+    (define-key js2-mode-map (kbd "M-.") nil)
+    (add-hook 'js2-mode-hook
+      (lambda ()
+        (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t))))
+  :ensure t)
+
+(use-package js2-refactor
+  :config
+  (progn
+    (js2r-add-keybindings-with-prefix "C-c C-r")
+    (add-hook 'js2-mode-hook #'js2-refactor-mode))
+  :ensure t)
 
 
 ;; ag projects
@@ -572,6 +672,7 @@
   (add-to-list 'auto-mode-alist '("\\.jsx?$" . rjsx-mode))
   (define-key rjsx-mode-map "<" nil)
   (define-key rjsx-mode-map (kbd "C-d") nil)
+  (define-key rjsx-mode-map (kbd "C-c r") #'rjsx-rename-tag-at-point)
   :ensure t)
 
 (use-package indium
@@ -695,14 +796,17 @@
 
 ;;;; Autocomplete, company, snippets
 (use-package company
-  :bind (("TAB"  . company-indent-or-complete-common))
   :ensure t
-  :diminish company-mode
-  :defer 1
+  :bind (("TAB" . company-complete-common-or-cycle))
   :config
   (progn
+    (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
+    (define-key company-active-map (kbd "C-s") 'company-search-mode)
+    (define-key company-active-map (kbd "C-n") 'company-select-next-or-abort)
+    (define-key company-active-map (kbd "C-p") 'company-select-previous-or-abort)
+    (define-key company-active-map (kbd "C-h") nil)
     (global-company-mode)
-    (setq company-idle-delay 0.1)))
+    (setq company-idle-delay 1)))
 
 (use-package yasnippet
   :init (setq yas-snippet-dirs
@@ -743,13 +847,17 @@ eg: /one/two => two
                         (t "run"))))
     (async-shell-command (format "cd %s && npm %s %s" project-dir run-prefix choice) (format "*npm* - %s - %s" choice project-name))))
 
-(defun ponelat/npm-link ()
-  "It'll link some project into some other ( defauling to current )"
-  (interactive)
-  (async-shell-command (format "cd %s && npm link && cd %s && npm link %s" project-target-dir project-base-path project-target)))
-
+(defun ponelat/npm-link (base-dir target-dir)
+  "It'll link TARGET-DIR to BASE-DIR project."
+  (let ((relative-path-to-target (file-relative-name target-dir base-dir)))
+    (async-shell-command (format "cd %s && npm link %s" base-dir relative-path-to-target))))
 
 (defun ponelat/helm-npm-run ()
+  "Run npm-run, from the helm projectile buffer."
+  (interactive)
+  (helm-exit-and-execute-action #'ponelat/npm-run))
+
+(defun ponelat/helm-get-env ()
   "Run npm-run, from the helm projectile buffer."
   (interactive)
   (helm-exit-and-execute-action #'ponelat/npm-run))
@@ -758,6 +866,17 @@ eg: /one/two => two
   "Run an npm command in the current project."
   (interactive)
   (ponelat/npm-run (projectile-project-root)))
+
+(defun ponelat/parent-dir (path)
+  (file-name-directory (directory-file-name path)))
+
+(defun ponelat/projectile-npm-link (link-path)
+  "Run an npm link against LINK-PATH."
+  (interactive
+    (list (read-directory-name "Project to Link: "
+            (ponelat/parent-dir
+              (projectile-project-root)))))
+  (ponelat/npm-link (projectile-project-root) link-path))
 
 (defun ponelat/helm-ag-do ()
   "Run npm-run, from the helm projectile buffer."
@@ -778,18 +897,13 @@ eg: /one/two => two
 (use-package helm
   :defines helm-mode-fuzzy-match helm-completion-in-region-fuzzy-match helm-M-x-fuzzy-match
   :diminish helm-mode
+  :bind (("M-x" . helm-M-x))
   :config
   (progn
     (setq helm-mode-fuzzy-match t)
     (setq helm-completion-in-region-fuzzy-match t)
-    (setq helm-autoresize-mode t)
     (setq helm-buffer-max-length 40)
-    (define-key helm-map (kbd "<escape>") 'hydra-helm/body)
-    (defvar helm-source-file-not-found
-      (helm-build-dummy-source
-        "Create file"
-        :action 'find-file))
-    (add-to-list 'helm-projectile-sources-list helm-source-file-not-found t)
+    (define-key helm-map [(control ?w)] 'backward-kill-word)
     (helm-mode))
   :ensure t)
 
@@ -797,32 +911,34 @@ eg: /one/two => two
   :ensure t)
 
 (use-package helm-projectile
-  :bind (("M-x" . helm-M-x))
   :ensure t
   :defer 1
   :config
-  (helm-projectile-on)
-  (define-key helm-projectile-projects-map (kbd "C-l") #'ponelat/helm-npm-run)
-  (define-key helm-projectile-projects-map (kbd "C-a") #'ponelat/helm-ag-do))
+  (progn
+    (helm-projectile-on)
+    (helm-projectile-define-key helm-projectile-projects-map (kbd "C-c g") #'helm-projectile-vc)
+    (define-key helm-projectile-projects-map (kbd "C-l") #'ponelat/helm-npm-run)
+    (define-key helm-projectile-projects-map (kbd "C-a") #'ponelat/helm-ag-do)))
 
 
 (use-package helm-ag
   :ensure t)
 
-(use-package flx
-  :ensure t)
+;; (use-package flx
+;;   :ensure t)
 
-(use-package helm-flx
-  :ensure t
-  :config
-  (helm-flx-mode +1))
+;; (use-package helm-flx
+;;   :ensure t
+;;   :config
+;;   (progn
+;;     (setq helm-flx-for-helm-find-files t)
+;;     (setq helm-flx-for-helm-locate t)
+;;     (helm-flx-mode +1)))
 
 (use-package helm-fuzzier
   :ensure t
   :config
   (progn
-    (setq helm-flx-for-helm-find-files t)
-    (setq helm-flx-for-helm-locate t)
     (helm-fuzzier-mode 1)))
 
 (defun helm-buffer-switch-to-new-window (_candidate)
@@ -846,16 +962,22 @@ eg: /one/two => two
 ;; (use-package flx-ido
 ;;   :ensure t)
 
+;;;; Ivy, counsel, swiper
+(setq enable-recursive-minibuffers t)
+(use-package ivy
+  :bind (("C-s" . swiper))
+  :config
+  (progn
+    (define-key swiper-map [(control ?w)] 'backward-kill-word))
+  :ensure t)
 ;;;; Git, magit
 
 (setq smerge-command-prefix "\C-cv")
 
-(defun ponelat/reset-commit-soft ()
+(defun ponelat/reset-head-soft ()
   "Reset to the last commit, softly."
   (interactive)
   (magit-reset-soft "HEAD^"))
-
-(global-set-key (kbd "M-o s") #'ponelat/reset-commit-soft)
 
 (use-package magit
   :bind (("C-c g" . magit-status))
@@ -915,7 +1037,13 @@ eg: /one/two => two
             (define-key git-gutter+-mode-map (kbd "C-x c") 'git-gutter+-commit)
             (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
             (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
-            (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer))
+            (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer)
+            (custom-set-variables
+              '(git-gutter+-window-width 1)
+              '(git-gutter+-added-sign "+")
+              '(git-gutter+-deleted-sign "-")
+              '(git-gutter+-modified-sign "=")
+              '(git-gutter:visual-line t)))
   :diminish (git-gutter+-mode . "+="))
 
 
@@ -932,6 +1060,7 @@ eg: /one/two => two
   :config
   (progn
     (define-key org-mode-map (kbd "C-c ;") nil)
+    (global-set-key (kbd "C-c C-L") #'org-store-link)
     (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
 
     (setq org-directory ponelat/today-dir)
@@ -955,7 +1084,7 @@ eg: /one/two => two
 
 ;;;; TODOs labels
     (setq org-todo-keywords
-      '((sequence "NEXT(n)" "TODO(t)" "|" "DONE(d!)")
+      '((sequence "NEXT(n)" "TODO(t)" "InProgress(p)" "|" "DONE(d!)")
          (sequence "LOOSE(l)" "SOMEDAY(s)" "|" "HABIT(h)")
          (sequence "BLOCKED(b@)" "|" "CANCELLED(c@)")
          (sequence "DISCUSS(i/@)" "|" "DONE(d!)")))
@@ -973,6 +1102,9 @@ eg: /one/two => two
            "* LOOSE %?\n  %i\n  %a")))))
 
 (use-package helm-org-rifle
+  :config
+  (progn
+    (setq helm-org-rifle-show-path t))
   :ensure t)
 
 ;;;; External Org mode, Office, Gmail
@@ -985,6 +1117,7 @@ eg: /one/two => two
   "Gets all external org data."
   (interactive)
   (ponelat/get-gmail-data)
+  (ponelat/get-pto-calendar)
   (ponelat/get-office-data))
 
 (defun ponelat/get-gmail-data ()
@@ -992,7 +1125,7 @@ eg: /one/two => two
   (interactive)
   (async-shell-command "source ~/.env && ical2org-gmail.awk <(curl -Ls -o - $ICAL_GMAIL) > ~/Dropbox/org/gmail.org" "*Importing Gmail Calendar*"))
 
-(defun ponelat/get-PTO-calendar ()
+(defun ponelat/get-pto-calendar ()
   "The iCal for the PTO calendar at work"
   (interactive)
   (async-shell-command "source ~/.env && ical2org-pto.awk <(curl -Ls -o - $ICAL_PTO) > ~/Dropbox/org/ical-pto.org" "*Importing Confluence PTO Calendar*"))
@@ -1043,7 +1176,11 @@ eg: /one/two => two
     (evil-define-key 'normal evil-org-mode-map
       (kbd "C-S-<return>") 'ponelat/org-insert-child-headline)
     (evil-define-key 'insert evil-org-mode-map
-      (kbd "C-S-<return>") 'ponelat/org-insert-child-headline))
+      (kbd "C-S-<return>") 'ponelat/org-insert-child-headline)
+    (evil-define-key 'insert evil-org-mode-map
+      (kbd "M-h") 'org-metaleft)
+    (evil-define-key 'insert evil-org-mode-map
+      (kbd "M-l") 'org-metaright))
   :ensure t)
 
 ;; TODO: fix this
@@ -1065,7 +1202,6 @@ eg: /one/two => two
   (progn
     (setq org-projectile-projects-file
       (concat ponelat/today-dir "/projects.org"))
-    (comment setq org-agenda-files (append org-agenda-files (org-projectile-todo-files)))
     (push (org-projectile-project-todo-entry) org-capture-templates)
     :ensure t))
 
@@ -1080,7 +1216,7 @@ eg: /one/two => two
   "Filter the *Packages* buffer by status."
   (interactive
    (list (completing-read
-          "Status: " '("new" "installed" "dependency" "obsolete"))))
+           "Status: " '("new" "installed" "dependency" "obsolete"))))
   (package-menu-filter (concat "status:" status)))
 
 (define-key package-menu-mode-map "s" #'package-menu-filter-by-status)
@@ -1147,6 +1283,29 @@ Version 2017-02-10"
 ;; Disable previous theme, before enabling new one. Not full proof.
 ;; Themes have a lot of power, and some of it cannot be reversed here
 
+;;; Theme hooks
+
+;; "gh" is from http://www.greghendershott.com/2017/02/emacs-themes.html
+(defvar gh/theme-hooks nil
+  "((theme-id . function) ...)")
+
+(defun gh/add-theme-hook (theme-id hook-func)
+  "Add (THEME-ID . HOOK-FUNC) to 'gh/theme-hooks'."
+  (add-to-list 'gh/theme-hooks (cons theme-id hook-func)))
+
+(defun gh/load-theme-advice (f theme-id &optional no-confirm no-enable &rest args)
+  "Enhances `load-theme' in two ways:
+1. ~~Disables enabled themes for a clean slate.~~
+   Not doing that, since I want to layer some themes (ie: org-beautify )
+2. Calls functions registered using `gh/add-theme-hook'."
+  (prog1
+    (apply f theme-id no-confirm no-enable args)
+    (unless no-enable
+       (progn
+        (pcase (assq theme-id gh/theme-hooks)
+          (`(,id . ,f) (funcall f id)))))))
+
+(advice-add 'load-theme :around #'gh/load-theme-advice)
 ;; Provides leuven which is good for daylight coding
 (use-package zerodark-theme
   :ensure)
@@ -1166,16 +1325,54 @@ Version 2017-02-10"
   :config
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
+(defun ponelat/setup-mode-line ()
+  "Set up the modeline."
+  (interactive)
+  (progn
+    (zerodark-setup-modeline-format)
+    (setq-default mode-line-format
+      `("%e"
+         " "
+         ,zerodark-modeline-ro " "
+         ,zerodark-buffer-coding
+         mode-line-frame-identification " "
+         " "
+         ,zerodark-modeline-modified
+         " "
+         ,zerodark-modeline-buffer-identification
+         ,zerodark-modeline-position
+         ,zerodark-modeline-vc
+         "  "
+         (:eval (zerodark-modeline-flycheck-status))
+         "  " mode-line-misc-info mode-line-end-spaces))
+    (setq mode-line-format (default-value 'mode-line-format))))
+
+;;;; Custom variables stored here...
+(setq custom-file "~/.emacs.d/custom.el")
+(load custom-file 'noerror)
+
 ;; ;;;; Load themes
 ;; (defadvice load-theme (before theme-dont-propagate activate)
 ;;   "Try to completely revert a theme, befor applying a new one."
 ;;   (mapc #'disable-theme custom-enabled-themes))
 
- (defun load-theme-only ()
+ (defun ponelat/load-theme-only ()
   "Load a theme, and disable all others."
   (interactive)
   (mapc #'disable-theme custom-enabled-themes)
    (command-execute 'load-theme))
+
+(defun load-theme-only (theme &optional no-confirm no-enable)
+  "Load a THEME, and disable all others.  While respecting NO-CONFIRM and NO-ENABLE from 'load-theme'."
+  (interactive)
+  (mapc #'disable-theme custom-enabled-themes)
+  (load-theme theme no-confirm no-enable))
+
+ (defun enable-theme-only (theme)
+  "Enable a THEME, and disable all others."
+  (interactive)
+  (mapc #'disable-theme custom-enabled-themes)
+   (enable-theme theme))
 
 ;; Load theme on first frame ( only once )
 (defvar ponelat:theme-window-loaded nil "A flag used to indicate that the GUI theme got loaded.")
@@ -1187,21 +1384,26 @@ Version 2017-02-10"
   "Enable or load gui/window theme."
   (if ponelat:theme-window-loaded
     (progn
-      (enable-theme 'zerodark)
-      (zerodark-setup-modeline-format))
+      (ponelat/setup-mode-line)
+      (enable-theme-only 'soothe)
+      (enable-theme 'org-beautify))
     (progn
-      (load-theme 'zerodark)
+      (ponelat/setup-mode-line)
+      (load-theme-only 'soothe)
       (setq org-beautify-theme-use-box-hack nil)
-      (load-theme 'org-beautify)
-      (zerodark-setup-modeline-format)
-      (setq ponelat:theme-window-loaded t))))
+      (load-theme 'org-beautify 1)
+      (setq ponelat:theme-window-loaded t)
+      (set-frame-parameter (selected-frame) 'alpha '(100 . 100))
+      (add-to-list 'default-frame-alist '( alpha . (100 . 100))))))
 
 (defun ponelat/setup-theme-terminal ()
   "Enable or load terminal theme."
   (if ponelat:theme-terminal-loaded
-    (enable-theme 'solarized-light)
     (progn
-      (load-theme 'solarized-light)
+      (enable-theme 'solarized-light))
+    (progn
+      (customize-set-variable 'solarized-termcolors 256)
+      (load-theme 'solarized-light t)
       (setq ponelat:theme-terminal-loaded t))))
 
 (defun ponelat/after-make-frame-functions-setup-theme (frame)
@@ -1220,18 +1422,14 @@ Version 2017-02-10"
       (ponelat/setup-theme)
       (ponelat/setup-theme-terminal))))
 
-;;;; Custom variables stored here...
-(setq custom-file "~/.emacs.d/custom.el")
-(load custom-file 'noerror)
 
 ;;;; Font,face
 (defvar ponelat/fonts
-  '(    ("Big" (:family "Ubuntu Mono" :height 160 :weight normal))
-     ("Normal" (:family "Ubuntu Mono" :height 120 :weight normal))))
+   '( ("Big"          (:family "Ubuntu Mono"   :height 160 :weight normal))
+      ("Normal"       (:family "Ubuntu Mono"   :height 120 :weight normal))))
 
 (defun ponelat/default-font (font-name)
-  "
-Set the font.  FONT-NAME is the key found in ponelat/fonts.
+"Set the font.  FONT-NAME is the key found in ponelat/fonts.
 Interactively you can choose the FONT-NAME"
   (interactive
     (list
