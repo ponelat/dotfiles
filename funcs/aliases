@@ -8,8 +8,8 @@ alias e="emacsclient -nw -c -a ''"
 alias E="SUDO_EDITOR=\"emacsclient -t -a emacs\" sudoedit"
 alias pserver="python -m SimpleHTTPServer"
 alias cjson="curl -sL -H 'accept: application/json' -H 'content-type: application/json'"
+alias devcurl="curl -sLN -H 'accept: application/json' -H 'content-type: application/json' -H \"Authorization: $SWAGGERHUBDEV_TOKEN\""
 alias ls='ls -A --color=always --group-directories-first -1 -v'
-alias cs="clear; git status || ls "
 alias .z=". ~/.zshrc"
 alias j="fasd_cd -d"
 alias d="fasd -dl1"
@@ -28,13 +28,13 @@ alias post="curl -X POST"
 alias put="curl -X PUT"
 alias curlt="curl -w 'time_namelookup:  %{time_namelookup}\n time_connect:  %{time_connect}\n time_appconnect:  %{time_appconnect}\n time_pretransfer:  %{time_pretransfer}\n time_redirect:  %{time_redirect}\n time_starttransfer:  %{time_starttransfer}\n ----------\n time_total:  %{time_total}\n'"
 
-# jq aliases
-alias jq-apis-hash="jq '[.apis[] | .props = (reduce .properties[] as \$x ({}; . + {(\$x.type | ascii_downcase): (\$x.value // \$x.url)})) | del(.properties)']"
-alias jq-apis="jq-apis-hash | jq '[.[] + .[].props | del(.props)]'"
-alias jq-is-private="jq 'map(select(.props[\"x-private\"] == \"true\"))'"
-
 function docker-id() {
   docker ps | fzf | awk '{ print $1 }'
+}
+
+function cs() {
+  clear
+  git status "$@" || ls
 }
 
 # Add entry into .gitignore

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: p
+# key: p
+# --
+$1: PropTypes.${2:object}${3:.isRequired},

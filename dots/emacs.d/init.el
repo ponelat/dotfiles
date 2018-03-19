@@ -31,14 +31,15 @@
 
 ;;;; Sum numbers
 (require 'cl-lib)
+
 (defun ponelat/sum-numbers-in-region (start end)
   (interactive "r")
   (message "%s"
-           (cl-reduce #'+
-              (split-string
-                (replace-regexp-in-string "[^0-9]+" " "
-                  (buffer-substring start end)))
-             :key #'string-to-number)))
+    (cl-reduce #'+
+      (split-string
+        (replace-regexp-in-string "[^0-9]+" " "
+          (buffer-substring start end)))
+      :key #'string-to-number)))
 ;; ;;;; SSH mode
 ;; (use-package ssh-mode
 ;;   :ensure t)
@@ -149,10 +150,14 @@
   (shell-command (concat "google-chrome-unstable" " " "\"" url "\"")))
 (setq x-selection-timeout 300)
 
+(defun browse-url-firefox (url &optional new-window)
+  "Open URL in Firefox, possibly in NEW-WINDOW."
+  (shell-command (concat "firefox" " " "\"" url "\"")))
+
 (windmove-default-keybindings)
 (auto-image-file-mode 1)
 (setq vc-follow-symlinks t)
-(setq browse-url-browser-function #'browse-url-chrome-unstable)
+(setq browse-url-browser-function #'browse-url-firefox)
 (electric-pair-mode t)
 
 (use-package avy
@@ -177,6 +182,7 @@
   "Org files"
   ("o" (ponelat/open-notes "office.org") "office")
   ("f" (ponelat/open-notes "money.org") "money")
+  ("b" (ponelat/open-notes "api-book.org") "api-book")
   ("m" (ponelat/open-notes "meetups.org") "meetups")
   ("p" (ponelat/open-notes "projects.org") "projects")
   ("t" (ponelat/open-notes "thoughts.org") "thoughts")
@@ -184,9 +190,10 @@
   ("j" (ponelat/open-notes "jokes.org") "jokes")
   ("d" (ponelat/open-notes "docs.org") "docs")
   ("l" (org-capture-goto-last-stored) "(last)")
-  ("e" (ponelat/open-notes "personal.org") "personal"))
+  ("e" (ponelat/open-notes "personal.org") "personal")
+  ("x" (ponelat/open-notes "phoenix.org") "phoenix coffee"))
 
-  (defhydra hydra-string-case (global-map "C-c C-s")
+(defhydra hydra-string-case (global-map "C-c C-s")
   "string case"
   ("c" string-inflection-all-cycle "all cycle"))
 
@@ -326,6 +333,12 @@
     (define-key evil-normal-state-map "\C-d" nil)
     (define-key evil-normal-state-map "\M-." nil)))
 
+(use-package ace-link
+  :config
+  (progn
+    (ace-link-setup-default))
+  :ensure t)
+
 ;; Make sure words are treated correctly in evil mode
 (with-eval-after-load 'evil
   (defalias #'forward-evil-word #'forward-evil-symbol))
@@ -373,7 +386,26 @@
 
 ;;;; Lisp, paredit
 (show-paren-mode 1)
-
+(use-package parinfer
+  :disabled t
+  :ensure t
+  :bind
+  (("C-," . parinfer-toggle-mode))
+  :init
+  (progn
+    (setq parinfer-extensions
+      '(defaults       ; should be included.
+         pretty-parens  ; different paren styles for different modes.
+         evil           ; If you use Evil.
+         lispy          ; If you use Lispy. With this extension, you should install Lispy and do not enable lispy-mode directly.
+         paredit        ; Introduce some paredit commands.
+         smart-tab      ; C-b & C-f jump positions and smart shift with tab & S-tab.
+         smart-yank))   ; Yank behavior depend on mode.
+    (add-hook 'clojure-mode-hook #'parinfer-mode)
+    (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
+    (add-hook 'common-lisp-mode-hook #'parinfer-mode)
+    (add-hook 'scheme-mode-hook #'parinfer-mode)
+    (add-hook 'lisp-mode-hook #'parinfer-mode)))
 ;;;; Pretty symbols, lambda
 
 (add-hook 'emacs-lisp-mode-hook
@@ -447,6 +479,16 @@
   (special-lispy-down)
   (special-lispy-ace-symbol-replace))
 
+(defun ponelat/slurp-forward ()
+  "It tries to slurp forward in different langs, starting with Lisp."
+  (interactive)
+  (lispy-forward-slurp-sexp 1))
+
+(defun ponelat/barf-forward ()
+  "It tries to barf forward in different langs, starting with Lisp."
+  (interactive)
+  (lispy-forward-barf-sexp 1))
+
 (use-package evil-lispy
   :init
   (add-hook 'clojure-mode-hook 'evil-lispy-mode)
@@ -459,7 +501,9 @@
     (define-key lispy-mode-map (kbd "C-d") 'ponelat/lispy-kill-sexp)
     (define-key lispy-mode-map (kbd "c") 'ponelat/lispy-clone)
     (define-key lispy-mode-map (kbd "\"") nil)
-    (evil-define-key 'insert evil-lispy-mode-map "]" nil))
+    (evil-define-key 'insert evil-lispy-mode-map "]" nil)
+    (evil-define-key 'insert evil-lispy-mode-map (kbd "C-.") 'ponelat/slurp-forward)
+    (evil-define-key 'insert evil-lispy-mode-map (kbd "C-,") 'ponelat/barf-forward))
   :ensure t)
 
 ;;(setq show-paren-style 'expression)
@@ -606,6 +650,116 @@
     (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
   :ensure t)
 
+;;;; Java, jdee, meghanada
+
+;; (defun ponelat/java-hook ()
+;;   "Sets up Java."
+;;   (interactive)
+;;   (eclim)
+;;   )
+
+(use-package eclim
+  :defer t
+  :config
+  (progn
+    (setq eclimd-autostart t)
+    (custom-set-variables
+      '(eclim-eclipse-dirs '("~/eclipse"))
+      '(eclim-executable "~/eclipse/eclim"))
+    (global-eclim-mode 1))
+  :ensure t)
+
+(use-package company-emacs-eclim
+  :defer t
+  :config
+  (progn
+    (company-emacs-eclim-setup))
+  :ensure t)
+
+;; (use-package jdee
+;;   :disabled t
+;;   :config
+;;   (setq jdee-server-dir "~/projects/jdee-server/target/")
+;;   :ensure t)
+
+;; (use-package autodisass-java-bytecode
+;;   :ensure t
+;;   :defer t)
+
+;; (use-package google-c-style
+;;   :defer t
+;;   :ensure t
+;;   :commands
+;;   (google-set-c-style))
+
+;; (use-package meghanada
+;;   :defer t
+;;   :init
+;;   (add-hook 'java-mode-hook
+;;             (lambda ()
+;;               (google-set-c-style)
+;;               (google-make-newline-indent)
+;;               (meghanada-mode t)
+;;               (smartparens-mode t)
+;;               (rainbow-delimiters-mode t)
+;;               (highlight-symbol-mode t)
+;;               (add-hook 'before-save-hook 'meghanada-code-beautify-before-save)))
+
+;;   :config
+;;   (use-package realgud
+;;     :ensure t)
+;;   (setq indent-tabs-mode nil)
+;;   (setq tab-width 2)
+;;   (setq c-basic-offset 2)
+;;   (setq meghanada-server-remote-debug t)
+;;   (setq meghanada-javac-xlint "-Xlint:all,-processing")
+;;   :bind
+;;   (:map meghanada-mode-map
+;;         ("C-S-t" . meghanada-switch-testcase)
+;;         ("M-RET" . meghanada-local-variable)
+;;         ("C-M-." . helm-imenu)
+;;         ("M-r" . meghanada-reference)
+;;         ("M-t" . meghanada-typeinfo)
+;;         ("C-z" . hydra-meghanada/body))
+;;   :commands
+;;   (meghanada-mode))
+
+;; (defhydra hydra-meghanada (:hint nil :exit t)
+;; "
+;; ^Edit^                           ^Tast or Task^
+;; ^^^^^^-------------------------------------------------------
+;; _f_: meghanada-compile-file      _m_: meghanada-restart
+;; _c_: meghanada-compile-project   _t_: meghanada-run-task
+;; _o_: meghanada-optimize-import   _j_: meghanada-run-junit-test-case
+;; _s_: meghanada-switch-test-case  _J_: meghanada-run-junit-class
+;; _v_: meghanada-local-variable    _R_: meghanada-run-junit-recent
+;; _i_: meghanada-import-all        _r_: meghanada-reference
+;; _g_: magit-status                _T_: meghanada-typeinfo
+;; _l_: helm-ls-git-ls
+;; _q_: exit
+;; "
+;;   ("f" meghanada-compile-file)
+;;   ("m" meghanada-restart)
+
+;;   ("c" meghanada-compile-project)
+;;   ("o" meghanada-optimize-import)
+;;   ("s" meghanada-switch-test-case)
+;;   ("v" meghanada-local-variable)
+;;   ("i" meghanada-import-all)
+
+;;   ("g" magit-status)
+;;   ("l" helm-ls-git-ls)
+
+;;   ("t" meghanada-run-task)
+;;   ("T" meghanada-typeinfo)
+;;   ("j" meghanada-run-junit-test-case)
+;;   ("J" meghanada-run-junit-class)
+;;   ("R" meghanada-run-junit-recent)
+;;   ("r" meghanada-reference)
+
+;;   ("q" exit)
+;;   ("z" nil "leave"))
+
 ;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
   :ensure t
@@ -615,6 +769,13 @@
     (setq js2-mode-show-parse-errors t)
     (setq js2-mode-show-strict-warnings nil)
     (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
+
+(use-package company-tern
+  :defer 1
+  :config
+  (progn
+    (add-to-list 'company-backends 'company-tern))
+  :ensure t)
 
 (defun ponelat/beautify-json ()
   (interactive)
@@ -672,11 +833,11 @@
   (add-to-list 'auto-mode-alist '("\\.jsx?$" . rjsx-mode))
   (define-key rjsx-mode-map "<" nil)
   (define-key rjsx-mode-map (kbd "C-d") nil)
+  (define-key rjsx-mode-map (kbd "C-c C-j") nil)
   (define-key rjsx-mode-map (kbd "C-c r") #'rjsx-rename-tag-at-point)
   :ensure t)
 
 (use-package indium
-  :disabled t
   :ensure t)
 
 (defun ponelat/find-incoming-js-imports (project filename)
@@ -797,23 +958,26 @@
 ;;;; Autocomplete, company, snippets
 (use-package company
   :ensure t
-  :bind (("TAB" . company-complete-common-or-cycle))
   :config
   (progn
-    (setq evil-complete-next-func 'company-complete-common-or-cycle)
-    (setq evil-complete-previous-func 'company-complete-common-or-cycle)
-
-    (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
+    (setq
+      evil-complete-next-func 'company-complete-common-or-cycle
+      evil-complete-previous-func 'company-complete-common-or-cycle
+      company-global-modes '(not magit-mode))
+    (global-company-mode)
+    (define-key company-mode-map (kbd "TAB") 'company-complete)
+    (define-key company-active-map (kbd "<tab>") 'company-complete-common-or-cycle)
     (define-key company-active-map (kbd "C-n") 'company-select-next-or-abort)
     (define-key company-active-map (kbd "C-s") 'company-search-mode)
     (define-key company-active-map (kbd "C-h") nil)
     (define-key company-active-map (kbd "C-p") 'company-select-previous-or-abort)
     (define-key company-active-map (kbd "C-s") 'company-filter-candidates)
 
+    (define-key company-active-map (kbd "C-w") 'nil)
+
     (define-key company-search-map (kbd "C-n") 'company-select-next-or-abort)
     (define-key company-search-map (kbd "C-p") 'company-select-previous-or-abort)
 
-    (global-company-mode)
     (setq company-idle-delay 1)))
 
 (use-package yasnippet
@@ -855,20 +1019,34 @@ eg: /one/two => two
                         (t "run"))))
     (async-shell-command (format "cd %s && npm %s %s" project-dir run-prefix choice) (format "*npm* - %s - %s" choice project-name))))
 
-(defun ponelat/npm-link (base-dir target-dir)
-  "It'll link TARGET-DIR to BASE-DIR project."
-  (let ((relative-path-to-target (file-relative-name target-dir base-dir)))
-    (async-shell-command (format "cd %s && npm link %s" base-dir relative-path-to-target))))
+(defun ponelat/npm-clone-and-link (project-dir)
+  "Fetch a list of npm scripts from PROJECT-DIR/package.json and async execute it."
+  (let* ((node-modules (concat project-dir "node_modules/"))
+          (choice (completing-read "Npm Dep: " (directory-files node-modules)))
+          (choice-full-path (concat project-dir "node_modules/" choice)))
+    (async-shell-command (format "cd %s && ~/projects/node-scripts/install-dep.sh %s" project-dir choice-full-path) (format "*Installing Dependency* - %s" choice))))
 
 (defun ponelat/helm-npm-run ()
   "Run npm-run, from the helm projectile buffer."
   (interactive)
   (helm-exit-and-execute-action #'ponelat/npm-run))
 
-(defun ponelat/helm-get-env ()
-  "Run npm-run, from the helm projectile buffer."
+(defun ponelat/npm-link (base-dir target-dir)
+  "It'll link TARGET-DIR to BASE-DIR project."
+  (let ((relative-path-to-target (file-relative-name target-dir base-dir)))
+    (async-shell-command (format "cd %s && npm link %s" base-dir relative-path-to-target))))
+
+(defun ponelat/helm-npm-clone-and-link ()
+  "Run npm-clone-and-link, from the helm projectile buffer."
   (interactive)
-  (helm-exit-and-execute-action #'ponelat/npm-run))
+  (helm-exit-and-execute-action #'ponelat/npm-clone-and-link))
+
+(comment defun ponelat/helm-get-env ()
+  "Get a secret from .env file and yank into clipboard."
+  (interactive)
+  (with-temp-buffer
+    (insert-file-contents "~/.env")
+    (keep-lines "(:alphanum:)+=(:alphanum:)")))
 
 (defun ponelat/projectile-npm-run ()
   "Run an npm command in the current project."
@@ -900,18 +1078,27 @@ eg: /one/two => two
   (progn
     (projectile-mode)
     (define-key projectile-command-map (kbd "n") #'ponelat/projectile-npm-run)))
-
 ;;;; Fuzzy, ido, helm
+
+;; (put 'helm-ff-run-open-file-externally 'helm-only t)
+
+(defun ponelat/helm-execute-file ()
+  "Run open file externally command action from `helm-source-find-files'."
+  (interactive)
+  (with-helm-alive-p
+    (helm-exit-and-execute-action #'xah/run-this-file-fn)))
+
 (use-package helm
   :defines helm-mode-fuzzy-match helm-completion-in-region-fuzzy-match helm-M-x-fuzzy-match
   :diminish helm-mode
   :bind (("M-x" . helm-M-x))
   :config
   (progn
-    (setq helm-mode-fuzzy-match t)
-    (setq helm-completion-in-region-fuzzy-match t)
-    (setq helm-buffer-max-length 40)
+    (setq helm-mode-fuzzy-match t
+      helm-completion-in-region-fuzzy-match t
+      helm-buffer-max-length 40)
     (define-key helm-map [(control ?w)] 'backward-kill-word)
+
     (helm-mode))
   :ensure t)
 
@@ -926,6 +1113,8 @@ eg: /one/two => two
     (helm-projectile-on)
     (helm-projectile-define-key helm-projectile-projects-map (kbd "C-c g") #'helm-projectile-vc)
     (define-key helm-projectile-projects-map (kbd "C-l") #'ponelat/helm-npm-run)
+    (define-key helm-projectile-projects-map (kbd "C-c l") #'ponelat/helm-npm-clone-and-link)
+    (define-key helm-projectile-find-file-map (kbd "C-x C-x") #'ponelat/helm-execute-file)
     (define-key helm-projectile-projects-map (kbd "C-a") #'ponelat/helm-ag-do)))
 
 
@@ -1051,7 +1240,8 @@ eg: /one/two => two
               '(git-gutter+-added-sign "+")
               '(git-gutter+-deleted-sign "-")
               '(git-gutter+-modified-sign "=")
-              '(git-gutter:visual-line t)))
+              '(git-gutter:visual-line t)
+              '(git-gutter+-modified  "yellow")))
   :diminish (git-gutter+-mode . "+="))
 
 
@@ -1068,6 +1258,7 @@ eg: /one/two => two
   :config
   (progn
     (define-key org-mode-map (kbd "C-c ;") nil)
+    (define-key org-mode-map (kbd "C-c C-'") 'org-cycle-list-bullet)
     (global-set-key (kbd "C-c C-L") #'org-store-link)
     (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
 
@@ -1114,6 +1305,21 @@ eg: /one/two => two
   (progn
     (setq helm-org-rifle-show-path t))
   :ensure t)
+
+(use-package org-journal
+  :config
+  (setq org-journal-dir (concat org-directory "/journal"))
+  :ensure t)
+
+
+;;;; Helper functions
+(defun ponelat/link-at-point ()
+  "It uses org-mode functions to get link at point."
+  (cond
+   ((org-in-regexp org-plain-link-re)
+    (buffer-substring
+     (match-beginning 0)
+     (match-end 0)))))
 
 ;;;; External Org mode, Office, Gmail
 (defun ponelat/get-office-data ()
@@ -1231,17 +1437,15 @@ eg: /one/two => two
 (define-key package-menu-mode-map "a" #'package-menu-find-marks)
 ;;;; Run current file
 
-(defun ponelat/run-this-file ()
-  "Execute the current file.
-For example, if the current buffer is x.py, then it'll call 「python x.py」 in a shell.
+
+(defun xah/run-this-file-fn (filename)
+  "Execute FILENAME
 The file can be Emacs Lisp, PHP, Perl, Python, Ruby, JavaScript, TypeScript, Bash, Ocaml, Visual Basic, TeX, Java, Clojure.
 File suffix is used to determine what program to run.
 
-If the file is modified or not saved, save it automatically before run.
-
+Derived from:
 URL `http://ergoemacs.org/emacs/elisp_run_current_file.html'
-Version 2017-02-10"
-  (interactive)
+Version 2017-12-27"
   (let (
         (-suffix-map
          ;; (‹extension› . ‹shell program name›)
@@ -1265,36 +1469,53 @@ Version 2017-02-10"
            ;; ("pov" . "/usr/local/bin/povray +R2 +A0.1 +J1.2 +Am2 +Q9 +H480 +W640")
            ))
         -fname
+        -fdir
         -fSuffix
         -prog-name
-        -cmd-str)
-    (when (not (buffer-file-name)) (save-buffer))
-    (when (buffer-modified-p) (save-buffer))
-    (setq -fname (buffer-file-name))
+         -cmd-str)
+    (setq -fname filename)
+    (setq -fdir (file-name-directory filename))
     (setq -fSuffix (file-name-extension -fname))
     (setq -prog-name (cdr (assoc -fSuffix -suffix-map)))
-    (setq -cmd-str (concat -prog-name " \""   -fname "\""))
+    (setq -cmd-str (format "cd %s && %s \"%s\"" -fdir -prog-name -fname))
     (cond
      ((string-equal -fSuffix "el") (load -fname))
      ((string-equal -fSuffix "java")
       (progn
-        (shell-command -cmd-str "*xah-run-current-file output*" )
-        (shell-command
+        (async-shell-command -cmd-str "*Run this*" )
+        (async-shell-command
          (format "java %s" (file-name-sans-extension (file-name-nondirectory -fname))))))
      (t (if -prog-name
             (progn
               (message "Running…")
-              (shell-command -cmd-str "*xah-run-current-file output*" ))
+              (async-shell-command -cmd-str "*Run this*"))
           (message "No recognized program file suffix for this file."))))))
+
+(defun xah/run-this-file ()
+  "Execute the current file.
+For example, if the current buffer is x.py, then it'll call 「python x.py」 in a shell.
+The file can be Emacs Lisp, PHP, Perl, Python, Ruby, JavaScript, TypeScript, Bash, Ocaml, Visual Basic, TeX, Java, Clojure.
+File suffix is used to determine what program to run.
+
+If the file is modified or not saved, save it automatically before run.
+
+Derived from:
+URL `http://ergoemacs.org/emacs/elisp_run_current_file.html'
+Version 2017-12-27"
+  (interactive)
+  (progn
+    (when (not (buffer-file-name)) (save-buffer))
+    (when (buffer-modified-p) (save-buffer))
+    (setq -fname (buffer-file-name))
+    (xah/run-this-file-fn -fname)))
 
 ;;;; Themes
 ;; Disable previous theme, before enabling new one. Not full proof.
 ;; Themes have a lot of power, and some of it cannot be reversed here
-
 ;;; Theme hooks
 
 ;; "gh" is from http://www.greghendershott.com/2017/02/emacs-themes.html
-(defvar gh/theme-hooks nil
+ (defvar gh/theme-hooks nil
   "((theme-id . function) ...)")
 
 (defun gh/add-theme-hook (theme-id hook-func)
@@ -1405,7 +1626,6 @@ Version 2017-02-10"
 
 (use-package soothe-theme
   :config
-  (te)
   (progn
     (gh/add-theme-hook
       'soothe
@@ -1500,6 +1720,7 @@ Version 2017-02-10"
 ;; The follow code exists to ensure that the theme is loaded at the right time.
 (defun ponelat/setup-theme ()
   "Enable or load gui/window theme."
+  (interactive)
   (if ponelat:theme-window-loaded
     (progn
       (ponelat/setup-mode-line)
@@ -1543,8 +1764,8 @@ Version 2017-02-10"
 
 ;;;; Font,face
 (defvar ponelat/fonts
-   '( ("Big"          (:family "Ubuntu Mono"   :height 160 :weight normal))
-      ("Normal"       (:family "Ubuntu Mono"   :height 120 :weight normal))))
+  '( ("Small"          (:family "Ubuntu Mono"   :height 100 :weight normal))
+     ("Normal"       (:family "Ubuntu Mono"   :height 160 :weight normal))))
 
 (defun ponelat/default-font (font-name)
 "Set the font.  FONT-NAME is the key found in ponelat/fonts.
@@ -1554,6 +1775,15 @@ Interactively you can choose the FONT-NAME"
       (completing-read "Choose font: " (alist-keys ponelat/fonts))))
   (let ((font-props (car (assoc-default font-name ponelat/fonts))))
     (apply 'set-face-attribute (append '(default nil) font-props))))
+
+
+;;;; Scratch buffer, Emacs
+(use-package scratch-message
+  :config
+  (progn
+    (setq fortune-file "/usr/share/games/fortunes/fortunes")
+    (scratch-message-mode t))
+  :ensure t)
 
 ;; What is this???...
 ;; (put 'narrow-to-region 'disabled nil)

@@ -1,7 +1,1 @@
-# -*- mode: snippet -*-
-# name: function(req, res, next) {}
-# key: rrn
-# --
-function(req, res, next) {
-	      $0
-}
+/home/josh/projects/dotfiles/dots/emacs.d/snippets/web-mode/ex

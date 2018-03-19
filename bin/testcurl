@@ -1,0 +1,3 @@
+#!/bin/bash
+nc -l -p 7777 &
+curl localhost:7777 "$@"

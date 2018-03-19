@@ -1,0 +1,3 @@
+#!/bin/bash
+# Get the api URLs out
+jq-apis-hash | jq '[.[] + .[].props | del(.props)]'

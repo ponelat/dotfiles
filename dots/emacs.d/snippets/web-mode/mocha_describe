@@ -1,7 +1,1 @@
-# -*- mode: snippet -*-
-# name: mocha: describe()
-# key: describe
-# --
-describe('$1', function() {
-	       $0
-})
+/home/josh/projects/dotfiles/dots/emacs.d/snippets/web-mode/mocha_describe

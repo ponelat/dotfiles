@@ -29,7 +29,7 @@ set $urgent-bg-color     #E53935
 # Startup
 exec --no-startup-id dex -a -e i3
 # exec --no-startup-id hsetroot -solid "$bg-color"
-exec --no-startup-id "~/.fehbg &"
+exec --no-startup-id "~/.fehbg"
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
@@ -121,6 +121,11 @@ bindsym $mod+space focus mode_toggle
 # focus the child container
 bindsym $mod+d focus child
 
+# bindsym $mod+p [instance="^scratchpad$"] scratchpad show
+# exec_always flock -w1 ~/.config/i3/scratchpad/lockfile ~/.config/i3/scratchpad/perpetual_emacs.sh
+# for_window [instance="^scratchpad$"] move scratchpad
+
+bindsym $mod+p exec "shutter -s"
 # set $work1 1:slack
 # set $work2 2:incog
 # set $work3 3:code
@@ -200,9 +205,9 @@ bindsym $mod+r mode "resize"
 # Requires, the use of the i3 fork... i3-gaps
 
 # Disable window titles
-for_window [class="^.*"] border pixel 1
-# gaps inner 20
-# gaps outer 0
+for_window [class="^.*"] border pixel 0
+# gaps outer 4
+gaps inner 4
 
 # set $mode_gaps Gaps: (o) outer, (i) inner
 # set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)
@@ -250,10 +255,12 @@ client.urgent #b58900 "$urgent-bg-color" #b58900 #b58900
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
 bar {
+    i3bar_command i3bar -t
     status_command i3blocks -c ~/.config/i3/i3blocks.conf
     colors {
-      background $bg-color
-      separator #757575
+      statusline #ffffff
+      background #00000044
+      separator #111111
       #                  border             background         text
       focused_workspace  $bg-color          $bg-color          $text-color
       inactive_workspace $inactive-bg-color $inactive-bg-color $inactive-text-color

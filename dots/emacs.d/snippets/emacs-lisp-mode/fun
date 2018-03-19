@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: fun
+# key: fun
+# --
+(defun ponelat/$1 ()
+"${2:It does something}"
+${3:(interactive)}
+$0)

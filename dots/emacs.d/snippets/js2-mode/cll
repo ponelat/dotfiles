@@ -1,5 +1,1 @@
-# -*- mode: snippet -*-
-# name: console.log('a', a)
-# key: cll
-# --
-console.log('$0', $0)
+/home/josh/projects/dotfiles/dots/emacs.d/snippets/js2-mode/cll

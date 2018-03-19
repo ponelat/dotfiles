@@ -38,7 +38,7 @@ export N_PREFIX="$HOME/.linuxbrew/include"
 [ -d "$HOME/projects/scripts" ] && PATH="$PATH:$HOME/projects/scripts"
 
 # Custom apps
-for dir in $HOME/apps/*/bin ; do 
+for dir in $HOME/apps/*/bin ; do
   PATH="$PATH:$dir"
 done
 
@@ -49,4 +49,6 @@ if [ -n "$DESKTOP_SESSION" ];then
   export SSH_AUTH_SOCK
 fi
 
+
+PATH="$HOME/.cargo/bin:$PATH"
 export PATH=$PATH

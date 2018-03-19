@@ -44,7 +44,7 @@ ZSH_CUSTOM=~/projects/dotfiles/zsh
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(fasd npm docker unaliases zsh-autosuggestions vi-mode-copy-paste aws)
+plugins=(fasd npm docker unaliases zsh-autosuggestions jira vi-mode-copy-paste aws curl)
 
 # Preferred editor for local and remote sessions
 # export EDITOR="emacsclient -t"
@@ -63,6 +63,8 @@ export RPROMPT=
 bindkey -v
 
 bindkey '^ ' autosuggest-accept
+bindkey "^K" history-beginning-search-backward
+bindkey "^J" history-beginning-search-forward
 
 setopt autolist       # Display completion candidates immediately.
 setopt cdablevars     # When an argument should be a dir but is not one,
@@ -104,5 +106,6 @@ BASE16_SHELL=$HOME/.config/base16-shell/
 
 PATH="$HOME/.yarn/bin:$PATH"
 PATH="$HOME/projects/accounts/bin:$PATH"
+PATH="$HOME/.cargo/bin:$PATH"
 export PATH="$HOME/apps/julia/bin:$PATH"
 [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
