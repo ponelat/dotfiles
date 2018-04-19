@@ -32,6 +32,7 @@
 ;;;; Sum numbers
 (require 'cl-lib)
 
+
 (defun ponelat/sum-numbers-in-region (start end)
   (interactive "r")
   (message "%s"
@@ -865,7 +866,7 @@
   (let* ((name (read-from-minibuffer "App name: "))
           (project-path (format "~/projects/%s" name)))
     (shell-command (format "mkdir -p %s" project-path))
-    (shell-command (format "tar zvxf ~/projects/scaffolds/create-react-app.tar.gz -C %s" project-path))
+    (shell-command (format "tar zvxf ~/projects/scripts/scaffolds/create-react-app.tar.gz -C %s" project-path))
     (find-file-other-window (format "%s/src/App.js" project-path))
     (async-shell-command "npm start")))
 
@@ -1024,7 +1025,7 @@ eg: /one/two => two
   (let* ((node-modules (concat project-dir "node_modules/"))
           (choice (completing-read "Npm Dep: " (directory-files node-modules)))
           (choice-full-path (concat project-dir "node_modules/" choice)))
-    (async-shell-command (format "cd %s && ~/projects/node-scripts/install-dep.sh %s" project-dir choice-full-path) (format "*Installing Dependency* - %s" choice))))
+    (async-shell-command (format "cd %s && ~/projects/scripts/node-install-dep.sh %s" project-dir choice-full-path) (format "*Installing Dependency* - %s" choice))))
 
 (defun ponelat/helm-npm-run ()
   "Run npm-run, from the helm projectile buffer."
@@ -1176,6 +1177,8 @@ eg: /one/two => two
   (interactive)
   (magit-reset-soft "HEAD^"))
 
+(setq auth-source '("~/.authinfo.gpg" "~/.authinfo" "~/.netrc"))
+
 (use-package magit
   :bind (("C-c g" . magit-status))
   :config
@@ -1246,12 +1249,65 @@ eg: /one/two => two
 
 
 ;;;; org-mode
+(defun org-teleport (&optional arg)
+  "Teleport the current heading to after a headline selected with avy.
+With a prefix ARG move the headline to before the selected
+headline. With a numeric prefix, set the headline level. If ARG
+is positive, move after, and if negative, move before."
+  (interactive "P")
+  ;; Kill current headline
+  (org-mark-subtree)
+  (kill-region (region-beginning) (region-end))
+  ;; Jump to a visible headline
+  (avy-with avy-goto-line (avy--generic-jump "^\\*+" nil avy-style))
+  (cond
+   ;; Move before  and change headline level
+   ((and (numberp arg) (> 0 arg))
+    (save-excursion
+      (yank))
+    ;; arg is what we want, second is what we have
+    ;; if n is positive, we need to demote (increase level)
+    (let ((n (- (abs arg) (car (org-heading-components)))))
+      (cl-loop for i from 1 to (abs n)
+               do
+               (if (> 0 n)
+                   (org-promote-subtree)
+                 (org-demote-subtree)))))
+   ;; Move after and change level
+   ((and (numberp arg) (< 0 arg))
+    (org-mark-subtree)
+    (goto-char (region-end))
+    (when (eobp) (insert "\n"))
+    (save-excursion
+      (yank))
+    ;; n is what we want and second is what we have
+    ;; if n is positive, we need to demote
+    (let ((n (- (abs arg) (car (org-heading-components)))))
+      (cl-loop for i from 1 to (abs n)
+               do
+               (if (> 0 n) (org-promote-subtree)
+                 (org-demote-subtree)))))
+
+   ;; move to before selection
+   ((equal arg '(4))
+    (save-excursion
+      (yank)))
+   ;; move to after selection
+   (t
+    (org-mark-subtree)
+    (goto-char (region-end))
+    (when (eobp) (insert "\n"))
+    (save-excursion
+      (yank))))
+  (outline-hide-leaves))
+
 (use-package org
   :ensure t
   :bind
   (("M-n" . org-capture)
     ("C-c a" . org-agenda)
     ("C-c i" . org-narrow-to-subtree)
+    ("C-c t" . org-teleport)
     ("C-c w" . org-agenda-refile)
     ("C-c I" . widen)
     ("C-c j" . ponelat/open-journal))
@@ -1300,6 +1356,36 @@ eg: /one/two => two
          ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
            "* LOOSE %?\n  %i\n  %a")))))
 
+;; Provides function to export current org buffer as JSON structure
+;; to $file.org.json. Adapted from an org-mode mailing post by
+;; Brett Viren: https://lists.gnu.org/archive/html/emacs-orgmode/2014-01/msg00338.html
+(require 'json)
+(defun org-export-json ()
+  "Export 'org-mode' buffer into json."
+  (interactive)
+  (let* ((tree (org-element-parse-buffer 'object nil)))
+    (org-element-map tree (append org-element-all-elements
+                                  org-element-all-objects '(plain-text))
+      (lambda (x)
+        (if (org-element-property :parent x)
+            (org-element-put-property x :parent "none"))
+        (if (org-element-property :structure x)
+            (org-element-put-property x :structure "none"))
+        ))
+    (write-region
+     (json-encode tree)
+      nil (concat (buffer-file-name) ".json"))))
+
+(defun cli-org-export-json ()
+  (let ((org-file-path (car command-line-args-left))
+        (other-load-files (cdr command-line-args-left)))
+    (mapc 'load-file other-load-files)
+    (find-file org-file-path)
+    (org-mode)
+    (message "Exporting to JSON: %s" (car command-line-args-left))
+    (org-export-json)))
+
+
 (use-package helm-org-rifle
   :config
   (progn
@@ -1325,7 +1411,7 @@ eg: /one/two => two
 (defun ponelat/get-office-data ()
   (interactive)
   "Get Office evnets for the week"
-  (async-shell-command "n use 8.9.1 ~/projects/microsoft-graph-client/get-event-data.js" "*Import Office365 Events*"))
+  (async-shell-command "n use 8.9.1 ~/projects/scripts/microsoft-graph-client/get-event-data.js" "*Import Office365 Events*"))
 
 (defun ponelat/get-all-data ()
   "Gets all external org data."
