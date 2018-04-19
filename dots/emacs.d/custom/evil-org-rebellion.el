@@ -57,6 +57,22 @@ If COUNT is given, move COUNT - 1 lines downward first."
   (setq evil-org-set-map (make-sparse-keymap))
   (evil-initialize-local-keymaps))
 
+;; Dired
+;; =====
+
+(eval-after-load 'dired
+  '(progn
+     (evil-define-key 'normal dired-mode-map
+       "gg" 'evil-goto-first-line
+       "G" 'evil-goto-line)))
+
+;; Shell
+;; =====
+
+(eval-after-load 'dired
+  '(progn
+     (evil-define-key 'normal shell-mode-map
+       "C-d" 'evil-scroll-down)))
 
 ;; Org Agenda
 ;; ==========
