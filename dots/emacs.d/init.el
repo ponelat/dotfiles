@@ -17,6 +17,9 @@
 
 ;; Allows use to create closures for functions ( in my case, for sentinel callbacks )
 (setq lexical-binding t)
+(windmove-default-keybindings)
+(auto-image-file-mode 1)
+(electric-pair-mode t)
 
 ;; Bootstrap `use-package'
 (unless (package-installed-p 'use-package)
@@ -115,18 +118,6 @@
       (switch-to-buffer "*terminal*")
     (ansi-term "/bin/zsh" "terminal")))
 
-(use-package shell-pop
-  :init
-  (progn
-    (setq shell-pop-default-directory "~/projects")
-    (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
-    (setq shell-pop-term-shell "/bin/zsh")
-    (setq shell-pop-universal-key "C-t")
-    (setq shell-pop-window-size 30)
-    (setq shell-pop-full-span t)
-    (setq shell-pop-window-position "bottom"))
-  :ensure t)
-
 (global-set-key (kbd "M-C-z") #'projectile-run-async-shell-command-in-root)
 (global-set-key (kbd "M-z") #'ponelat/term)
 
@@ -155,11 +146,8 @@
   "Open URL in Firefox, possibly in NEW-WINDOW."
   (shell-command (concat "firefox" " " "\"" url "\"")))
 
-(windmove-default-keybindings)
-(auto-image-file-mode 1)
 (setq vc-follow-symlinks t)
-(setq browse-url-browser-function #'browse-url-firefox)
-(electric-pair-mode t)
+(setq browse-url-browser-function #'browse-url-chrome)
 
 (use-package avy
   :config
@@ -182,11 +170,11 @@
 (defhydra ponelat/hydra/open-notes (:idle 1.0 :color blue)
   "Org files"
   ("o" (ponelat/open-notes "office.org") "office")
+  ("t" (ponelat/open-notes "travel.org") "travel")
   ("f" (ponelat/open-notes "money.org") "money")
   ("b" (ponelat/open-notes "api-book.org") "api-book")
   ("m" (ponelat/open-notes "meetups.org") "meetups")
   ("p" (ponelat/open-notes "projects.org") "projects")
-  ("t" (ponelat/open-notes "thoughts.org") "thoughts")
   ("n" (ponelat/open-notes "notes.org") "notes")
   ("j" (ponelat/open-notes "jokes.org") "jokes")
   ("d" (ponelat/open-notes "docs.org") "docs")
@@ -199,45 +187,6 @@
   ("c" string-inflection-all-cycle "all cycle"))
 
 (global-set-key (kbd "C-c o") 'ponelat/hydra/open-notes/body)
-
-(defhydra hydra-helm (:hint nil :color pink)
-        "
-                                                                          ╭──────┐
-   Navigation   Other  Sources     Mark             Do             Help   │ Helm │
-  ╭───────────────────────────────────────────────────────────────────────┴──────╯
-         ^_k_^         _K_        _p_    [_m_] mark         [_v_] view         [_H_] helm help
-        ^^↑^^         ^↑^       ^↑^   [_t_] toggle all   [_d_] delete       [_s_] source help
-    _h_ ←   → _l_    _c_        ^ ^    [_u_] unmark all   [_f_] follow: %(helm-attr 'follow)
-        ^^↓^^         ^↓^       ^↓^    ^ ^               [_y_] yank selection
-         ^_j_^         _J_        _n_      ^ ^               [_w_] toggle windows
-  --------------------------------------------------------------------------------
-        "
-        ("<tab>" helm-keyboard-quit "back" :exit t)
-        ("<escape>" nil "quit")
-        ("\\" (insert "\\") "\\" :color blue)
-        ("h" helm-beginning-of-buffer)
-        ("j" helm-next-line)
-        ("k" helm-previous-line)
-        ("l" helm-end-of-buffer)
-        ("g" helm-beginning-of-buffer)
-        ("G" helm-end-of-buffer)
-        ("n" helm-next-source)
-        ("p" helm-previous-source)
-        ("K" helm-scroll-other-window-down)
-        ("J" helm-scroll-other-window)
-        ("c" helm-recenter-top-bottom-other-window)
-        ("m" helm-toggle-visible-mark)
-        ("t" helm-toggle-all-marks)
-        ("u" helm-unmark-all)
-        ("H" helm-help)
-        ("s" helm-buffer-help)
-        ("v" helm-execute-persistent-action)
-        ("d" helm-persistent-delete-marked)
-        ("y" helm-yank-selection)
-        ("w" helm-toggle-resplit-and-swap-windows)
-  ("f" helm-follow-mode))
-
-
 
 (use-package diminish
   :ensure t)
@@ -651,116 +600,6 @@
     (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
   :ensure t)
 
-;;;; Java, jdee, meghanada
-
-;; (defun ponelat/java-hook ()
-;;   "Sets up Java."
-;;   (interactive)
-;;   (eclim)
-;;   )
-
-(use-package eclim
-  :defer t
-  :config
-  (progn
-    (setq eclimd-autostart t)
-    (custom-set-variables
-      '(eclim-eclipse-dirs '("~/eclipse"))
-      '(eclim-executable "~/eclipse/eclim"))
-    (global-eclim-mode 1))
-  :ensure t)
-
-(use-package company-emacs-eclim
-  :defer t
-  :config
-  (progn
-    (company-emacs-eclim-setup))
-  :ensure t)
-
-;; (use-package jdee
-;;   :disabled t
-;;   :config
-;;   (setq jdee-server-dir "~/projects/jdee-server/target/")
-;;   :ensure t)
-
-;; (use-package autodisass-java-bytecode
-;;   :ensure t
-;;   :defer t)
-
-;; (use-package google-c-style
-;;   :defer t
-;;   :ensure t
-;;   :commands
-;;   (google-set-c-style))
-
-;; (use-package meghanada
-;;   :defer t
-;;   :init
-;;   (add-hook 'java-mode-hook
-;;             (lambda ()
-;;               (google-set-c-style)
-;;               (google-make-newline-indent)
-;;               (meghanada-mode t)
-;;               (smartparens-mode t)
-;;               (rainbow-delimiters-mode t)
-;;               (highlight-symbol-mode t)
-;;               (add-hook 'before-save-hook 'meghanada-code-beautify-before-save)))
-
-;;   :config
-;;   (use-package realgud
-;;     :ensure t)
-;;   (setq indent-tabs-mode nil)
-;;   (setq tab-width 2)
-;;   (setq c-basic-offset 2)
-;;   (setq meghanada-server-remote-debug t)
-;;   (setq meghanada-javac-xlint "-Xlint:all,-processing")
-;;   :bind
-;;   (:map meghanada-mode-map
-;;         ("C-S-t" . meghanada-switch-testcase)
-;;         ("M-RET" . meghanada-local-variable)
-;;         ("C-M-." . helm-imenu)
-;;         ("M-r" . meghanada-reference)
-;;         ("M-t" . meghanada-typeinfo)
-;;         ("C-z" . hydra-meghanada/body))
-;;   :commands
-;;   (meghanada-mode))
-
-;; (defhydra hydra-meghanada (:hint nil :exit t)
-;; "
-;; ^Edit^                           ^Tast or Task^
-;; ^^^^^^-------------------------------------------------------
-;; _f_: meghanada-compile-file      _m_: meghanada-restart
-;; _c_: meghanada-compile-project   _t_: meghanada-run-task
-;; _o_: meghanada-optimize-import   _j_: meghanada-run-junit-test-case
-;; _s_: meghanada-switch-test-case  _J_: meghanada-run-junit-class
-;; _v_: meghanada-local-variable    _R_: meghanada-run-junit-recent
-;; _i_: meghanada-import-all        _r_: meghanada-reference
-;; _g_: magit-status                _T_: meghanada-typeinfo
-;; _l_: helm-ls-git-ls
-;; _q_: exit
-;; "
-;;   ("f" meghanada-compile-file)
-;;   ("m" meghanada-restart)
-
-;;   ("c" meghanada-compile-project)
-;;   ("o" meghanada-optimize-import)
-;;   ("s" meghanada-switch-test-case)
-;;   ("v" meghanada-local-variable)
-;;   ("i" meghanada-import-all)
-
-;;   ("g" magit-status)
-;;   ("l" helm-ls-git-ls)
-
-;;   ("t" meghanada-run-task)
-;;   ("T" meghanada-typeinfo)
-;;   ("j" meghanada-run-junit-test-case)
-;;   ("J" meghanada-run-junit-class)
-;;   ("R" meghanada-run-junit-recent)
-;;   ("r" meghanada-reference)
-
-;;   ("q" exit)
-;;   ("z" nil "leave"))
-
 ;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
   :ensure t
@@ -771,6 +610,13 @@
     (setq js2-mode-show-strict-warnings nil)
     (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
 
+(use-package mocha
+  (progn
+    (define-key js2-mode-map  (kbd "C-c C-t f") 'mocha-test-file)
+    (define-key js2-mode-map  (kbd "C-c C-t p") 'mocha-test-at-point)
+    (define-key js2-mode-map  (kbd "C-c C-t a") 'mocha-test-project))
+  :ensure t)
+
 (use-package company-tern
   :defer 1
   :config
@@ -779,6 +625,7 @@
   :ensure t)
 
 (defun ponelat/beautify-json ()
+  "Will prettify JSON."
   (interactive)
   (let ((b (if mark-active (min (point) (mark)) (point-min)))
         (e (if mark-active (max (point) (mark)) (point-max))))
@@ -804,7 +651,7 @@
 
 ;; ag projects
 (defun assoc-recursive (alist &rest keys)
-  "Recursively find KEYs in ALIST."
+  "Recursively search ALIST for KEYS."
   (while keys
     (setq alist (cdr (assoc (pop keys) alist))))
   alist)
@@ -891,12 +738,6 @@
   :config
     (setq flycheck-highlighting-mode 'lines)
     (global-flycheck-mode))
-    ;; (set-face-attribute 'flycheck-warning nil
-		;; 	:foreground "black"
-		;; 	:background "yellow")
-    ;; (set-face-attribute 'flycheck-error nil
-		;; 	:foreground "black"
-		;; 	:background "pink"))
 
 (use-package pos-tip
   :ensure t)
@@ -906,15 +747,6 @@
   :config
   (with-eval-after-load 'flycheck
     (flycheck-pos-tip-mode)))
-
-;; From http://www.cyrusinnovation.com/initial-emacs-setup-for-reactreactnative/
-;; (defun ponelat/setup-local-eslint ()
-;;     "If ESLint found in node_modules directory - use that for flycheck.
-;; Intended for use in PROJECTILE-AFTER-SWITCH-PROJECT-HOOK."
-;;     (interactive)
-;;     (let ((local-eslint (expand-file-name "./node_modules/.bin/eslint")))
-;;       (setq flycheck-javascript-eslint-executable
-;;             (and (file-exists-p local-eslint) local-eslint))))
 
 ;; So that we can access `./node_modules/.bin/eslint` mostly
 (use-package add-node-modules-path
@@ -1122,17 +954,6 @@ eg: /one/two => two
 (use-package helm-ag
   :ensure t)
 
-;; (use-package flx
-;;   :ensure t)
-
-;; (use-package helm-flx
-;;   :ensure t
-;;   :config
-;;   (progn
-;;     (setq helm-flx-for-helm-find-files t)
-;;     (setq helm-flx-for-helm-locate t)
-;;     (helm-flx-mode +1)))
-
 (use-package helm-fuzzier
   :ensure t
   :config
@@ -1150,15 +971,6 @@ eg: /one/two => two
     (switch-to-buffer buf))
   ;; Adjust size of windows
   (balance-windows))
-
-;; (use-package ido
-;;   :ensure t
-;;   :config
-;;   (ido-mode)
-;;   :pin melpa)
-
-;; (use-package flx-ido
-;;   :ensure t)
 
 ;;;; Ivy, counsel, swiper
 (setq enable-recursive-minibuffers t)
@@ -1596,7 +1408,7 @@ Version 2017-12-27"
     (xah/run-this-file-fn -fname)))
 
 ;;;; Themes
-;; Disable previous theme, before enabling new one. Not full proof.
+;; Disable previous theme, before enabling new one. Not fool-proof.
 ;; Themes have a lot of power, and some of it cannot be reversed here
 ;;; Theme hooks
 
@@ -1689,7 +1501,7 @@ Version 2017-12-27"
            (alt-background   "#111013"))
 
   (custom-theme-set-faces
-      'soothe
+      'leuven
     `(company-echo-common ((,class (:foreground ,gray-1 :background ,gray-1bg))))
     `(company-preview ((,class (:foreground ,gray-1 :background ,gray-1bg))))
       `(company-preview-common ((,class (:foreground ,gray-1 :background ,gray-1bg))))
@@ -1711,6 +1523,7 @@ Version 2017-12-27"
   :ensure t)
 
 (use-package soothe-theme
+  :disabled t
   :config
   (progn
     (gh/add-theme-hook
@@ -1722,11 +1535,6 @@ Version 2017-12-27"
   :disabled t
   :defer t
   :ensure)
-
-;; (use-package nord-theme
-;;   :defer t
-;;   :disabled t
-;;   :ensure)
 
 (use-package solarized-theme
   :defer t
@@ -1775,11 +1583,6 @@ Version 2017-12-27"
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
 
-;; ;;;; Load themes
-;; (defadvice load-theme (before theme-dont-propagate activate)
-;;   "Try to completely revert a theme, befor applying a new one."
-;;   (mapc #'disable-theme custom-enabled-themes))
-
  (defun ponelat/load-theme-only ()
   "Load a theme, and disable all others."
   (interactive)
@@ -1810,11 +1613,11 @@ Version 2017-12-27"
   (if ponelat:theme-window-loaded
     (progn
       (ponelat/setup-mode-line)
-      (enable-theme-only 'soothe)
+      (enable-theme-only 'leuven)
       (enable-theme 'org-beautify))
     (progn
       (ponelat/setup-mode-line)
-      (load-theme-only 'soothe)
+      (load-theme-only 'leuven)
       (setq org-beautify-theme-use-box-hack nil)
       (load-theme 'org-beautify 1)
       (setq ponelat:theme-window-loaded t)
