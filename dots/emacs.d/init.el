@@ -9,7 +9,22 @@
            ("marmalade"    . "http://marmalade-repo.org/packages/"))))
 
 (require 'package)
+(setq load-prefer-newer t)
 (package-initialize)
+
+(use-package auto-compile
+  :demand t
+  :config
+  (auto-compile-on-load-mode)
+  (auto-compile-on-save-mode)
+  (setq auto-compile-display-buffer               nil)
+  (setq auto-compile-mode-line-counter            t)
+  (setq auto-compile-source-recreate-deletes-dest t)
+  (setq auto-compile-toggle-deletes-nonlib-dest   t)
+  (setq auto-compile-update-autoloads             t)
+  (add-hook 'auto-compile-inhibit-compile-hook
+    'auto-compile-inhibit-compile-detached-git-head))
+
 
 ;; Add custom files
 ;; Be sure to run "rcup" for stuff you've added to projects/dotfiles to show up here
@@ -26,17 +41,13 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-(setq load-prefer-newer t)
 ;;;; init.el helpers
 (defmacro comment (&rest body)
   "Comment out sexp (BODY)."
   nil)
 
-;;;; Sum numbers
-(require 'cl-lib)
-
-
 (defun ponelat/sum-numbers-in-region (start end)
+  "Sum the numbers in the current buffer, from START to END."
   (interactive "r")
   (message "%s"
     (cl-reduce #'+
@@ -44,6 +55,7 @@
         (replace-regexp-in-string "[^0-9]+" " "
           (buffer-substring start end)))
       :key #'string-to-number)))
+
 ;; ;;;; SSH mode
 ;; (use-package ssh-mode
 ;;   :ensure t)
@@ -184,19 +196,20 @@
 
 (defhydra hydra-string-case (global-map "C-c C-s")
   "string case"
-  ("c" string-inflection-all-cycle "all cycle"))
+  ("s" string-inflection-all-cycle "all cycle"))
 
 (global-set-key (kbd "C-c o") 'ponelat/hydra/open-notes/body)
+(global-set-key (kbd "C-c s") 'hydra-string-case/body)
 
 (use-package diminish
   :ensure t)
 
-(use-package ace-window
-  :bind (("M-p" . ace-window))
-  :config
-  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
-  (setq aw-dispatch-always t)
-  :ensure t)
+;(comment use-package ace-window
+;  :bind (("M-p" . ace-window))
+;  :config
+;  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+;  (setq aw-dispatch-always t)
+;  :ensure t)
 
 ;;;; Mode discovery
 (use-package discover-my-major
@@ -262,7 +275,8 @@
     (global-set-key (kbd "C-S-k") #'evil-window-up)
     (global-set-key (kbd "C-S-j") #'evil-window-down)
     (evil-leader/set-key
-      "q" #'kill-buffer-and-window
+      ;; "q" #'kill-buffer-and-window
+      "q" #'quit-window
       "Q" #'save-buffers-kill-terminal
       "p" #'helm-projectile-switch-project
       "j" #'helm-M-x
@@ -282,6 +296,31 @@
     (evil-mode)
     (define-key evil-normal-state-map "\C-d" nil)
     (define-key evil-normal-state-map "\M-." nil)))
+
+(evil-define-text-object rsb/textobj-inner-c-defun (count &optional beg end type)
+  (save-excursion
+    (mark-defun)
+    (re-search-forward "{")
+    (exchange-point-and-mark)
+    (re-search-backward "}")
+    (evil-range (region-beginning) (region-end) type :expanded t)))
+
+(evil-define-text-object rsb/textobj-outer-c-defun (count &optional beg end type)
+  :type line
+  (save-excursion
+    (mark-defun)
+    (if (looking-at "[:space:]*$")
+        (forward-line))
+    (exchange-point-and-mark)
+    (unless (save-excursion
+              (forward-line)
+              (looking-at "[:space:]*$"))
+      (forward-line))
+    (evil-range (region-beginning) (region-end) type :expanded t)))
+
+
+(define-key evil-inner-text-objects-map "f" 'rsb/textobj-inner-c-defun)
+(define-key evil-outer-text-objects-map "f" 'rsb/textobj-outer-c-defun)
 
 (use-package ace-link
   :config
@@ -600,6 +639,38 @@
     (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
   :ensure t)
 
+;;;; Java
+(use-package jdee
+  :config
+  (setq jdee-server-dir "~/jars")
+  :ensure t)
+
+;;;; Java - automation
+
+;; mvn verify -Dmaven.test.failure.ignore=true -Denv=dev -Dselenium=browser.chrome
+(defun shub/test-features (&rest extra)
+  (interactive)
+  "Run features, with EXTRA flags."
+  (let*
+    ((task "verify")
+      (directory (projectile-project-root))
+      (flags '("-Dmaven.test.failure.ignore=true"
+                "-Denv=dev"
+                "-Dselenium=browser.chrome"))
+      (cmd
+        (format "cd %s && %s %s %s %s"
+          directory
+          jdee-maven-program
+          task
+          (string-join flags " ")
+          (string-join extra " "))))
+    (compilation-start cmd)))
+
+(defun shub/test-current-feature (&rest extra)
+  "Run all feature tests."
+  (interactive)
+  (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name)))
+
 ;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
   :ensure t
@@ -610,7 +681,7 @@
     (setq js2-mode-show-strict-warnings nil)
     (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
 
-(use-package mocha
+(comment use-package mocha
   (progn
     (define-key js2-mode-map  (kbd "C-c C-t f") 'mocha-test-file)
     (define-key js2-mode-map  (kbd "C-c C-t p") 'mocha-test-at-point)
@@ -768,6 +839,7 @@
   :config
   (progn
     (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
+    (setq cljr-suppress-no-project-warning t)
     (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
     (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion))
   (global-company-mode))
@@ -989,6 +1061,12 @@ eg: /one/two => two
   (interactive)
   (magit-reset-soft "HEAD^"))
 
+(defun ponelat/wipe-file ()
+  "Checkout the current file from HEAD, effectively wiping out the changes."
+  (interactive)
+  (if (y-or-n-p (format "Are you sure you want to wipe out your changes in %s? " buffer-file-name))
+    (magit-file-checkout "HEAD" buffer-file-name)))
+
 (setq auth-source '("~/.authinfo.gpg" "~/.authinfo" "~/.netrc"))
 
 (use-package magit
@@ -1140,6 +1218,7 @@ is positive, move after, and if negative, move before."
     (setq org-agenda-span 5)
     (setq org-agenda-start-on-weekday nil)
     (setq org-deadline-warning-days 1)
+    (setq org-confirm-babel-evaluate nil)
 
     ;;;; Org refile
     (setq org-refile-use-outline-path 'file)
@@ -1434,7 +1513,7 @@ Version 2017-12-27"
 
 (advice-add 'load-theme :around #'gh/load-theme-advice)
 
-(defun ponelat/theme-soothe-extras (theme-id)
+(defun ponelat/theme-extras (theme-id)
   "Add extra theme settings to THEME-ID theme."
   (interactive)
   (let*  ((class '((class color) (min-colors 89)))
@@ -1501,7 +1580,7 @@ Version 2017-12-27"
            (alt-background   "#111013"))
 
   (custom-theme-set-faces
-      'leuven
+      theme-id
     `(company-echo-common ((,class (:foreground ,gray-1 :background ,gray-1bg))))
     `(company-preview ((,class (:foreground ,gray-1 :background ,gray-1bg))))
       `(company-preview-common ((,class (:foreground ,gray-1 :background ,gray-1bg))))
@@ -1528,7 +1607,7 @@ Version 2017-12-27"
   (progn
     (gh/add-theme-hook
       'soothe
-      #'ponelat/theme-soothe-extras))
+      (lambda (a) (ponelat/theme-extras 'soothe))))
   :ensure t)
 
 (use-package badwolf-theme
@@ -1538,11 +1617,11 @@ Version 2017-12-27"
 
 (use-package solarized-theme
   :defer t
-  :disabled t
   :ensure t)
+
 ;; (with-eval-after-load 'zerodark-theme ())
 ;; This can only run in window mode...
-(comment use-package org-beautify-theme
+(use-package org-beautify-theme
   :defer t
   :ensure t)
 
@@ -1604,20 +1683,17 @@ Version 2017-12-27"
 ;; Load theme on first frame ( only once )
 (defvar ponelat:theme-window-loaded nil "A flag used to indicate that the GUI theme got loaded.")
 (defvar ponelat:theme-terminal-loaded nil "A flag used to indicate that the Terminal theme got loaded.")
+(defvar ponelat:theme 'solarized-light "The initial theme.")
 
 ;; Due to starting a daemon at the same time as our client
 ;; The follow code exists to ensure that the theme is loaded at the right time.
 (defun ponelat/setup-theme ()
   "Enable or load gui/window theme."
   (interactive)
-  (if ponelat:theme-window-loaded
+  (unless ponelat:theme-window-loaded
     (progn
       (ponelat/setup-mode-line)
-      (enable-theme-only 'leuven)
-      (enable-theme 'org-beautify))
-    (progn
-      (ponelat/setup-mode-line)
-      (load-theme-only 'leuven)
+      (load-theme-only ponelat:theme)
       (setq org-beautify-theme-use-box-hack nil)
       (load-theme 'org-beautify 1)
       (setq ponelat:theme-window-loaded t)
@@ -1653,8 +1729,8 @@ Version 2017-12-27"
 
 ;;;; Font,face
 (defvar ponelat/fonts
-  '( ("Small"          (:family "Ubuntu Mono"   :height 100 :weight normal))
-     ("Normal"       (:family "Ubuntu Mono"   :height 160 :weight normal))))
+  '( ("Small"          (:family "Noto Mono"   :height 100 :weight normal))
+     ("Normal"       (:family "Noto Mono"   :height 140 :weight normal))))
 
 (defun ponelat/default-font (font-name)
 "Set the font.  FONT-NAME is the key found in ponelat/fonts.
@@ -1667,14 +1743,15 @@ Interactively you can choose the FONT-NAME"
 
 
 ;;;; Scratch buffer, Emacs
-(use-package scratch-message
+(setq initial-scratch-message ";; Start...\n\n")
+
+;; Shows a helpful panel, if you forget which keys are on a prefix.
+(use-package which-key
   :config
   (progn
-    (setq fortune-file "/usr/share/games/fortunes/fortunes")
-    (scratch-message-mode t))
+    (which-key-mode))
   :ensure t)
 
-;; What is this???...
 ;; (put 'narrow-to-region 'disabled nil)
 
 ;;; init.el ends here
