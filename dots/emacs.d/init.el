@@ -134,8 +134,8 @@
 (global-set-key (kbd "M-z") #'ponelat/term)
 
 ;;;; Dirs
-(defvar ponelat/today-dir "~/Dropbox/org")
-(defvar ponelat/projects-dir "~/projects")
+(defvar ponelat/today-dir "~/Dropbox/org" "My base ORG-MODE folder.")
+(defvar ponelat/projects-dir "~/projects" "My base projects folder, used with PROJECTILE and others.")
 
 ;;;; Startup
 (setq inhibit-splash-screen t
@@ -184,7 +184,7 @@
   ("o" (ponelat/open-notes "office.org") "office")
   ("t" (ponelat/open-notes "travel.org") "travel")
   ("f" (ponelat/open-notes "money.org") "money")
-  ("b" (ponelat/open-notes "api-book.org") "api-book")
+  ("b" (find-file (concat ponelat/projects-dir "/api-book/book/api-book.org")) "api-book")
   ("m" (ponelat/open-notes "meetups.org") "meetups")
   ("p" (ponelat/open-notes "projects.org") "projects")
   ("n" (ponelat/open-notes "notes.org") "notes")
@@ -238,6 +238,21 @@
 (use-package auto-indent-mode
   :config
   (add-hook 'rjsx-mode 'auto-indent-mode)
+  :ensure t)
+
+;;;; Writeroom, writing, book
+
+;; Disable git-gutter mode in writeroom-mode ( as it clashes with margin/fringe )
+(defun ponelat/inhibit-git-gutter+-mode ()
+  "Disable `git-gutter+-mode' in local buffer."
+  (add-hook 'after-change-major-mode-hook
+    (lambda () (git-gutter+-mode 0))
+    :append :local))
+
+(use-package writeroom-mode
+  :config
+  (comment progn                        ; Doesn't seem to work. Want to disable git-gutter+-mode when in writeroom-mode
+    (add-hook 'writeroom-mode-hook #'ponelat/inhibit-git-gutter+-mode))
   :ensure t)
 
 ;;;; Sudo, root, sudowrite, dired, tramp
@@ -358,20 +373,6 @@
   (evil-normal-state))
 (global-set-key (kbd "C-g") #'ed/escape-normal-mode)
 (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
-
-;;;; Global Bindings, keys
-(bind-key "C-x C-k" 'kill-this-buffer)
-(bind-key "C-x Q" 'save-buffers-kill-emacs)
-(bind-key "C-x y" #'eval-buffer)
-
-(bind-key "C-c l e" 'ponelat/emacs-lisp-imenu-init)
-(bind-key "C-c l o" 'helm-org-rifle-agenda-files)
-
-(bind-key "C-c ;" 'delete-other-windows)
-(bind-key "C-c :" 'delete-window)
-(bind-key "C-c C-a" 'helm-do-ag-project-root)
-
-(bind-key "C-h l" #'find-library)
 
 ;;;; Lisp, paredit
 (show-paren-mode 1)
@@ -671,6 +672,11 @@
   (interactive)
   (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name)))
 
+(defun shub/test-current-feature-staging (&rest extra)
+  "Run all feature tests."
+  (interactive)
+  (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name) "-Denv=staging"))
+
 ;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
   :ensure t
@@ -719,8 +725,27 @@
     (add-hook 'js2-mode-hook #'js2-refactor-mode))
   :ensure t)
 
+;;;; Apps, spotify
+(defun ponelat/spotify (command)
+  "Runs the ~/bin/spot spotify client (DBus) with COMMAND as argument.
+See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1cd1116b80718d986f1c1e7966/sp"
+  (call-process-shell-command (format "~/bin/spot %s" command)))
 
-;; ag projects
+(defun ponelat/spotify-next ()
+  "Skips next spotify song."
+  (interactive)
+  (ponelat/spotify "next"))
+(defun ponelat/spotify-previous ()
+  "Visit previous spotify song."
+  (interactive)
+  (ponelat/spotify "prev"))
+(defun ponelat/spotify-play-toggle ()
+  "Play/pause spotify."
+  (interactive)
+  (ponelat/spotify "play"))
+
+
+;;;; ag projects
 (defun assoc-recursive (alist &rest keys)
   "Recursively search ALIST for KEYS."
   (while keys
@@ -1492,12 +1517,13 @@ Version 2017-12-27"
 ;;; Theme hooks
 
 ;; "gh" is from http://www.greghendershott.com/2017/02/emacs-themes.html
- (defvar gh/theme-hooks nil
+(defvar gh/theme-hooks nil
   "((theme-id . function) ...)")
 
 (defun gh/add-theme-hook (theme-id hook-func)
   "Add (THEME-ID . HOOK-FUNC) to 'gh/theme-hooks'."
   (add-to-list 'gh/theme-hooks (cons theme-id hook-func)))
+
 
 (defun gh/load-theme-advice (f theme-id &optional no-confirm no-enable &rest args)
   "Enhances `load-theme' in two ways:
@@ -1513,7 +1539,20 @@ Version 2017-12-27"
 
 (advice-add 'load-theme :around #'gh/load-theme-advice)
 
-(defun ponelat/theme-extras (theme-id)
+;;;; Faces, font, style
+(defun ponelat/face-extras ()
+  "It changes some faces, regardless of theme. To my liking."
+  (progn
+    (let ((bg-color (face-attribute 'default :background)))
+      (set-face-attribute 'org-hide nil :foreground bg-color :background bg-color)
+      (set-face-attribute 'fringe nil :foreground bg-color :background bg-color))))
+
+(defun ponelat/add-frame-padding ()
+  "Add a padding to frame."
+  (interactive)
+  (set-frame-parameter nil 'internal-border-width 50))
+
+(defun ponelat/theme-soothe-extras ()
   "Add extra theme settings to THEME-ID theme."
   (interactive)
   (let*  ((class '((class color) (min-colors 89)))
@@ -1580,7 +1619,7 @@ Version 2017-12-27"
            (alt-background   "#111013"))
 
   (custom-theme-set-faces
-      theme-id
+      'soothe
     `(company-echo-common ((,class (:foreground ,gray-1 :background ,gray-1bg))))
     `(company-preview ((,class (:foreground ,gray-1 :background ,gray-1bg))))
       `(company-preview-common ((,class (:foreground ,gray-1 :background ,gray-1bg))))
@@ -1607,7 +1646,7 @@ Version 2017-12-27"
   (progn
     (gh/add-theme-hook
       'soothe
-      (lambda (a) (ponelat/theme-extras 'soothe))))
+      (lambda (a) (ponelat/theme-soothe-extras))))
   :ensure t)
 
 (use-package badwolf-theme
@@ -1683,7 +1722,7 @@ Version 2017-12-27"
 ;; Load theme on first frame ( only once )
 (defvar ponelat:theme-window-loaded nil "A flag used to indicate that the GUI theme got loaded.")
 (defvar ponelat:theme-terminal-loaded nil "A flag used to indicate that the Terminal theme got loaded.")
-(defvar ponelat:theme 'solarized-light "The initial theme.")
+(defvar ponelat:theme 'soothe "The initial theme.")
 
 ;; Due to starting a daemon at the same time as our client
 ;; The follow code exists to ensure that the theme is loaded at the right time.
@@ -1693,6 +1732,7 @@ Version 2017-12-27"
   (unless ponelat:theme-window-loaded
     (progn
       (ponelat/setup-mode-line)
+      (ponelat/face-extras)
       (load-theme-only ponelat:theme)
       (setq org-beautify-theme-use-box-hack nil)
       (load-theme 'org-beautify 1)
@@ -1745,6 +1785,17 @@ Interactively you can choose the FONT-NAME"
 ;;;; Scratch buffer, Emacs
 (setq initial-scratch-message ";; Start...\n\n")
 
+;;;; Toggle fullscreen, buffer
+(defun ponelat/toggle-maximize-buffer ()
+  "Maximize buffer."
+  (interactive)
+  (if (= 1 (length (window-list)))
+      (jump-to-register '_)
+    (progn
+      (window-configuration-to-register '_)
+      (delete-other-windows))))
+(with-eval-after-load 'evil
+  (evil-global-set-key 'normal (kbd "C-w f") #'ponelat/toggle-maximize-buffer))
 ;; Shows a helpful panel, if you forget which keys are on a prefix.
 (use-package which-key
   :config
@@ -1753,6 +1804,25 @@ Interactively you can choose the FONT-NAME"
   :ensure t)
 
 ;; (put 'narrow-to-region 'disabled nil)
+
+;;;; Global Bindings, keys
+(bind-key "C-x C-k" 'kill-this-buffer)
+(bind-key "C-x Q" 'save-buffers-kill-emacs)
+(bind-key "C-x y" #'eval-buffer)
+
+(bind-key "C-c l e" 'ponelat/emacs-lisp-imenu-init)
+(bind-key "C-c l l" #'imenu)
+(bind-key "C-c l a" 'helm-org-rifle-agenda-files)
+(bind-key "C-c l o" 'helm-org-rifle)
+
+(bind-key "C-c ;" 'delete-other-windows)
+(bind-key "C-c :" 'delete-window)
+(bind-key "C-c C-a" 'helm-do-ag-project-root)
+
+(bind-key "C-h l" #'find-library)
+(bind-key "C-x a n" #'ponelat/spotify-next)
+(bind-key "C-x a p" #'ponelat/spotify-previous)
+(bind-key "C-x a SPC" #'ponelat/spotify-play-toggle)
 
 ;;; init.el ends here
 (provide 'init)
