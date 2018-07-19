@@ -177,12 +177,14 @@
 (defhydra hydra-zoom (global-map "C-x =")
   "zoom"
   ("k" text-scale-increase "in")
-  ("j" text-scale-decrease "out"))
+  ("j" text-scale-decrease "out")
+  ("0" (lambda () (interactive) (text-scale-decrease 0)) "reset"))
 
 (defhydra ponelat/hydra/open-notes (:idle 1.0 :color blue)
   "Org files"
   ("o" (ponelat/open-notes "office.org") "office")
   ("t" (ponelat/open-notes "travel.org") "travel")
+  ("g" (ponelat/open-notes "get-well-onprem.org") "get-well")
   ("f" (ponelat/open-notes "money.org") "money")
   ("b" (find-file (concat ponelat/projects-dir "/api-book/book/api-book.org")) "api-book")
   ("m" (ponelat/open-notes "meetups.org") "meetups")
@@ -403,6 +405,8 @@
     (setq prettify-symbols-alist '(("lambda" . 955)))
     (prettify-symbols-mode)))
 
+;; ┌ ┬ ┐ ├ ┼ ┤ └ ┴ ┘ ─ │
+
 (add-hook 'clojure-mode-hook
   (lambda ()
     (setq prettify-symbols-alist '(("fn" . 955)
@@ -431,6 +435,12 @@
 ;;   (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode)
 ;;   (add-hook 'json-mode-hook 'enable-paredit-mode)
 ;;   :ensure t)
+
+;;;; Color
+(use-package rainbow-mode
+  :config
+  (rainbow-mode 1)
+  :ensure t)
 
 ;;;; html,xml, markup
 (use-package emmet-mode
@@ -657,7 +667,8 @@
       (directory (projectile-project-root))
       (flags '("-Dmaven.test.failure.ignore=true"
                 "-Denv=dev"
-                "-Dselenium=browser.chrome"))
+                "-Dagent=browser.chrome"
+                "-DdriverPath=/home/josh/bin/chromedriver"))
       (cmd
         (format "cd %s && %s %s %s %s"
           directory
@@ -1117,20 +1128,17 @@ eg: /one/two => two
   :ensure t)
 
 ;;;; GitHub
-(use-package magit-gh-pulls
-  :config (add-hook 'magit-mode-hook 'turn-on-magit-gh-pulls)
+(use-package magithub
+  :after magit
+  :config
+  (magithub-feature-autoinject t)
+  (setq magithub-clone-default-directory "~/projects")
   :ensure t)
 
 (use-package gist
   :ensure t)
 
-(use-package github-clone
-  :ensure t)
-
 (use-package git-link
-  :ensure t)
-
-(use-package github-browse-file
   :ensure t)
 
 ;;;; Ledger
@@ -1163,7 +1171,123 @@ eg: /one/two => two
   :diminish (git-gutter+-mode . "+="))
 
 
+;;;; IMB Box symbols
+;; ┌ ┬ ┐ ├ ┼ ┤ └ ┴ ┘ ─ │
+
+;;;; org-mode pre
+(defun ponelat/org-mode-styles ()
+  "It styles org mode."
+  (interactive)
+  ;; Headline sizes
+  (let* ((variable-tuple
+           (cond ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
+             ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+             ((x-list-fonts "Noto Sans")         '(:font "Noto Sans"))
+             ((x-list-fonts "Verdana")         '(:font "Verdana"))
+             ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
+             (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+          (fixed-tuple
+            (cond ((x-list-fonts "Noto Mono") '(:font "Noto Mono"))
+              (nil (warn "Cannot find a Sans Serif Font.  Install Noto Sans"))))
+          (base-font-color     (face-foreground 'default nil 'default))
+          (headline           `(:inherit default :foreground ,base-font-color)))
+    (progn
+      (custom-theme-set-faces
+        'user
+        `(variable-pitch ((t ( ,@variable-tuple :height ,(face-attribute 'default :height) :weight light))))
+        `(fixed-pitch    ((t ( ,@fixed-tuple :slant normal :weight normal :height ,(face-attribute 'default :height) :width normal)))))
+
+      (custom-theme-set-faces
+        'user
+        `(org-level-8 ((t (,@headline ,@variable-tuple))))
+        `(org-level-7 ((t (,@headline ,@variable-tuple))))
+        `(org-level-6 ((t (,@headline ,@variable-tuple))))
+        `(org-level-5 ((t (,@headline ,@variable-tuple))))
+        `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+        `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.25))))
+        `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.5))))
+        `(org-level-1 ((t (,@headline :height 1.5))))
+        `(org-document-title ((t (,@headline ,@variable-tuple :height 3.0 :weight bold :underline nil))))
+        '(org-block                 ((t (:inherit fixed-pitch))))
+        '(org-table                 ((t (:inherit fixed-pitch))))
+        '(org-code                  ((t (:inherit fixed-pitch))))
+        ;; '(org-document-info         ((t (:foreground "dark orange"))))
+        '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+        ;; '(org-link                  ((t (:foreground "royal blue" :underline t))))
+        '(org-meta-line             ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+        '(org-property-value        ((t (:inherit fixed-pitch))) t)
+        '(org-special-keyword       ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+        '(org-tag                   ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+        '(org-verbatim              ((t (:inherit (shadow fixed-pitch))))))))
+  (ponelat/face-extras))
+
+
 ;;;; org-mode
+(use-package org
+  :ensure t
+  :bind
+  (("M-n" . org-capture)
+    ("C-c a" . org-agenda)
+    ("C-c i" . org-narrow-to-subtree)
+    ("C-c t" . org-teleport)
+    ("C-c w" . org-agenda-refile)
+    ("C-c I" . widen)
+    ("C-c j" . ponelat/open-journal))
+  :config
+  (progn
+    (define-key org-mode-map (kbd "C-c ;") nil)
+    (define-key org-mode-map (kbd "C-c C-'") 'org-cycle-list-bullet)
+    (global-set-key (kbd "C-c C-L") #'org-store-link)
+    (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
+
+    (setq org-directory ponelat/today-dir)
+    (setq org-agenda-files (list ponelat/today-dir))
+    (setq org-default-notes-file "notes.org")
+    (setq org-confirm-elisp-link-function nil)
+    (setq org-src-fontify-natively t)
+    (setq org-insert-heading-respect-content t)
+    (setq org-agenda-start-day "1d")
+    (setq org-agenda-span 5)
+    (setq org-agenda-start-on-weekday nil)
+    (setq org-deadline-warning-days 1)
+    (setq org-confirm-babel-evaluate nil)
+
+    ;;;; Styles
+    (setq org-hide-emphasis-markers t)
+    (font-lock-add-keywords 'org-mode
+      '(("^ *\\([-]\\) "
+          (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+    (add-hook 'org-mode-hook 'variable-pitch-mode )
+    (add-hook 'org-mode-hook #'ponelat/org-mode-styles)
+
+    ;;;; Org refile
+    (setq org-refile-use-outline-path 'file)
+    (setq org-refile-allow-creating-parent-nodes 'confirm)
+    (setq org-outline-path-complete-in-steps nil)
+    (setq org-refile-targets
+          '((nil :maxlevel . 3)
+             (org-agenda-files :maxlevel . 3)))
+
+;;;; TODOs labels
+    (setq org-todo-keywords
+      '((sequence "NEXT(n)" "TODO(t)" "InProgress(p)" "|" "DONE(d!)")
+         (sequence "LOOSE(l)" "SOMEDAY(s)" "|" "HABIT(h)")
+         (sequence "BLOCKED(b@)" "|" "CANCELLED(c@)")
+         (sequence "DISCUSS(i/@)" "|" "DONE(d!)")))
+;;;; org templates
+    (setq org-capture-templates
+      '(("t" "Todo" entry (file (lambda () (concat org-directory "/notes.org")))
+          "* TODO %?\n  %i\n  %a")
+         ("b" "Blank Point" entry (file (lambda () (concat org-directory "/notes.org")))
+           "* %?")
+         ("j" "Jokes" entry (file (lambda () (concat org-directory "/jokes.org")))
+           "* %?")
+         ("n" "Notes" entry (file (lambda () (concat org-directory "/notes.org")))
+           "* %?\n  %i\n  %a")
+         ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
+           "* LOOSE %?\n  %i\n  %a")))))
+
+
 (defun org-teleport (&optional arg)
   "Teleport the current heading to after a headline selected with avy.
 With a prefix ARG move the headline to before the selected
@@ -1215,62 +1339,6 @@ is positive, move after, and if negative, move before."
     (save-excursion
       (yank))))
   (outline-hide-leaves))
-
-(use-package org
-  :ensure t
-  :bind
-  (("M-n" . org-capture)
-    ("C-c a" . org-agenda)
-    ("C-c i" . org-narrow-to-subtree)
-    ("C-c t" . org-teleport)
-    ("C-c w" . org-agenda-refile)
-    ("C-c I" . widen)
-    ("C-c j" . ponelat/open-journal))
-  :config
-  (progn
-    (define-key org-mode-map (kbd "C-c ;") nil)
-    (define-key org-mode-map (kbd "C-c C-'") 'org-cycle-list-bullet)
-    (global-set-key (kbd "C-c C-L") #'org-store-link)
-    (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
-
-    (setq org-directory ponelat/today-dir)
-    (setq org-agenda-files (list ponelat/today-dir))
-    (setq org-default-notes-file "notes.org")
-    (setq org-confirm-elisp-link-function nil)
-    (setq org-src-fontify-natively t)
-    (setq org-insert-heading-respect-content t)
-    (setq org-agenda-start-day "1d")
-    (setq org-agenda-span 5)
-    (setq org-agenda-start-on-weekday nil)
-    (setq org-deadline-warning-days 1)
-    (setq org-confirm-babel-evaluate nil)
-
-    ;;;; Org refile
-    (setq org-refile-use-outline-path 'file)
-    (setq org-refile-allow-creating-parent-nodes 'confirm)
-    (setq org-outline-path-complete-in-steps nil)
-    (setq org-refile-targets
-          '((nil :maxlevel . 3)
-             (org-agenda-files :maxlevel . 3)))
-
-;;;; TODOs labels
-    (setq org-todo-keywords
-      '((sequence "NEXT(n)" "TODO(t)" "InProgress(p)" "|" "DONE(d!)")
-         (sequence "LOOSE(l)" "SOMEDAY(s)" "|" "HABIT(h)")
-         (sequence "BLOCKED(b@)" "|" "CANCELLED(c@)")
-         (sequence "DISCUSS(i/@)" "|" "DONE(d!)")))
-;;;; org templates
-    (setq org-capture-templates
-      '(("t" "Todo" entry (file (lambda () (concat org-directory "/notes.org")))
-          "* TODO %?\n  %i\n  %a")
-         ("b" "Blank Point" entry (file (lambda () (concat org-directory "/notes.org")))
-           "* %?")
-         ("j" "Jokes" entry (file (lambda () (concat org-directory "/jokes.org")))
-           "* %?")
-         ("n" "Notes" entry (file (lambda () (concat org-directory "/notes.org")))
-           "* %?\n  %i\n  %a")
-         ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
-           "* LOOSE %?\n  %i\n  %a")))))
 
 ;; Provides function to export current org buffer as JSON structure
 ;; to $file.org.json. Adapted from an org-mode mailing post by
@@ -1377,7 +1445,7 @@ is positive, move after, and if negative, move before."
 
 (defun ponelat/org-open-link-shub (link)
   "Open LINK as JIRA issue, if it matches shub-xxxx."
-  (cond ((string-match "\\(shub-[0-9]\\{4\\}\\)" link) ; [[shub-xxxx]]
+  (cond ((string-match "\\(\\(shub|sdes|sonp|splat|steam|scons\\)-[0-9]\\{4\\}\\)" link) ; [[shub-xxxx]]
          (let* ((shub (match-string 1 link))
                 (url (concat "https://smartbear.atlassian.net/browse/" (url-encode-url (upcase shub)))))
            (browse-url url)))))
@@ -1541,10 +1609,12 @@ Version 2017-12-27"
 
 ;;;; Faces, font, style
 (defun ponelat/face-extras ()
-  "It changes some faces, regardless of theme. To my liking."
+  "Change some faces, regardless of theme.  To my liking."
+  (interactive)
   (progn
     (let ((bg-color (face-attribute 'default :background)))
       (set-face-attribute 'org-hide nil :foreground bg-color :background bg-color)
+      (set-face-attribute 'org-code nil :foreground (face-attribute 'org-formula :foreground))
       (set-face-attribute 'fringe nil :foreground bg-color :background bg-color))))
 
 (defun ponelat/add-frame-padding ()
@@ -1640,6 +1710,10 @@ Version 2017-12-27"
   :defer t
   :ensure t)
 
+(use-package gruvbox-theme
+  :defer t
+  :ensure t)
+
 (use-package soothe-theme
   :disabled t
   :config
@@ -1672,6 +1746,7 @@ Version 2017-12-27"
 (use-package org-bullets
   :ensure t
   :config
+  (setq org-bullets-face-name "Monospace")
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
 (defun ponelat/setup-mode-line ()
@@ -1722,7 +1797,7 @@ Version 2017-12-27"
 ;; Load theme on first frame ( only once )
 (defvar ponelat:theme-window-loaded nil "A flag used to indicate that the GUI theme got loaded.")
 (defvar ponelat:theme-terminal-loaded nil "A flag used to indicate that the Terminal theme got loaded.")
-(defvar ponelat:theme 'soothe "The initial theme.")
+(defvar ponelat:theme 'gruvbox-dark-medium "The initial theme.")
 
 ;; Due to starting a daemon at the same time as our client
 ;; The follow code exists to ensure that the theme is loaded at the right time.
@@ -1732,11 +1807,11 @@ Version 2017-12-27"
   (unless ponelat:theme-window-loaded
     (progn
       (ponelat/setup-mode-line)
-      (ponelat/face-extras)
       (load-theme-only ponelat:theme)
       (setq org-beautify-theme-use-box-hack nil)
       (load-theme 'org-beautify 1)
       (setq ponelat:theme-window-loaded t)
+      (ponelat/face-extras)
       (set-frame-parameter (selected-frame) 'alpha '(100 . 100))
       (add-to-list 'default-frame-alist '( alpha . (100 . 100))))))
 
@@ -1769,8 +1844,8 @@ Version 2017-12-27"
 
 ;;;; Font,face
 (defvar ponelat/fonts
-  '( ("Small"          (:family "Noto Mono"   :height 100 :weight normal))
-     ("Normal"       (:family "Noto Mono"   :height 140 :weight normal))))
+  '( ("Small"  (:family "Noto Mono"   :height 98  :weight normal))
+     ("Normal" (:family "Noto Mono"   :height 143 :weight normal))))
 
 (defun ponelat/default-font (font-name)
 "Set the font.  FONT-NAME is the key found in ponelat/fonts.
@@ -1781,6 +1856,23 @@ Interactively you can choose the FONT-NAME"
   (let ((font-props (car (assoc-default font-name ponelat/fonts))))
     (apply 'set-face-attribute (append '(default nil) font-props))))
 
+(defun ponelat/current-font-index ()
+  "Get's the current font-index as part of `ponelat/fonts'."
+  (interactive)
+  (let ((active-index
+          (seq-position ponelat/fonts (face-attribute 'default :height)
+             (lambda (pair val)
+               (= val (plist-get (nth 1 pair) :height))))))
+    (or active-index 0)))
+
+(defun ponelat/cycle-default-font ()
+  "It cycles through the default fonts."
+  (interactive)
+  (let* ((index (ponelat/current-font-index))
+         (next-index (mod (+ 1 index) (length ponelat/fonts))))
+    (ponelat/default-font (first (nth next-index ponelat/fonts)))))
+
+(bind-key "C-x f" #'ponelat/cycle-default-font)
 
 ;;;; Scratch buffer, Emacs
 (setq initial-scratch-message ";; Start...\n\n")
