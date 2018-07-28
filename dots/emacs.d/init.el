@@ -311,6 +311,8 @@
   :config
   (progn
     (evil-mode)
+    (define-key evil-normal-state-map (kbd "j") #'evil-next-visual-line)
+    (define-key evil-normal-state-map (kbd "k") #'evil-previous-visual-line)
     (define-key evil-normal-state-map "\C-d" nil)
     (define-key evil-normal-state-map "\M-." nil)))
 
@@ -650,6 +652,9 @@
     (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
   :ensure t)
 
+(use-package docker-compose-mode
+  :ensure t)
+
 ;;;; Java
 (use-package jdee
   :config
@@ -869,6 +874,12 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 (use-package jq-mode
   :ensure t)
 
+;;;; Haskell, FP
+(use-package haskell-mode
+  :config
+  (progn
+    (add-hook 'haskell-mode-hook 'interactive-haskell-mode))
+  :ensure t)
 ;;;; Clojure
 (use-package cider
   :ensure t
@@ -1141,6 +1152,20 @@ eg: /one/two => two
 (use-package git-link
   :ensure t)
 
+(defun ponelat/git-link-develop ()
+  "Call `git-link' and set `git-link-default-branch' to develop."
+  (interactive)
+  (setq git-link-default-branch "develop")
+  (call-interactively #'git-link)
+  (setq git-link-default-branch nil))
+
+(defun ponelat/git-link-master ()
+  "Call `git-link' and set `git-link-default-branch' to master."
+  (interactive)
+  (setq git-link-default-branch "master")
+  (call-interactively #'git-link)
+  (setq git-link-default-branch nil))
+
 ;;;; Ledger
 (use-package ledger-mode
   :config
@@ -1271,8 +1296,7 @@ eg: /one/two => two
 ;;;; TODOs labels
     (setq org-todo-keywords
       '((sequence "NEXT(n)" "TODO(t)" "InProgress(p)" "|" "DONE(d!)")
-         (sequence "LOOSE(l)" "SOMEDAY(s)" "|" "HABIT(h)")
-         (sequence "BLOCKED(b@)" "|" "CANCELLED(c@)")
+         (sequence "MEET(m)" "BLOCKED(b@)" "|" "CANCELLED(c@)")
          (sequence "DISCUSS(i/@)" "|" "DONE(d!)")))
 ;;;; org templates
     (setq org-capture-templates

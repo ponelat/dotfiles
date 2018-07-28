@@ -44,7 +44,7 @@ ZSH_CUSTOM=~/projects/dotfiles/zsh
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(fasd npm docker unaliases zsh-autosuggestions jira vi-mode-copy-paste aws curl)
+plugins=(fasd npm docker unaliases zsh-autosuggestions jira vi-mode-copy-paste aws curl kubectl)
 
 # Preferred editor for local and remote sessions
 # export EDITOR="emacsclient -t"
