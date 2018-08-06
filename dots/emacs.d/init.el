@@ -122,7 +122,7 @@
 (define-key emacs-lisp-mode-map (kbd "C-c n") 'init-narrow-to-section)
 (define-key emacs-lisp-mode-map (kbd "C-c w") 'widen)
 
-;;;; Term, bash, zsh
+;;;; Term, bash, zsh, shell
 (defun ponelat/term ()
   "Create or jump to an 'ansi-term', running zsh."
   (interactive)
@@ -132,6 +132,13 @@
 
 (global-set-key (kbd "M-C-z") #'projectile-run-async-shell-command-in-root)
 (global-set-key (kbd "M-z") #'ponelat/term)
+
+(ignore-errors
+  (require 'ansi-color)
+  (defun my-colorize-compilation-buffer ()
+    (when (eq major-mode 'compilation-mode)
+      (ansi-color-apply-on-region compilation-filter-start (point-max))))
+  (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
 
 ;;;; Dirs
 (defvar ponelat/today-dir "~/Dropbox/org" "My base ORG-MODE folder.")
@@ -191,6 +198,8 @@
   ("p" (ponelat/open-notes "projects.org") "projects")
   ("n" (ponelat/open-notes "notes.org") "notes")
   ("j" (ponelat/open-notes "jokes.org") "jokes")
+  ("s" (ponelat/open-notes "shopping.org") "shopping")
+  ("a" (ponelat/open-notes "pain.org") "pain points")
   ("d" (ponelat/open-notes "docs.org") "docs")
   ("l" (org-capture-goto-last-stored) "(last)")
   ("e" (ponelat/open-notes "personal.org") "personal")
@@ -673,7 +682,8 @@
       (flags '("-Dmaven.test.failure.ignore=true"
                 "-Denv=dev"
                 "-Dagent=browser.chrome"
-                "-DdriverPath=/home/josh/bin/chromedriver"))
+                "-DdriverArgs=--headless"
+                "-DdriverPath=/home/josh/bin/chrome"))
       (cmd
         (format "cd %s && %s %s %s %s"
           directory
@@ -874,6 +884,10 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 (use-package jq-mode
   :ensure t)
 
+;;;; Go lang
+ (use-package go-mode
+  :ensure t)
+
 ;;;; Haskell, FP
 (use-package haskell-mode
   :config
@@ -971,6 +985,13 @@ eg: /one/two => two
                         (t "run"))))
     (async-shell-command (format "cd %s && npm %s %s" project-dir run-prefix choice) (format "*npm* - %s - %s" choice project-name))))
 
+(defun ponelat/get-links (directory)
+  "Show links in DIRECTORY.  Default to `projectile-project-root'."
+  (interactive (list (projectile-project-root)))
+  (split-string
+    (shell-command-to-string
+      (format "find %s -type l -not -ipath '*/.bin/*'" directory))))
+
 (defun ponelat/npm-clone-and-link (project-dir)
   "Fetch a list of npm scripts from PROJECT-DIR/package.json and async execute it."
   (let* ((node-modules (concat project-dir "node_modules/"))
@@ -978,15 +999,24 @@ eg: /one/two => two
           (choice-full-path (concat project-dir "node_modules/" choice)))
     (async-shell-command (format "cd %s && ~/projects/scripts/node-install-dep.sh %s" project-dir choice-full-path) (format "*Installing Dependency* - %s" choice))))
 
-(defun ponelat/helm-npm-run ()
-  "Run npm-run, from the helm projectile buffer."
-  (interactive)
-  (helm-exit-and-execute-action #'ponelat/npm-run))
-
 (defun ponelat/npm-link (base-dir target-dir)
   "It'll link TARGET-DIR to BASE-DIR project."
   (let ((relative-path-to-target (file-relative-name target-dir base-dir)))
     (async-shell-command (format "cd %s && npm link %s" base-dir relative-path-to-target))))
+
+(defun ponelat/parent-dir (path)
+  "Return parent directory of PATH."
+  (file-name-directory (directory-file-name path)))
+
+(defun ponelat/npm-unlink (base-dir target-dir)
+  "It'll unlink TARGET-DIR from BASE-DIR project."
+  (let ((filename (file-name-nondirectory target-dir)))
+    (async-shell-command (format "cd %s && npm unlink %s" base-dir filename))))
+
+(defun ponelat/helm-npm-run ()
+  "Run npm-run, from the helm projectile buffer."
+  (interactive)
+  (helm-exit-and-execute-action #'ponelat/npm-run))
 
 (defun ponelat/helm-npm-clone-and-link ()
   "Run npm-clone-and-link, from the helm projectile buffer."
@@ -1005,9 +1035,6 @@ eg: /one/two => two
   (interactive)
   (ponelat/npm-run (projectile-project-root)))
 
-(defun ponelat/parent-dir (path)
-  (file-name-directory (directory-file-name path)))
-
 (defun ponelat/projectile-npm-link (link-path)
   "Run an npm link against LINK-PATH."
   (interactive
@@ -1015,6 +1042,13 @@ eg: /one/two => two
             (ponelat/parent-dir
               (projectile-project-root)))))
   (ponelat/npm-link (projectile-project-root) link-path))
+
+(defun ponelat/projectile-npm-unlink (link-path)
+  "Run an npm link against LINK-PATH."
+  (interactive
+    (list (completing-read "Project to Unlink: "
+            (ponelat/get-links (projectile-project-root)))))
+  (ponelat/npm-unlink (projectile-project-root) link-path))
 
 (defun ponelat/helm-ag-do ()
   "Run npm-run, from the helm projectile buffer."
@@ -1091,6 +1125,11 @@ eg: /one/two => two
   ;; Adjust size of windows
   (balance-windows))
 
+;;;; fasd, files, recent
+(use-package fasd
+  :config
+  (global-fasd-mode 1)
+  :ensure t)
 ;;;; Ivy, counsel, swiper
 (setq enable-recursive-minibuffers t)
 (use-package ivy
@@ -1166,6 +1205,12 @@ eg: /one/two => two
   (call-interactively #'git-link)
   (setq git-link-default-branch nil))
 
+(defun ponelat/ponelat-copy-branch ()
+  "It kills the current git branch."
+  (interactive)
+  (kill-new (git-link--branch)))
+
+
 ;;;; Ledger
 (use-package ledger-mode
   :config
@@ -1235,6 +1280,7 @@ eg: /one/two => two
         `(org-document-title ((t (,@headline ,@variable-tuple :height 3.0 :weight bold :underline nil))))
         '(org-block                 ((t (:inherit fixed-pitch))))
         '(org-table                 ((t (:inherit fixed-pitch))))
+        '(org-todo                  ((t (:inherit fixed-pitch))))
         '(org-code                  ((t (:inherit fixed-pitch))))
         ;; '(org-document-info         ((t (:foreground "dark orange"))))
         '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
@@ -1257,7 +1303,8 @@ eg: /one/two => two
     ("C-c t" . org-teleport)
     ("C-c w" . org-agenda-refile)
     ("C-c I" . widen)
-    ("C-c j" . ponelat/open-journal))
+    ("C-c j" . ponelat/open-journal)
+    ("C-c d" . ponelat/open-today))
   :config
   (progn
     (define-key org-mode-map (kbd "C-c ;") nil)
@@ -1277,11 +1324,17 @@ eg: /one/two => two
     (setq org-deadline-warning-days 1)
     (setq org-confirm-babel-evaluate nil)
 
+    ;;;; Babel
+    (progn
+      (add-to-list 'org-babel-load-languages '(js . t))
+      (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
+      (add-to-list 'org-babel-tangle-lang-exts '("js" . "js")))
+
     ;;;; Styles
     (setq org-hide-emphasis-markers t)
     (font-lock-add-keywords 'org-mode
       '(("^ *\\([-]\\) "
-          (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+          (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "—"))))))
     (add-hook 'org-mode-hook 'variable-pitch-mode )
     (add-hook 'org-mode-hook #'ponelat/org-mode-styles)
 
@@ -1304,6 +1357,10 @@ eg: /one/two => two
           "* TODO %?\n  %i\n  %a")
          ("b" "Blank Point" entry (file (lambda () (concat org-directory "/notes.org")))
            "* %?")
+         ("d" "Today" entry (file+olp+datetree (lambda () (concat org-directory "/today.org")))
+           "* TODO %? \nAdded: %T")
+         ("s" "Shopping" entry (file (lambda () (concat org-directory "/shopping.org")))
+           "* %?")
          ("j" "Jokes" entry (file (lambda () (concat org-directory "/jokes.org")))
            "* %?")
          ("n" "Notes" entry (file (lambda () (concat org-directory "/notes.org")))
@@ -1311,6 +1368,17 @@ eg: /one/two => two
          ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
            "* LOOSE %?\n  %i\n  %a")))))
 
+
+(defun ponelat/org-todo-keywords ()
+  "Return list of org todo kewords."
+  (mapcar (lambda (a) (replace-regexp-in-string "\\(\\w+\\).*" "\\1" a))
+    (delete-dups
+      (sort
+        (seq-filter (lambda (item) (not (string= "|" item)))
+          (apply 'seq-concatenate
+            (cons 'list
+              (mapcar 'cdr org-todo-keywords))))
+        (lambda (a b) (string< a b))))))
 
 (defun org-teleport (&optional arg)
   "Teleport the current heading to after a headline selected with avy.
@@ -1459,6 +1527,13 @@ is positive, move after, and if negative, move before."
   (interactive)
   (find-file (concat org-directory "/journal.org")))
 
+(defun ponelat/open-today ()
+  "Open the journal file."
+  (interactive)
+  (find-file (concat org-directory "/today.org"))
+  (org-datetree-find-date-create (calendar-current-date))
+  (org-narrow-to-subtree))
+
 (use-package htmlize
   :ensure t)
 
@@ -1492,10 +1567,12 @@ is positive, move after, and if negative, move before."
   :ensure t)
 
 ;; TODO: fix this
-(defun my-org-archive-done-tasks ()
-  "Archive all TODOs with DONE."
-  (interactive)
-  (org-map-entries 'org-archive-subtree "/DONE" 'file))
+(defun ponelat/archive (type)
+  "Archive all TODOs with TYPE."
+  (interactive
+    (list
+      (completing-read "Choose type: " (ponelat/org-todo-keywords))))
+  (org-map-entries 'org-archive-subtree (format "/%s" type) 'agenda))
 
 (comment use-package org-pomodoro
   :ensure t
@@ -1870,7 +1947,6 @@ Version 2017-12-27"
 (defvar ponelat/fonts
   '( ("Small"  (:family "Noto Mono"   :height 98  :weight normal))
      ("Normal" (:family "Noto Mono"   :height 143 :weight normal))))
-
 (defun ponelat/default-font (font-name)
 "Set the font.  FONT-NAME is the key found in ponelat/fonts.
 Interactively you can choose the FONT-NAME"
@@ -1880,13 +1956,16 @@ Interactively you can choose the FONT-NAME"
   (let ((font-props (car (assoc-default font-name ponelat/fonts))))
     (apply 'set-face-attribute (append '(default nil) font-props))))
 
+;;;; Set default font
+(ponelat/default-font "Small")
+
 (defun ponelat/current-font-index ()
   "Get's the current font-index as part of `ponelat/fonts'."
   (interactive)
   (let ((active-index
           (seq-position ponelat/fonts (face-attribute 'default :height)
-             (lambda (pair val)
-               (= val (plist-get (nth 1 pair) :height))))))
+            (lambda (pair val)
+              (= val (plist-get (nth 1 pair) :height))))))
     (or active-index 0)))
 
 (defun ponelat/cycle-default-font ()
@@ -1900,6 +1979,14 @@ Interactively you can choose the FONT-NAME"
 
 ;;;; Scratch buffer, Emacs
 (setq initial-scratch-message ";; Start...\n\n")
+
+;; Kill all other buffers
+(defun ponelat/kill-other-buffers ()
+    "Kill all other buffers."
+    (interactive)
+    (mapc 'kill-buffer
+          (delq (current-buffer)
+            (remove-if-not 'buffer-file-name (buffer-list)))))
 
 ;;;; Toggle fullscreen, buffer
 (defun ponelat/toggle-maximize-buffer ()

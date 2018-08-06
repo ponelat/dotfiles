@@ -1,3 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
-sudo openvpn --config ~/openvpn/new-josh-dev-swagger-vpn.ovpn
+. ~/.env
+sudo openvpn --config $SWAGGER_OVPN

@@ -52,6 +52,10 @@ If COUNT is given, move COUNT - 1 lines downward first."
   "go" 'org-open-at-point
   "$"  'evil-org-end-of-line)
 
+;;; Minibuffer
+(evil-define-key 'normal minibuffer-local-map
+  "C-w" 'evil-delete-backward-word)
+
 (evil-define-keymap evil-org-set-map
   :local t
   (setq evil-org-set-map (make-sparse-keymap))
