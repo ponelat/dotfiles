@@ -10,3 +10,9 @@
 [submodule "dots/config/i3/i3blocks"]
 	path = dots/config/i3/i3blocks
 	url = git://github.com/Anachron/i3blocks.git
+[submodule "zsh/plugins/zsh-autosuggestions"]
+	path = zsh/plugins/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+[submodule "dots/emacs.d/custom/evil-plugins"]
+	path = dots/emacs.d/custom/evil-plugins
+  url = https://github.com/tarao/evil-plugins

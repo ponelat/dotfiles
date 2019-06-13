@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: cln
+# key: cln
+# --
+console.log(\`$1:\n"\${$1.replace(/\n/gm, '⏎\n')}"\`)

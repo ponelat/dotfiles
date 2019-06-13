@@ -1,8 +1,5 @@
 PROJECTS="$HOME/projects"
 
-# For passwords and such...
-[ -s $HOME/.env ] && . $HOME/.env
-
 # Add Python installed bins to path
 [ -d $HOME/.local/bin ] && export PATH+=:"$HOME/.local/bin"
 
@@ -27,11 +24,10 @@ PROJECTS="$HOME/projects"
 # export SAUCE_ACCESS_KEY="KEYKEYKEY"
 
 # Source the 'rvm' function
-# Add RVM to PATH for scripting 
+# Add RVM to PATH for scripting
 [ -s "$HOME/.rvm/scripts/rvm" ] && . "$HOME/.rvm/scripts/rvm"; export PATH="$PATH:$HOME/.rvm/bin"
 
 # Linuxbrew, see:
-echo $HOME/.linuxbrew
 if [ -d "$HOME/.linuxbrew" ]; then
   export PATH="$HOME/.linuxbrew/bin:$PATH"
   export MANPATH="$(brew --prefix)/share/man:$MANPATH"
@@ -55,7 +51,7 @@ if [ -d "$HOME/.linuxbrew" ]; then
   # fi
 
   # Linuxbrew manually sourced files...
-  [ -f "$(brew --prefix)/share/liquidprompt" ] && . "$(brew --prefix)/share/liquidprompt" 
+  [ -f "$(brew --prefix)/share/liquidprompt" ] && . "$(brew --prefix)/share/liquidprompt"
 
 fi
 
@@ -87,7 +83,7 @@ case "$TERM" in
 esac
 
 # Base16 Shell
-[ -d "$HOME/.config/base16-shell" ] && . "/home/josh/.config/base16-shell/base16-paraiso.dark.sh"
+# [ -d "$HOME/.config/base16-shell" ] && . "/home/josh/.config/base16-shell/base16-paraiso.dark.sh"
 
 # Correct base16 colors for ls output
 [ -x `type -P dircolors` ] && eval `dircolors`

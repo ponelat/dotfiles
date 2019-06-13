@@ -1,6 +1,3 @@
-### Secret tokens / keys
-. ~/.env
-
 ### Aliases
 # alias n=vim
 alias v=vim

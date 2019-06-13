@@ -2,4 +2,4 @@
 # name: ex
 # key: ex
 # --
-expect($1).${2:toEqual}($3)
+expect($1).toEqual($0)

@@ -40,9 +40,10 @@
   pullclean = "!git pull && git cleanup ; git remote prune origin"
   wipe = "!git checkout . ; git clean -df"
   pushu ="!git-push-u-origin"
+  rblame="!git-rblame $@"
 [push]
   default = simple
 [github]
 	user = ponelat
 [credential]
-	helper = /usr/lib/git-core/git-credential-gnome-keyring
+	helper = /usr/share/doc/git/contrib/credential/gnome-keyring/git-credential-gnome-keyring

@@ -4,6 +4,7 @@
 # Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
 
+# Handles a lot of $PATH stuff, check there first
 . ~/.profile
 
 # Set my terminal if I'm not in tmux.
@@ -84,18 +85,17 @@ setopt nolistbeep     # No bell on ambiguous completion!!
 
 ### Custom imports
 ### User credentials (dont check this into your repo)
-. ~/.env
 . ~/projects/dotfiles/funcs/aliases
 . ~/projects/dotfiles/funcs/funcs
 
 ## Ruby
-export RBENV_ROOT="$HOME/.linuxbrew/var/rbenv"
-rbenv >/dev/null 2>&1 && eval "`rbenv init -`"
+# export RBENV_ROOT="$HOME/.linuxbrew/var/rbenv"
+# rbenv >/dev/null 2>&1 && eval "`rbenv init -`"
 
 ### Yarn
-if which yarn > /dev/null; then
-  PATH="$PATH:`yarn global bin`"
-fi
+# if which yarn > /dev/null; then
+  # PATH="$PATH:`yarn global bin`"
+# fi
 
 ### Base 16
 BASE16_SHELL=$HOME/.config/base16-shell/
@@ -129,8 +129,22 @@ fco() {
 }
 
 
-PATH="$HOME/.yarn/bin:$PATH"
-PATH="$HOME/projects/accounts/bin:$PATH"
-PATH="$HOME/.cargo/bin:$PATH"
-export PATH="$HOME/apps/julia/bin:$PATH"
-[[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
+# export PATH="$HOME/apps/julia/bin:$PATH"
+# [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
+
+if [ -f $HOME/.nix-profile/etc/profile.d/nix.sh ] ; then
+  # Need to add this for _other_ programs to identify it, as nix.sh doesn't work for emacs
+  source $HOME/.nix-profile/etc/profile.d/nix.sh
+  export NIX_PATH="nixpkgs=$HOME/.nix-defexpr/channels/nixos-18.03"
+fi
+
+alias ddive="docker run --rm -it \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $(which docker):/bin/docker \
+    wagoodman/dive:latest"
+
+# kitty
+# autoload -Uz compinit
+# compinit
+# # Completion for kitty
+# kitty + complete setup zsh | source /dev/stdin

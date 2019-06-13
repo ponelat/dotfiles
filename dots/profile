@@ -17,16 +17,22 @@ if [ -n "$BASH_VERSION" ]; then
 fi
 
 # ssh
-export SSH_KEY_PATH="~/.ssh/dsa_id"
+export SSH_KEY_PATH="~/.ssh/id_rsa"
+
+if [ -n "$DESKTOP_SESSION" ];then
+  eval $(gnome-keyring-daemon --start)
+  export SSH_AUTH_SOCK
+fi
 
 ### Linuxbrew
 [ -d "$HOME/.linuxbrew" ] && PATH="$HOME/.linuxbrew/bin:$PATH"
 [ -d "$HOME/.linuxbrew" ] && PATH="$HOME/.linuxbrew/sbin:$PATH"
+[ -d "$HOME/.linuxbrew/include/bin" ] && PATH="$HOME/.linuxbrew/include/bin:$PATH"
 export XDG_DATA_DIRS="$HOME/.linuxbrew/share:$XDG_DATA_DIRS"
 
 ### N ( node.js manager )
 export N_PREFIX="$HOME/.linuxbrew/include"
-[ -d "$HOME/.linuxbrew/include/bin" ] && PATH="$HOME/.linuxbrew/include/bin:$PATH"
+[ -d "$HOME/.yarn/bin" ] && PATH="$PATH:$HOME/.yarn/bin"
 
 ### Path
 [ -d "$HOME/.local/bin" ] && PATH="$PATH:$HOME/.local/bin"
@@ -36,19 +42,17 @@ export N_PREFIX="$HOME/.linuxbrew/include"
 [ -d "$HOME/projects/dotfiles/bin" ] && PATH="$PATH:$HOME/projects/dotfiles/bin"
 [ -d "$HOME/projects/docker-cloud" ] && PATH="$PATH:$HOME/projects/docker-cloud"
 [ -d "$HOME/projects/scripts" ] && PATH="$PATH:$HOME/projects/scripts"
+[ -d "$HOME/projects/accounts/bin" ] && PATH="$PATH:$HOME/accounts/bin"
 
 # Custom apps
 for dir in $HOME/apps/*/bin ; do
   PATH="$PATH:$dir"
 done
 
-[ -d "$HOME/apps/hyperterm" ] && PATH="$PATH:$HOME/apps/hyperterm"
+[ -d "$HOME/go/bin" ] && PATH="$PATH:$HOME/go/bin"
+[ -d "$HOME/.cargo/bin" ] && PATH="$PATH:$HOME/.cargo/bin"
+[ -d "$HOME/.nix-profile/bin" ] && PATH="$PATH:$HOME/.nix-profile/bin"
 
-if [ -n "$DESKTOP_SESSION" ];then
-  eval $(gnome-keyring-daemon --start)
-  export SSH_AUTH_SOCK
-fi
-
-
-PATH="$HOME/.cargo/bin:$PATH"
 export PATH=$PATH
+
+export ETCDCTL_API=3

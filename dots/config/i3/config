@@ -54,6 +54,8 @@ bindsym $mod+Shift+t exec "chrome"
 bindsym $mod+Shift+y exec "~/.config/i3/layout.sh"
 bindsym $mod+c exec zenity --calendar
 
+# i3 for_window [instance="Navigator"] resize grow left 200, resize grow right 200, resize grow down 150, resize grow up 100
+
 # kill focused window
 bindsym $mod+q kill
 
@@ -127,6 +129,9 @@ bindsym $mod+d focus child
 # exec_always flock -w1 ~/.config/i3/scratchpad/lockfile ~/.config/i3/scratchpad/perpetual_emacs.sh
 # for_window [instance="^scratchpad$"] move scratchpad
 
+# Used for testing Selenium/Chrome
+# for_window [class=".*"] fullscreen enable
+
 bindsym $mod+p exec "shutter -s"
 # set $work1 1:slack
 # set $work2 2:incog
@@ -174,6 +179,12 @@ bindsym $mod+Shift+c reload
 bindsym $mod+Shift+r restart
 # exit i3 (logs you out of your X session)
 bindsym $mod+Shift+q exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
+
+bindsym $mod+Shift+g resize set 1358 px 3000 px
+
+set $screencast bash ~/bin/screenrecord-i3
+bindsym $mod+Shift+s exec $screencast
+
 
 # resize window (you can also use the mouse for that)
 mode "resize" {

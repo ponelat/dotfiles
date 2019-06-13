@@ -1,5 +1,5 @@
 set nocompatible              " be iMproved, required
-filetype off                  
+filetype off
 
 set path+=**/*
 
@@ -62,7 +62,7 @@ Plug 'tmhedberg/matchit'
 " Toggle quickfix and location lists
 Plug 'Valloric/ListToggle'
 
-" Emmet 
+" Emmet
 Plug 'mattn/emmet-vim'
 
 " Motions
@@ -91,7 +91,7 @@ Plug 'neomake/neomake'
 " Plug 'scrooloose/syntastic'
 
 " Family syntaxes
-Plug 'Markdown-syntax'
+" Plug 'Markdown-syntax'
 Plug 'tpope/vim-jdaddy'
 Plug 'elzr/vim-json'
 Plug 'groenewege/vim-less'
@@ -174,7 +174,7 @@ map sw <Plug>(easymotion-overwin-w)
 map sn <Plug>(easymotion-vim-n)
 map sN <Plug>(easymotion-vim-N)
 
-"""" Map camelCaseMotion 
+"""" Map camelCaseMotion
 map <silent> ,w <Plug>CamelCaseMotion_w
 map <silent> ,b <Plug>CamelCaseMotion_b
 map <silent> ,e <Plug>CamelCaseMotion_e
@@ -246,7 +246,7 @@ function! s:echoline(line)
   execute append(line('.'), a:line)
 endfunction
 
-command! -nargs=1 -complete=file Lines call PasteLineFromFile(<q-args>) 
+command! -nargs=1 -complete=file Lines call PasteLineFromFile(<q-args>)
 
 function! PasteLineFromFile(line)
   call fzf#run({'source': 'cat '.a:line, 'sink': function('s:echoline'), 'options': '-m'})
@@ -319,7 +319,7 @@ nnoremap <silent><leader>ea :tabnew ~/.config/awesome/rc.lua<CR>
 nnoremap <silent><leader>ei :tabnew ~/.config/i3/config<CR>
 nnoremap <silent><leader>ee :tabnew ~/.env<CR>
 " Set the current file's path as the current working dir, in vim
-nnoremap <Leader><c-j> :cd %:p:h<CR> 
+nnoremap <Leader><c-j> :cd %:p:h<CR>
 
 nnoremap <silent><leader>rc :!ctags<cr>
 
@@ -348,7 +348,7 @@ let b:surround_56 = "/* \r */"
 
 """" Map General
 " Make sure nothing conflicts with tmux ( c-a, is my tmux prefix )
-map <c-a> <nop> 
+map <c-a> <nop>
 " For consistant behaviour with s-D and s-C
 nnoremap Y y$
 
@@ -421,7 +421,7 @@ augroup filetypedetect
   au BufRead,BufNewFile *eslintrc set filetype=json
   au BufRead,BufNewFile *vimrc setlocal foldmethod=marker
   au BufRead,BufNewFile *profile set ft=sh
-  " au BufWritePost       * Neomake 
+  " au BufWritePost       * Neomake
   au FileType less set omnifunc=csscomplete#CompleteCSS
 augroup END
 
@@ -433,10 +433,10 @@ set novisualbell
 " colorscheme base16-default-dark
 
 " Terminal color mode, if in a non-true-color term
-let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"    " To make `termguicolors` work
-let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"    " To make `termguicolors` work
-set termguicolors
-" set t_Co=256
+" let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"    " To make `termguicolors` work
+" let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"    " To make `termguicolors` work
+" set termguicolors
+set t_Co=256
 colorscheme jellybeans
 
 hi StatusLine ctermfg=7 guifg=#c0c0c0 ctermbg=234 guibg=#1c1c1c
@@ -458,7 +458,7 @@ set exrc                  " enable per-directory .vimrc files
 set secure                " disable unsafe commands in local .vimrc files
 set number                " Numbers in the gutter ( fixed )
 " Use the same symbols as TextMate for tabstops and EOLs
-set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#  
+set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
 set ssop-=options    " do not store global and local values in a session
 set ssop-=folds      " do not store folds
 set wildmode=longest,list,full   " Autocomplete in ex readline...
@@ -471,8 +471,8 @@ set hidden " Allow open buffers ( prevents warning about unsaved changes, when o
 set shortmess+=c
 """" Default Indents ( prefer to use .editorconfig, if you can )
 set shiftwidth=2   " Rememb
-set softtabstop=2 
-set tabstop=2 
+set softtabstop=2
+set tabstop=2
 set expandtab
 set nowrap
 set smartindent
@@ -533,19 +533,19 @@ command! -range=% HighlightRepeats <line1>,<line2>call HighlightRepeats()
 " Newline each comma
 nnoremap <leader>cn :s/,/,/g<CR>
 
-function! SplitWithDevelop() 
+function! SplitWithDevelop()
   exe 'vnew'
   exe 'r! git cat-file -p develop:#'
 endfunction
 command! SplitWithDevelop call SplitWithDevelop()
 
-function! SplitWithMaster() 
+function! SplitWithMaster()
   exe 'vnew'
   exe 'r! git cat-file -p master:#'
 endfunction
 command! SplitWithMaster call SplitWithMaster()
 
-function! SplitWith() 
+function! SplitWith()
   let branch = input('Branch: ', 'master')
   let file = input('File: ',expand('%p:h'))
   exe 'vnew ' . file
@@ -553,7 +553,7 @@ function! SplitWith()
 endfunction
 command! SplitWith call SplitWith()
 
-function! Fork() 
+function! Fork()
   let file = input('File: ',expand('%p:h'))
   exe 'saveas ' . file
 endfunction
