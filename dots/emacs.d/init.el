@@ -2,33 +2,50 @@
 ;;; -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
-(setq package-archives
-  (quote (("gnu"          . "http://elpa.gnu.org/packages/")
-          ("melpa-stable" . "http://stable.melpa.org/packages/")
-          ("melpa"        . "http://melpa.org/packages/")
-           ("marmalade"    . "http://marmalade-repo.org/packages/"))))
 
-(require 'package)
-(setq load-prefer-newer t)
-(package-initialize)
-
-(use-package auto-compile
-  :demand t
-  :config
-  (progn
-    (auto-compile-on-load-mode)
-    (auto-compile-on-save-mode)
-    (setq auto-compile-display-buffer               nil)
-    (setq auto-compile-mode-line-counter            t)
-    (setq auto-compile-source-recreate-deletes-dest t)
-    (setq auto-compile-toggle-deletes-nonlib-dest   t)
-    (setq auto-compile-update-autoloads             t)
-    (add-hook 'auto-compile-inhibit-compile-hook
-      'auto-compile-inhibit-compile-detached-git-head)))
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
 ;;;; Custom variables stored here...
 (setq emacs-dir "~/.emacs.d")
 (setq custom-file (concat emacs-dir "/custom.el"))
+
+;; Add custom files
+;; Be sure to run "rcup" for stuff you've added to projects/dotfiles to show up here
+(add-to-list 'load-path "~/.emacs.d/custom")
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
+;; Allows use to create closures for functions ( in my case, for sentinel callbacks )
+(setq lexical-binding t)
+(windmove-default-keybindings)
+(auto-image-file-mode 1)
+(electric-pair-mode t)
+
+;;;; init.el helpers
+(defmacro comment (&rest body)
+  "Comment out sexp (BODY)."
+  nil)
+
+;;;;;;;;;;;;; Packages ...
+;; Install `use-package'
+(straight-use-package 'use-package)
+
+;; Tell straight.el to overwrite use-package, such it uses straight.el instead of package.el by default.
+;; ...to NOT use straight.el, add `:straigh nil` to `use-package'
+(setq straight-use-package-by-default t)
+
+;; Load org quickly! Before it could be loaded by some nafarious package, breaking it from straight.el
+(straight-use-package 'org)
 
 ;; Disable
 (defun ponelat/toggle-trace-request ()
@@ -45,27 +62,6 @@
       (message "Tracing Requests disabled"))))
 
 
-;; Add custom files
-;; Be sure to run "rcup" for stuff you've added to projects/dotfiles to show up here
-(add-to-list 'load-path "~/.emacs.d/custom")
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-
-;; Allows use to create closures for functions ( in my case, for sentinel callbacks )
-(setq lexical-binding t)
-(windmove-default-keybindings)
-(auto-image-file-mode 1)
-(electric-pair-mode t)
-
-;; Bootstrap `use-package'
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-;;;; init.el helpers
-(defmacro comment (&rest body)
-  "Comment out sexp (BODY)."
-  nil)
-
 (defun ponelat/sum-numbers-in-region (start end)
   "Sum the numbers in the current buffer, from START to END."
   (interactive "r")
@@ -78,11 +74,11 @@
 
 ;; ;;;; SSH mode
 ;; (use-package ssh-mode
-;;   :ensure t)
+;;   )
 
 ;;;; Macrostep
-(use-package macrostep
-  :ensure t)
+(use-package macrostep)
+
 
 ;;;; Auth info, secrets, passwords
 (defun ponelat/get-secret (host)
@@ -216,16 +212,15 @@
 
 (use-package avy
   :config
-  (setq avy-timeout-seconds 0.3)
-  :ensure t)
+  (setq avy-timeout-seconds 0.3))
 
 ;;;; Strings
-(use-package string-inflection
-  :ensure t)
+(use-package string-inflection)
+
 
 ;;;; Hydra, menus
 (use-package hydra
-  :ensure t)
+  )
 
 (defhydra hydra-zoom (global-map "C-x =")
   "zoom"
@@ -266,14 +261,14 @@
 (global-set-key (kbd "C-c s") 'hydra-string-case/body)
 
 (use-package diminish
-  :ensure t)
+  )
 
 ;(comment use-package ace-window
 ;  :bind (("M-p" . ace-window))
 ;  :config
 ;  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
 ;  (setq aw-dispatch-always t)
-;  :ensure t)
+;  )
 
 ;;;; Mode discovery
 (use-package discover-my-major
@@ -281,19 +276,19 @@
   (progn
     (global-set-key (kbd "C-h C-m") 'discover-my-major)
     (global-set-key (kbd "C-h M-m") 'discover-my-mode))
-  :ensure t)
+  )
 
 (use-package ranger
   :disabled t
-  :ensure t)
+  )
 
 (comment use-package dot-mode
-  :ensure t
+
   :config
   (global-dot-mode))
 
 (use-package editorconfig
-  :ensure t
+
   :diminish editorconfig-mode
   :config
   (editorconfig-mode 1))
@@ -302,7 +297,7 @@
 (use-package auto-indent-mode
   :config
   (add-hook 'rjsx-mode 'auto-indent-mode)
-  :ensure t)
+  )
 
 ;;;; Writeroom, writing, book
 (defun ponelat/write ()
@@ -326,7 +321,7 @@
   :config
   (comment progn                        ; Doesn't seem to work. Want to disable git-gutter+-mode when in writeroom-mode
     (add-hook 'writeroom-mode-hook #'ponelat/inhibit-git-gutter+-mode))
-  :ensure t)
+  )
 
 ;;;; Sudo, root, sudowrite, dired, tramp
 (require 'tramp)
@@ -337,17 +332,16 @@
   (dired (format "/sudo::%s" (buffer-file-name))))
 
 (use-package dired-narrow
-  :ensure t
   :bind (:map dired-mode-map
               ("/" . dired-narrow)))
 
 (use-package docker-tramp
-  :ensure t)
+  )
 
 ;;;; Markdown
 
 (use-package markdown-mode
-  :ensure t)
+  )
 
  (defun ponelat/expand-lines ()
     (interactive)
@@ -357,7 +351,7 @@
 
 ;;;; Evil, vim
 (use-package evil
-  :ensure t
+
   :init
   (progn
     (setq
@@ -373,15 +367,15 @@
     (define-key evil-normal-state-map "\M-." nil)
     (define-key evil-normal-state-map "go" 'org-open-at-point-global)))
 
-(use-package evil-collection
-  :ensure t
-  :config
-  (progn
-    (evil-collection-init '(pdf help dired fundamental))))
+;; (use-package evil-collection
+;;   :after evil
+;;   :custom (evil-collection-setup-minibuffer t)
+;;   :config
+;;   (progn
+;;     (evil-collection-init pdf)))
 
 (use-package evil-leader
   :after evil
-  :ensure t
   :config
   (progn
     (global-evil-leader-mode)
@@ -415,7 +409,7 @@
   :config
   (progn
     (global-evil-matchit-mode 1))
-  :ensure t)
+  )
 
 (evil-define-text-object rsb/textobj-inner-c-defun (count &optional beg end type)
   (save-excursion
@@ -446,29 +440,26 @@
   :config
   (progn
     (ace-link-setup-default))
-  :ensure t)
+  )
 
 ;; Make sure words are treated correctly in evil mode
 (with-eval-after-load 'evil
   (defalias #'forward-evil-word #'forward-evil-symbol))
 
 (use-package evil-replace-with-register
-  :ensure t
+
   :config
   (progn
     (setq evil-replace-with-register-key "gr")
     (evil-replace-with-register-install)))
 
 (use-package evil-commentary
-  :ensure t
+
   :config (evil-commentary-mode))
 
 (use-package evil-surround
   :config (global-evil-surround-mode t)
-  :ensure t)
-
-;;;; Evil Rebellion
-(require 'evil-org-rebellion)
+  )
 
 ;;;; Hard core escape, super powerful keywords
 (defun ed/escape-normal-mode ()
@@ -483,7 +474,7 @@
 (show-paren-mode 1)
 (use-package parinfer
   :disabled t
-  :ensure t
+
   :bind
   (("C-," . parinfer-toggle-mode))
   :init
@@ -519,7 +510,7 @@
 (use-package highlight-sexp
   :config
   (highlight-sexp-mode 1)
-  :ensure t)
+  )
 ;; (defun ponelat/non-lisp-paredit()
 ;;   "Turn on paredit mode for non-lisps."
 ;;   (interactive)
@@ -528,7 +519,7 @@
 ;;   (paredit-mode 1))
 
 ;; (use-package paredit
-;;   :ensure t
+;;
 ;;   :init
 ;;   (add-hook 'rjsx-mode-hook 'ponelat/non-lisp-paredit))
 
@@ -538,13 +529,13 @@
 ;;   (add-hook 'ielm-mode-hook 'evil-paredit-mode)
 ;;   (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode)
 ;;   (add-hook 'json-mode-hook 'enable-paredit-mode)
-;;   :ensure t)
+;;   )
 
 ;;;; Color
 (use-package rainbow-mode
   :config
   (rainbow-mode 1)
-  :ensure t)
+  )
 
 ;;;; html,xml, markup
 (use-package emmet-mode
@@ -554,8 +545,9 @@
     (setq emmet-expand-jsx-className? t)
     (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'rjsx-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-    (add-hook 'css-mode-hook  'emmet-mode)) ;; enable Emmet's css abbreviation.
-  :ensure t)
+    (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+    (evil-define-key 'visual emmet-mode-keymap (kbd "C-j") #'emmet-wrap-with-markup))
+  )
 
 (progn
   (defun ponelat/nxml-where ()
@@ -585,10 +577,10 @@
 
 (add-hook 'find-file-hook 'xml-find-file-hook t)
 (use-package web-mode
-  :ensure t)
+  )
 
 ;; (comment use-package lispy
-;;   :ensure t
+;;
 ;;   :config
 ;;   (add-hook 'clojure-mode-hook 'lispy-mode)
 ;;   (add-hook 'emacs-lisp-mode-hook 'lispy-mode)
@@ -635,22 +627,22 @@
     (evil-define-key 'insert evil-lispy-mode-map "]" nil)
     (evil-define-key 'insert evil-lispy-mode-map (kbd "C-.") 'ponelat/slurp-forward)
     (evil-define-key 'insert evil-lispy-mode-map (kbd "C-,") 'ponelat/barf-forward))
-  :ensure t)
+  )
 
 ;;(setq show-paren-style 'expression)
 
 ;;;; Ag
 ;; use the_silver_searcher when available
 (use-package ag
-  :ensure t
+
   :if (executable-find "ag"))
 
 (use-package rg
-  :ensure t)
+  )
 
 (use-package helm-rg
   :after helm
-  :ensure t)
+  )
 
 
 ;;;; Clipboard
@@ -703,29 +695,27 @@
 
 ;;;; Cuccumber, test, geherkin
 (use-package feature-mode
-  :ensure t)
+  )
 
 ;;;; Yaml
 (use-package yaml-mode
-  :ensure t)
+  )
 
 (use-package yaml-imenu
   :config
   (yaml-imenu-enable)
-  :ensure t)
+  )
 
 ;;;; HTTP, REST, Swagger
 (use-package restclient
   :config
   (progn
-    (add-to-list 'auto-mode-alist '("\\.rest\\'" . restclient-mode)))
-  (setq restclient-)
-:ensure t)
+    (add-to-list 'auto-mode-alist '("\\.rest\\'" . restclient-mode))))
 
 (use-package company-restclient
   :config
   (add-to-list 'company-backends 'company-restclient)
-  :ensure t)
+  )
 
 ;;;; Typescript
 (defun ponelat/setup-tide-mode ()
@@ -743,7 +733,7 @@
     (lambda ()
       (when (string-equal "tsx" (file-name-extension buffer-file-name))
         (ponelat/setup-tide-mode))))
-  :ensure t)
+  )
 
 ;; aligns annotation to the right hand side
 (setq company-tooltip-align-annotations t)
@@ -758,14 +748,14 @@
 ;;;; CSV
 (use-package csv-mode
   :disabled t
-  :ensure t)
+  )
 
 ;;;; Ruby, rspec
 (use-package ruby-mode
-  :ensure t)
+  )
 
 (use-package rspec-mode
-  :ensure t)
+  )
 
 ;;;; Rust, cargo
 (use-package rust-mode
@@ -774,10 +764,10 @@
     (define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
     (setq company-tooltip-align-annotations t)
     (setq rust-cargo-bin "~/.cargo/bin/cargo"))
-  :ensure t)
+  )
 
 (use-package toml-mode
-  :ensure t)
+  )
 
 (use-package racer
   :config
@@ -785,27 +775,45 @@
     (add-hook 'rust-mode-hook #'racer-mode)
     (add-hook 'racer-mode-hook #'eldoc-mode)
     (setq racer-rust-src-path "~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src"))
-  :ensure t)
+  )
 
 ;;;; Docker, Dockerfile
 (use-package dockerfile-mode
   :config
   (progn
     (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
-  :ensure t)
+  )
 
 (use-package docker-compose-mode
-  :ensure t)
+  )
 
 ;; LDAP, LDIF, Active Directory
 (use-package ldap
-  :ensure t)
+  )
 
 ;;;; Java
-(use-package jdee
+(use-package meghanada
   :config
-  (setq jdee-server-dir "~/jars")
-  :ensure t)
+  (progn (add-hook 'java-mode-hook
+           (lambda ()
+             ;; meghanada-mode on
+             (meghanada-mode t)
+             (flycheck-mode +1)
+             (setq c-basic-offset 2)))
+
+    (cond
+      ((eq system-type 'windows-nt)
+        (setq meghanada-java-path (expand-file-name "bin/java.exe" (getenv "JAVA_HOME")))
+        (setq meghanada-maven-path "mvn.cmd"))
+      (t
+        (setq meghanada-java-path "java")
+        (setq meghanada-maven-path "mvn")))
+    ))
+
+;; (use-package jdee
+;;   :config
+;;   (setq jdee-server-dir "~/jars")
+;;   )
 
 ;;;; Java - automation
 
@@ -841,7 +849,7 @@
 
 ;;;; Javascript, js-mode, js2-mode
 (use-package js2-mode
-  :ensure t
+
   :diminish js2-mode
   :config
   (progn
@@ -854,17 +862,17 @@
     (define-key js2-mode-map  (kbd "C-c C-t f") 'mocha-test-file)
     (define-key js2-mode-map  (kbd "C-c C-t p") 'mocha-test-at-point)
     (define-key js2-mode-map  (kbd "C-c C-t a") 'mocha-test-project))
-  :ensure t)
+  )
 
 (use-package nodejs-repl
-  :ensure t)
+  )
 
 (use-package company-tern
   :defer 1
   :config
   (progn
     (add-to-list 'company-backends 'company-tern))
-  :ensure t)
+  )
 
 (defun ponelat/shell-command-on-region-to-string (begin end command)
   "It wraps `shell-command-on-region' using BEGIN, END and COMMAND, so that it returnes a string."
@@ -902,14 +910,14 @@
     (add-hook 'js2-mode-hook
       (lambda ()
         (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t))))
-  :ensure t)
+  )
 
 (use-package js2-refactor
   :config
   (progn
     (js2r-add-keybindings-with-prefix "C-c C-r")
     (add-hook 'js2-mode-hook #'js2-refactor-mode))
-  :ensure t)
+  )
 
 ;;;; Apps, spotify
 (defun ponelat/spotify (command)
@@ -956,7 +964,7 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 ;; (ponelat/ag "actions/user" "/home/josh/projects/swaggerhub-frontend/")
 
 (use-package web-beautify
-  :ensure t)
+  )
 
 (use-package rjsx-mode
   :config
@@ -965,10 +973,10 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
   (define-key rjsx-mode-map (kbd "C-d") nil)
   (define-key rjsx-mode-map (kbd "C-c C-j") nil)
   (define-key rjsx-mode-map (kbd "C-c r") #'rjsx-rename-tag-at-point)
-  :ensure t)
+  )
 
 (use-package indium
-  :ensure t)
+  )
 
 (defun ponelat/find-incoming-js-imports (project filename)
   "Find all files within PROJECT, that import the FILENAME, and present a helm buffer to jump to."
@@ -993,11 +1001,17 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
   "Create a react app, by unzipping a .tar.gz into ~/projects/NAME, firing up the server and opening src/App.js."
   (interactive)
   (let* ((name (read-from-minibuffer "App name: "))
-          (project-path (format "~/projects/%s" name)))
-    (shell-command (format "mkdir -p %s" project-path))
-    (shell-command (format "tar zvxf ~/projects/scripts/scaffolds/create-react-app.tar.gz -C %s" project-path))
-    (find-file-other-window (format "%s/src/App.js" project-path))
-    (async-shell-command "npm start")))
+          (typescript? (y-or-n-p "Typescript? "))
+          (project-path (format "~/projects/%s" name))
+          (tarball
+            (cond
+              (typescript? "create-react-app-typescript.tgz")
+              (t "create-react-app.tgz"))))
+    (progn
+      (shell-command (format "mkdir -p %s" project-path))
+      (shell-command (format "tar zxf ~/projects/scripts/scaffolds/%s -C %s" tarball project-path))
+      (find-file-other-window (format "%s/src/%s" project-path (if typescript? "App.tsx" "App.js")))
+      (async-shell-command "npm run dev"))))
 
 (defun creat-project ()
   "Create a simple project folder with .git/."
@@ -1011,21 +1025,21 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 ;;;; Less/Css
 
 (use-package less-css-mode
-  :ensure t)
+  )
 
 ;;;; Flycheck, syntax, lint
 (use-package flycheck
-  :ensure t
+
   :diminish flycheck-mode
   :config
     (setq flycheck-highlighting-mode 'lines)
     (global-flycheck-mode))
 
 (use-package pos-tip
-  :ensure t)
+  )
 
 (use-package flycheck-pos-tip
-  :ensure t
+
   :config
   (with-eval-after-load 'flycheck
     (flycheck-pos-tip-mode)))
@@ -1036,7 +1050,7 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 
 ;; So that we can access `./node_modules/.bin/eslint` mostly
 (use-package add-node-modules-path
-  :ensure t
+
   :init
   (progn
     (eval-after-load 'js2-mode
@@ -1046,28 +1060,28 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 
 ;;;; Jq
 (use-package jq-mode
-  :ensure t)
+  )
 
 ;;;; Go lang
  (use-package go-mode
    :config
    (setq gofmt-command "goimports")
    (add-hook 'before-save-hook 'gofmt-before-save)
-   :ensure t)
+   (evil-define-key 'normal go-mode-map "gd" #'godef-jump)
+   )
 
 (use-package company-go
   :after company
   :init
-  (add-to-list 'company-backends 'company-go)
-  :ensure t)
+  (add-to-list 'company-backends 'company-go))
 
 
 (use-package go-eldoc
-  :ensure t
+
   :init (add-hook 'go-mode-hook 'go-eldoc-setup))
 
 (use-package go-guru
-  :ensure t
+
   :init (add-hook 'go-mode-hook 'go-guru-hl-identifier-mode))
 
 ;;;; Haskell, FP
@@ -1075,23 +1089,22 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
   :config
   (progn
     (add-hook 'haskell-mode-hook 'interactive-haskell-mode))
-  :ensure t)
+  )
 ;;;; Clojure
 (use-package cider
-  :ensure t
+
   :config
   (progn
     (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
     (setq cljr-suppress-no-project-warning t)
     (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
-    (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion))
-  (global-company-mode))
+    (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion)))
 
 (use-package flycheck-joker
-  :ensure t)
+  )
 
 (use-package clojure-mode
-  :ensure t
+
   :config
   (add-hook 'clojure-mode-hook (lambda ()
                                  (clj-refactor-mode)
@@ -1099,7 +1112,7 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
                                  (cljr-add-keybindings-with-prefix "C-c C-m"))))
 
 (use-package clj-refactor
-  :ensure t)
+  )
 
 ; Auto load buffer, when in jacked-in
 (add-hook 'cider-mode-hook
@@ -1108,7 +1121,7 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 
 ;;;; Autocomplete, company, snippets
 (use-package company
-  :ensure t
+
   :config
   (progn
     (setq
@@ -1129,17 +1142,17 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
     (define-key company-search-map (kbd "C-n") 'company-select-next-or-abort)
     (define-key company-search-map (kbd "C-p") 'company-select-previous-or-abort)
 
-    (setq company-idle-delay 1)))
+    (setq company-idle-delay nil)))
 
 (use-package yasnippet
   :init (setq yas-snippet-dirs
 	      '("~/.emacs.d/snippets"))
 
   :config (yas-global-mode 1)
-  :ensure t)
+  )
 
 (use-package react-snippets
-  :ensure t)
+  )
 
 ;;;; npm
 (require 'json)
@@ -1166,24 +1179,25 @@ eg: /one/two => two
   "Test if FILE-STR is a shell file."
   (string-match-p "\\.sh$" file-str))
 
-(defun ponelat/shell-run (project-dir)
-  "Search for shell commands in PROJECT-DIR and execute it."
+(defun ponelat/shell-run (prefix project-dir)
+  "With PREFIX add arguments, then search for shell commands in PROJECT-DIR and execute it."
   (interactive)
   (projectile-with-default-dir project-dir
-    (let* ((files (projectile-current-project-files))
+    (let* ((args (if prefix (buffer-file-name) ""))
+            (files (projectile-current-project-files))
             (shell-files (seq-filter #'ponelat/shell-file-p files))
             (shell-file-rel (completing-read "Run: " shell-files))
-            (shell-file-abs (concat project-dir shell-file-rel)))
+            (shell-file-abs (concat project-dir shell-file-rel " " args)))
       (async-shell-command shell-file-abs))))
 
 
-(defun ponelat/project-run (project-dir)
-  "Guess at and execute a build step in PROJECT-DIR."
+(defun ponelat/project-run (prefix project-dir)
+  "Guess at and execute a build step, possibly with PREFIX (current file) in PROJECT-DIR."
   (cond
     ((ponelat/npm-project-p project-dir)
       (ponelat/npm-run project-dir))
     (t
-      (ponelat/shell-run project-dir))))
+      (ponelat/shell-run prefix project-dir))))
 
 (defun ponelat/npm-run (project-dir)
   "Fetch a list of npm scripts from PROJECT-DIR/package.json and async execute it."
@@ -1273,10 +1287,17 @@ eg: /one/two => two
   (interactive)
   (ponelat/npm-run (projectile-project-root)))
 
-(defun ponelat/projectile-project-run ()
+(defun ponelat/projectile-project-run (prefix)
   "Run build command in the current project."
-  (interactive)
-  (ponelat/project-run (projectile-project-root)))
+  (interactive "P")
+  (ponelat/project-run prefix (projectile-project-root)))
+
+;; (defun ponelat/test-universal (prefix)
+;;   "It does something"
+;;   (interactive "P")
+;;   (if prefix
+;;     (message "Prefix!")
+;;     (message "Not prefix.")))
 
 
 (defun ponelat/projectile-npm-link (link-path)
@@ -1304,7 +1325,7 @@ eg: /one/two => two
 (use-package projectile
   :init
   (setq projectile-keymap-prefix (kbd "C-c p"))
-  :ensure t
+
   :diminish projectile
   :config
   (progn
@@ -1320,10 +1341,31 @@ eg: /one/two => two
   (with-helm-alive-p
     (helm-exit-and-execute-action #'xah/run-this-file-fn)))
 
+;; From https://www.reddit.com/r/emacs/comments/bxt0cz/helm_and_the_tab_key/
+(progn
+  (defun ponelat/double-flash-mode-line ()
+    "Flash the modeline"
+    (let ((flash-sec (/ 1.0 20)))
+      (invert-face 'mode-line)
+      (run-with-timer flash-sec nil #'invert-face 'mode-line)
+      (run-with-timer (* 2 flash-sec) nil #'invert-face 'mode-line)
+      (run-with-timer (* 3 flash-sec) nil #'invert-face 'mode-line)))
+  (defun ponelat/helm-execute-if-single-persistent-action (&optional attr split-onewindow)
+    "Execute persistent action if the candidate list is less than 2"
+    (interactive)
+    (with-helm-alive-p
+      (if (> (helm-get-candidate-number) 2)
+        (ponelat/double-flash-mode-line)
+        (helm-execute-persistent-action)))))
+
 (use-package helm
   :defines helm-mode-fuzzy-match helm-completion-in-region-fuzzy-match helm-M-x-fuzzy-match
   :diminish helm-mode
   :bind (("M-x" . helm-M-x))
+  ;; :bind* (:map helm-map
+  ;;          ([tab] . ponelat/helm-execute-if-single-persistent-action)
+  ;;          ("C-i" . ponelat/helm-execute-if-single-persistent-action))
+
   :config
   (progn
     (setq helm-adaptive-history-file (concat emacs-dir "/helm-adaptive-history.el"))
@@ -1333,14 +1375,13 @@ eg: /one/two => two
       helm-buffer-max-length 40)
     (define-key helm-map [(control ?w)] 'backward-kill-word)
 
-    (helm-mode))
-  :ensure t)
+    (helm-mode)))
 
 (use-package helm-ls-git
-  :ensure t)
+  )
 
 (use-package helm-projectile
-  :ensure t
+
   :defer 1
   :config
   (progn
@@ -1355,10 +1396,10 @@ eg: /one/two => two
 
 
 (use-package helm-ag
-  :ensure t)
+  )
 
 (use-package helm-fuzzier
-  :ensure t
+
   :config
   (progn
     (helm-fuzzier-mode 1)))
@@ -1379,7 +1420,7 @@ eg: /one/two => two
 (use-package fasd
   :config
   (global-fasd-mode 1)
-  :ensure t)
+  )
 ;;;; Ivy, counsel, swiper
 (setq enable-recursive-minibuffers t)
 (use-package ivy
@@ -1387,7 +1428,8 @@ eg: /one/two => two
   :config
   (progn
     (define-key swiper-map [(control ?w)] 'backward-kill-word))
-  :ensure t)
+  )
+
 ;;;; Git, magit
 
 (setq smerge-command-prefix "\C-cv")
@@ -1411,35 +1453,35 @@ eg: /one/two => two
   (progn
     (magit-define-popup-switch 'magit-log-popup ?f "first parent" "--first-parent")
     (setq magit-list-refs-sortby "-creatordate"))
-  :ensure t)
-
+  )
 (use-package evil-magit
-  :ensure t)
+  )
 
 ;;;; GhostText, browser, live
 (use-package atomic-chrome
-  :ensure t)
+  )
 ;;;; Jira
 (use-package jira-markup-mode
   :config
   (add-to-list 'auto-mode-alist '("\\.confluence$" . jira-markup-mode))
   (add-to-list 'auto-mode-alist '("\\.jira" . jira-markup-mode))
-  (add-to-list 'auto-mode-alist '("/itsalltext/.*jira.*\\.txt$" . jira-markup-mode))
-  :ensure t)
-
+  (add-to-list 'auto-mode-alist '("/itsalltext/.*jira.*\\.txt$" . jira-markup-mode)))
 ;;;; GitHub
-(use-package magithub
-  :after magit
-  :config
-  (magithub-feature-autoinject t)
-  (setq magithub-clone-default-directory "~/projects")
-  :ensure t)
+;; Required for magithub until they move to `transient' https://github.com/magit/magit/issues/3749
+(use-package forge
+ :requires magit)
 
-(use-package gist
-  :ensure t)
+; (use-package magit-popup)
+; (use-package magithub
+;   :requires magit-popup
+;   :config
+;   (magithub-feature-autoinject t)
+;   (setq magithub-clone-default-directory "~/projects")
+;   )
 
-(use-package git-link
-  :ensure t)
+(use-package gist)
+
+(use-package git-link)
 
 (defun ponelat/git-link-develop ()
   "Call `git-link' and set `git-link-default-branch' to develop."
@@ -1467,11 +1509,11 @@ eg: /one/two => two
   (progn
     (add-to-list 'auto-mode-alist '("\\.ledger\\'" . ledger-mode))
     (setq ledger-report-use-native-highlighting t))
-  :ensure t)
+  )
 
 
 (use-package git-gutter+
-  :ensure t
+
   :init (global-git-gutter+-mode)
   :config (progn
             (define-key git-gutter+-mode-map (kbd "C-x n") 'git-gutter+-next-hunk)
@@ -1492,11 +1534,54 @@ eg: /one/two => two
               '(git-gutter+-modified  "yellow")))
   :diminish (git-gutter+-mode . "+="))
 
-
+;; "^\\(=====[ 	]+\\)\\([^\t\n].*?\\)\\(\\([ \t]+=====\\)?[ \t]*\\(?:\n\\|\\'\\)\\)"
 (use-package adoc-mode
   :config
-  (add-to-list 'auto-mode-alist (cons "\\.adoc\\'" 'adoc-mode))
-  :ensure t)
+  (progn
+
+    (add-to-list 'auto-mode-alist (cons "\\.adoc\\'" 'adoc-mode))
+    (add-hook 'adoc-mode-hook (lambda() (buffer-face-mode t)))
+
+    (defun ponelat/adoc-imenu-create-index ()
+      (let* ((index-alist)
+              (re-all-titles-core
+                (mapconcat
+                  (lambda (level) (adoc-re-one-line-title level))
+                  '(0 1 2 3 4)
+                  "\\)\\|\\(?:"))
+              (re-all-titles
+                (concat "\\(?:" re-all-titles-core "\\)")))
+        (save-restriction
+          (widen)
+          (goto-char 0)
+          (while (re-search-forward re-all-titles nil t)
+            (backward-char) ; skip backwards the trailing \n of a title
+            (let* ((descriptor (adoc-title-descriptor))
+                    (title-level (nth 2 descriptor))
+                    (title-text (nth 3 descriptor))
+                    (title-pos (nth 4 descriptor)))
+              (setq
+                index-alist
+                (cons (cons (format "%s%s" (make-string title-level ?\ ) title-text) title-pos) index-alist)))))
+        (list (cons "Title" (nreverse index-alist)))))
+
+    (defun ponelat/adoc-imenu-expresssions ()
+      (interactive)
+      "Create only the top level titles. With proper titles"
+      (setq-local imenu-create-index-function #'ponelat/adoc-imenu-create-index)
+      ;; (setq imenu-create-index-function #'imenu-default-create-index-function)
+      (setq-local imenu-prev-index-position-function nil)
+      ;; (add-to-list 'imenu-generic-expression '("Title" "^\\(=+[ \t]*[^ \t].+\\)\n$" 1 t))
+      ;; (add-to-list 'imenu-generic-expression '("Images" "^[ \t]*image::?\\(\\)\\[.*\\]\n?" 1 t))
+      )
+    (add-hook 'adoc-mode-hook #'ponelat/adoc-imenu-expresssions)
+
+    (defun ponelat/adoc-imenu-to-org-headings ()
+      "Captures the imenu into the kill ring."
+      (interactive)
+      (kill-new (pp (imenu-create-index-function))))
+
+    ))
 
 ;;;; IMB Box symbols
 ;; ┌ ┬ ┐ ├ ┼ ┤ └ ┴ ┘ ─ │
@@ -1554,7 +1639,6 @@ eg: /one/two => two
 
 ;;;; org-mode
 (use-package org
-  :ensure t
   :bind
   (("M-n" . org-capture)
     ("C-c a" . org-agenda)
@@ -1755,12 +1839,12 @@ is positive, move after, and if negative, move before."
   :config
   (progn
     (setq helm-org-rifle-show-path t))
-  :ensure t)
+  )
 
 (use-package org-journal
   :config
   (setq org-journal-dir (concat org-directory "/journal"))
-  :ensure t)
+  )
 
 
 ;;;; Helper functions
@@ -1774,24 +1858,23 @@ is positive, move after, and if negative, move before."
 
 ;;;; PDFs / doc view
  (progn
-  (setq doc-view-continuous nil)
-    (evil-define-key 'normal doc-view-mode-map "j" (lambda () (interactive) (doc-view-scroll-down-or-previous-page 1)))
+   (setq doc-view-continuous nil)
+   (evil-define-key 'normal doc-view-mode-map "j" (lambda () (interactive) (doc-view-scroll-down-or-previous-page 1)))
 
-  (use-package pdf-tools
-    ;; :disabled t
-    :after evil-collection
-    :ensure t
-    :config
-    ;; initialise
-    (progn
-      (pdf-tools-install)
-      (evil-set-initial-state 'pdf-view-mode 'normal)
-      ;; open pdfs scaled to fit page
-      (setq-default pdf-view-display-size 'fit-page)
-      ;; automatically annotate highlights
-      (setq pdf-annot-activate-created-annotations t)
-      ;; use normal isearch
-      (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))))
+   (use-package pdf-tools
+     :config
+     ;; initialise
+     (progn
+       ;; This forces the pdf-tools to use /usr/bin for pkg-config. As linuxbrew conflicts with that.
+       (let ((process-environment (cons (concat "PATH=/usr/bin/:" (getenv "PATH")) process-environment)))
+         (pdf-tools-install t t))
+       (evil-set-initial-state 'pdf-view-mode 'normal)
+       ;; open pdfs scaled to fit page
+       (setq-default pdf-view-display-size 'fit-page)
+       ;; automatically annotate highlights
+       (setq pdf-annot-activate-created-annotations t)
+       ;; use normal isearch
+       (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))))
 
 ;;;; External Org mode, Office, Gmail
 (defun ponelat/get-office-data ()
@@ -1827,7 +1910,7 @@ is positive, move after, and if negative, move before."
   (call-interactively 'evil-insert))
 
 (use-package ox-jira
-  :ensure t)
+  )
 
 ;;;; Open with external tools
 (defun xah-open-in-external-app (&optional @fname)
@@ -1875,7 +1958,7 @@ Version 2019-01-18"
           "inkscape"
           '(file))))
     (openwith-mode 1))
-  :ensure t)
+  )
 
 (defun ponelat/open-notes (filename)
   "Open the default FILENAME from default org dir."
@@ -1895,7 +1978,7 @@ Version 2019-01-18"
   (org-narrow-to-subtree))
 
 (use-package htmlize
-  :ensure t)
+  )
 
 (defun ponelat/open-project-org ()
   "Open the default notes (org-mode) file."
@@ -1908,7 +1991,6 @@ Version 2019-01-18"
          (let* ((shub (match-string 1 link))
                 (url (concat "https://smartbear.atlassian.net/browse/" (url-encode-url (upcase shub)))))
            (browse-url url)))))
-
 
 (use-package evil-org
   :config
@@ -1924,7 +2006,7 @@ Version 2019-01-18"
       (kbd "M-h") 'org-metaleft)
     (evil-define-key 'insert evil-org-mode-map
       (kbd "M-l") 'org-metaright))
-  :ensure t)
+  )
 
 ;; TODO: fix this
 (defun ponelat/archive (type)
@@ -1935,7 +2017,7 @@ Version 2019-01-18"
   (org-map-entries 'org-archive-subtree (format "/%s" type) 'agenda))
 
 (comment use-package org-pomodoro
-  :ensure t
+
   :commands (org-pomodoro)
   :config
     (setq alert-user-configuration (quote ((((:category . "org-pomodoro")) libnotify nil)))))
@@ -1948,7 +2030,7 @@ Version 2019-01-18"
     (setq org-projectile-projects-file
       (concat ponelat/today-dir "/projects.org"))
     (push (org-projectile-project-todo-entry) org-capture-templates)
-    :ensure t))
+    ))
 
 ;;;; Package stuff
 (defun package-menu-find-marks ()
@@ -2169,11 +2251,11 @@ Version 2017-12-27"
 
 (use-package zerodark-theme
   :defer t
-  :ensure t)
+  )
 
 (use-package gruvbox-theme
   :defer t
-  :ensure t)
+  )
 
 (use-package soothe-theme
   :disabled t
@@ -2182,7 +2264,7 @@ Version 2017-12-27"
     (gh/add-theme-hook
       'soothe
       (lambda (a) (ponelat/theme-soothe-extras))))
-  :ensure t)
+  )
 
 (use-package badwolf-theme
   :disabled t
@@ -2191,21 +2273,21 @@ Version 2017-12-27"
 
 (use-package solarized-theme
   :defer t
-  :ensure t)
+  )
 
 ;; (with-eval-after-load 'zerodark-theme ())
 ;; This can only run in window mode...
 (use-package org-beautify-theme
   :defer t
-  :ensure t)
+  )
 
 (use-package sublime-themes
   :defer t
   :disabled t
-  :ensure t)
+  )
 
 (use-package org-bullets
-  :ensure t
+
   :config
   (setq
     org-bullets-bullet-list '("●" "○")
@@ -2305,8 +2387,7 @@ Version 2017-12-27"
 ;;;; Font,face
 (defvar ponelat/fonts
   '( ("Small"  (:family "Noto Mono"   :height 98  :weight normal))
-     ("Normal" (:family "Noto Mono"   :height 140 :weight normal))
-     ("Special" (:family "Sans Forgetica"   :height 98 :weight normal))))
+     ("Normal" (:family "Noto Mono"   :height 140 :weight normal))))
 (defun ponelat/default-font (font-name)
 "Set the font.  FONT-NAME is the key found in ponelat/fonts.
 Interactively you can choose the FONT-NAME"
@@ -2338,7 +2419,7 @@ Interactively you can choose the FONT-NAME"
   :bind (("C-c C-c" . #'eval-defun))
   :config
   (progn (eros-mode 1))
-  :ensure t)
+  )
 
 ;; Kill all other buffers
 (defun ponelat/kill-other-buffers ()
@@ -2357,15 +2438,15 @@ Interactively you can choose the FONT-NAME"
     (progn
       (window-configuration-to-register '_)
       (delete-other-windows))))
+
 (with-eval-after-load 'evil
   (evil-global-set-key 'normal (kbd "C-w f") #'ponelat/toggle-maximize-buffer))
+
 ;; Shows a helpful panel, if you forget which keys are on a prefix.
 (use-package which-key
   :config
   (progn
-    (which-key-mode))
-  :ensure t)
-
+    (which-key-mode)))
 
 ;;;; Global Bindings, keys
 (bind-key "C-x C-k" 'kill-this-buffer)
