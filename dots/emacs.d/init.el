@@ -95,9 +95,11 @@
   (let* ((auth (ponelat/get-secret host))
          (user (nth 0 auth))
          (password (nth 1 auth)))
-    (base64-encode-string (format "%s:%s" user password))))
+    (ponelat/basic-auth user password)))
 
-
+(defun ponelat/basic-auth (username pass)
+  "Return the basic auth for USERNAME and PASS."
+  (base64-encode-string (format "%s:%s" username pass)))
 
 ;;;; Copy filename helper
 (defun ponelat/kill-copy-filename ()
@@ -109,6 +111,21 @@
     (when filename
       (kill-new filename)
       (message "Copied buffer file name '%s' to the clipboard." filename))))
+
+;;;; Revert buffer/file reload
+(global-set-key  (kbd "C-x RET RET") (lambda () (interactive) (revert-buffer t t nil)))
+
+(defun ponelat/copy-file-from-downloads ()
+  "It copies a file from ~/Downloads, using Helm."
+  (interactive)
+  (let* ((file-to-copy (read-file-name "File to copy: " "~/Downloads/"))
+          (directory default-directory)
+          (filename (file-name-nondirectory file-to-copy))
+          (dest-file
+            (expand-file-name
+              (read-file-name "Dest: " directory nil nil filename)
+              directory)))
+    (copy-file file-to-copy dest-file)))
 
 ;;;; Config management
 (defun imenu-elisp-sections ()
@@ -217,6 +234,12 @@
 ;;;; Strings
 (use-package string-inflection)
 
+(defun ponelat/string-kebab-case-function (str)
+  "It converts STR to be in kebab case. Handles spaces as well.
+
+eg: \"Hello over there\" => \"hello-over-there\"
+"
+  (downcase (replace-regexp-in-string "[ \t]" "-" str)))
 
 ;;;; Hydra, menus
 (use-package hydra
@@ -326,6 +349,7 @@
 ;;;; Sudo, root, sudowrite, dired, tramp
 (require 'tramp)
 (setq dired-dwim-target t)
+(setq tramp-default-method "ssh")
 (defun ponelat/sudo-this ()
   "Opens a Dired buffer with sudo priviledges."
   (interactive)
@@ -333,7 +357,7 @@
 
 (use-package dired-narrow
   :bind (:map dired-mode-map
-              ("/" . dired-narrow)))
+          ("C-c s" . dired-narrow)))
 
 (use-package docker-tramp
   )
@@ -353,10 +377,9 @@
 (use-package evil
 
   :init
-  (progn
-    (setq
-      evil-want-keybinding nil
-      evil-want-integration t))
+  (setq
+    evil-want-keybinding nil
+    evil-want-integration t)
   :config
   (progn
     (evil-mode 1)
@@ -2466,6 +2489,15 @@ Interactively you can choose the FONT-NAME"
 (bind-key "C-x a n" #'ponelat/spotify-next)
 (bind-key "C-x a p" #'ponelat/spotify-previous)
 (bind-key "C-x a SPC" #'ponelat/spotify-play-toggle)
+
+;;;; Keys, emojis
+
+;; Can you see this face: 😬
+(use-package emojify
+  :config
+  (emojify-set-emoji-styles '(unicode))
+  (global-emojify-mode)
+  (global-set-key (kbd "C-x 8 e") 'emojify-insert-emoji))
 
 ;;;; Custom.el file
 (load custom-file 'noerror)
