@@ -319,8 +319,7 @@ eg: \"Hello over there\" => \"hello-over-there\"
 ;;;; Autoindent
 (use-package auto-indent-mode
   :config
-  (add-hook 'rjsx-mode 'auto-indent-mode)
-  )
+  (add-hook 'rjsx-mode 'auto-indent-mode))
 
 ;;;; Writeroom, writing, book
 (defun ponelat/write ()
@@ -390,12 +389,12 @@ eg: \"Hello over there\" => \"hello-over-there\"
     (define-key evil-normal-state-map "\M-." nil)
     (define-key evil-normal-state-map "go" 'org-open-at-point-global)))
 
-;; (use-package evil-collection
-;;   :after evil
-;;   :custom (evil-collection-setup-minibuffer t)
-;;   :config
-;;   (progn
-;;     (evil-collection-init pdf)))
+(use-package evil-collection
+  :after evil
+  :custom (evil-collection-setup-minibuffer t)
+  :config
+  (progn
+    (evil-collection-init)))
 
 (use-package evil-leader
   :after evil
@@ -531,9 +530,8 @@ eg: \"Hello over there\" => \"hello-over-there\"
     (prettify-symbols-mode)))
 
 (use-package highlight-sexp
-  :config
-  (highlight-sexp-mode 1)
-  )
+  :config (highlight-sexp-mode 1))
+
 ;; (defun ponelat/non-lisp-paredit()
 ;;   "Turn on paredit mode for non-lisps."
 ;;   (interactive)
@@ -596,7 +594,16 @@ eg: \"Hello over there\" => \"hello-over-there\"
       (which-function-mode t)
       (setq which-func-mode t)))
 
-  (add-hook 'which-func-functions 'nxml-where t t))
+  (add-hook 'which-func-functions 'nxml-where t t)
+  (setq auto-mode-alist (cons '("\\.xml$" . nxml-mode) auto-mode-alist))
+  (setq auto-mode-alist (cons '("\\.xsl$" . nxml-mode) auto-mode-alist))
+  (setq auto-mode-alist (cons '("\\.xhtml$" . nxml-mode) auto-mode-alist))
+  (setq auto-mode-alist (cons '("\\.page$" . nxml-mode) auto-mode-alist))
+
+  (autoload 'xml-mode "nxml" "XML editing mode" t)
+
+  (eval-after-load 'rng-loc
+    '(add-to-list 'rng-schema-locating-files "~/.emacs.d/schema/schemas.xml")))
 
 (add-hook 'find-file-hook 'xml-find-file-hook t)
 (use-package web-mode
@@ -2289,14 +2296,8 @@ Version 2017-12-27"
       (lambda (a) (ponelat/theme-soothe-extras))))
   )
 
-(use-package badwolf-theme
-  :disabled t
-  :defer t
-  :ensure)
-
 (use-package solarized-theme
-  :defer t
-  )
+  :defer t)
 
 ;; (with-eval-after-load 'zerodark-theme ())
 ;; This can only run in window mode...
