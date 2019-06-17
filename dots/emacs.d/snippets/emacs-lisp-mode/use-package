@@ -2,5 +2,4 @@
 # name:use
 # key:use
 # --
-(use-package $1
-  :ensure t)
+(use-package $1)
