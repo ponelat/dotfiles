@@ -188,12 +188,20 @@
 (global-set-key (kbd "M-C-z") #'projectile-run-async-shell-command-in-root)
 (global-set-key (kbd "M-z") #'ponelat/term)
 
+
+
 (ignore-errors
   (require 'ansi-color)
   (defun my-colorize-compilation-buffer ()
     (when (eq major-mode 'compilation-mode)
       (ansi-color-apply-on-region compilation-filter-start (point-max))))
   (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
+
+;;;; Special files to edit /etc/hosts
+(defun ponelat/edit-hosts-file ()
+  "Edit /etc/hosts"
+  (interactive)
+  (find-file "/sudo::/etc/hosts"))
 
 ;;;; Dirs
 (defvar ponelat/today-dir "~/Dropbox/org" "My base ORG-MODE folder.")
@@ -311,7 +319,6 @@ eg: \"Hello over there\" => \"hello-over-there\"
   (global-dot-mode))
 
 (use-package editorconfig
-
   :diminish editorconfig-mode
   :config
   (editorconfig-mode 1))
@@ -2358,6 +2365,15 @@ Version 2017-12-27"
   (interactive)
   (mapc #'disable-theme custom-enabled-themes)
    (enable-theme theme))
+
+;;;; Window stuff
+(progn
+  ;; This will auto-resize windows as you move between them.
+  (use-package zoom
+    :config
+    (evil-global-set-key 'normal (kbd "C-w =") #'zoom)
+    (setq zoom-size '(0.618 . 0.618))
+    (zoom-mode t)))
 
 ;; Load theme on first frame ( only once )
 (defvar ponelat:theme-window-loaded nil "A flag used to indicate that the GUI theme got loaded.")
