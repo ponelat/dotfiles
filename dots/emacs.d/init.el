@@ -132,6 +132,7 @@
   "Create a list of sections from config file."
   (setq imenu-prev-index-position-function nil)
   (add-to-list 'imenu-generic-expression '("use" "^ *( *use-package *\\(.+\\)$" 1) t)
+  (add-to-list 'imenu-generic-expression '("hydra" "^ *( *defhydra *\\(.+\\)$" 1) t)
   (add-to-list 'imenu-generic-expression '("Sections" "^;;;; \\(.+\\)$" 1) t))
 
 (add-hook 'emacs-lisp-mode-hook 'imenu-elisp-sections)
@@ -175,6 +176,11 @@
 (define-key emacs-lisp-mode-map (kbd "C-c w") 'widen)
 
 ;;;; Term, bash, zsh, shell
+;; Set certain files to be in sh-mode automagically
+(progn
+  (add-to-list 'auto-mode-alist '("\\.?zshrc\\'" . sh-mode))
+  (add-to-list 'auto-mode-alist '("\\.?profile\\'" . sh-mode))
+  (add-to-list 'auto-mode-alist '("\\.?aliases\\'" . sh-mode)))
 (defun ponelat/term ()
   "Create or jump to an 'ansi-term', running zsh."
   (interactive)
@@ -196,12 +202,6 @@
     (when (eq major-mode 'compilation-mode)
       (ansi-color-apply-on-region compilation-filter-start (point-max))))
   (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
-
-;;;; Special files to edit /etc/hosts
-(defun ponelat/edit-hosts-file ()
-  "Edit /etc/hosts"
-  (interactive)
-  (find-file "/sudo::/etc/hosts"))
 
 ;;;; Dirs
 (defvar ponelat/today-dir "~/Dropbox/org" "My base ORG-MODE folder.")
@@ -249,6 +249,13 @@ eg: \"Hello over there\" => \"hello-over-there\"
 "
   (downcase (replace-regexp-in-string "[ \t]" "-" str)))
 
+;;;; Special files to edit
+(progn
+  (defun ponelat/edit-hosts-file ()
+    "Edit /etc/hosts"
+    (interactive)
+    (find-file "/sudo::/etc/hosts"))
+  )
 ;;;; Hydra, menus
 (use-package hydra
   )
@@ -288,8 +295,23 @@ eg: \"Hello over there\" => \"hello-over-there\"
   "string case"
   ("s" string-inflection-all-cycle "all cycle"))
 
-(global-set-key (kbd "C-c o") 'ponelat/hydra/open-notes/body)
-(global-set-key (kbd "C-c s") 'hydra-string-case/body)
+(defhydra edit-file (:color blue
+                      :exit t
+                      :pre (which-key-mode nil)
+                      :post (which-key-mode t))
+  "Special File"
+  ("h" ponelat/edit-hosts-file "/etc/hosts")
+  ("i" ponelat/emacs-lisp-imenu-init "init.el")
+  ("r" ponelat/jump-to-rest-scratch "rest-scratch")
+  ("i" (lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/i3/config" ponelat/projects-dir))) "i3 config")
+  ("z" (lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) "i3 config")
+  ("p" (lambda () (interactive) (find-file (format "%s/dotfiles/dots/profile" ponelat/projects-dir))) "i3 config"))
+
+;; Keyboard shortcuts for hydras
+(progn
+  (global-set-key (kbd "C-c l f") #'edit-file/body)
+  (global-set-key (kbd "C-c o") 'ponelat/hydra/open-notes/body)
+  (global-set-key (kbd "C-c s") 'hydra-string-case/body))
 
 (use-package diminish
   )
@@ -381,7 +403,6 @@ eg: \"Hello over there\" => \"hello-over-there\"
 
 ;;;; Evil, vim
 (use-package evil
-
   :init
   (setq
     evil-want-keybinding nil
@@ -393,6 +414,7 @@ eg: \"Hello over there\" => \"hello-over-there\"
     (define-key evil-normal-state-map (kbd "j") #'evil-next-visual-line)
     (define-key evil-normal-state-map (kbd "k") #'evil-previous-visual-line)
     (define-key evil-normal-state-map "\C-d" nil)
+    (define-key evil-normal-state-map "\C-j" nil)
     (define-key evil-normal-state-map "\M-." nil)
     (define-key evil-normal-state-map "go" 'org-open-at-point-global)))
 
@@ -574,7 +596,7 @@ eg: \"Hello over there\" => \"hello-over-there\"
     (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'rjsx-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
-    (evil-define-key 'visual emmet-mode-keymap (kbd "C-j") #'emmet-wrap-with-markup))
+    (evil-define-key 'visual emmet-mode-keymap (kbd "C-l") #'emmet-wrap-with-markup))
   )
 
 (progn
@@ -668,18 +690,13 @@ eg: \"Hello over there\" => \"hello-over-there\"
 
 ;;(setq show-paren-style 'expression)
 
-;;;; Ag
+;;;; Ag, RipGrep
 ;; use the_silver_searcher when available
-(use-package ag
+(use-package ag :if (executable-find "ag"))
 
-  :if (executable-find "ag"))
+(use-package rg)
 
-(use-package rg
-  )
-
-(use-package helm-rg
-  :after helm
-  )
+(use-package helm-rg)
 
 
 ;;;; Clipboard
@@ -749,10 +766,25 @@ eg: \"Hello over there\" => \"hello-over-there\"
   (progn
     (add-to-list 'auto-mode-alist '("\\.rest\\'" . restclient-mode))))
 
+;; OpenAPI yaml mode
+(straight-use-package
+  '(openapi-yaml-mode :type git :host github :repo "magoyette/openapi-yaml-mode"))
+
+;; Add command to jump into a restclient scratch, stored by projectile project.
+(defun ponelat/jump-to-rest-scratch ()
+  "Jump to the restclient buffer for making rest calls.
+Will use `projectile-default-project-name' .rest as the file name."
+  (interactive)
+  (let* ((basedir (format "%s/restclient-scratch" ponelat/projects-dir))
+          (project-name (cond
+                          ((projectile-project-root) (projectile-default-project-name (projectile-project-root)))
+                          (t "global")))
+          (scratch-file (format "%s/%s.rest" basedir project-name)))
+    (find-file scratch-file)))
+
 (use-package company-restclient
   :config
-  (add-to-list 'company-backends 'company-restclient)
-  )
+  (add-to-list 'company-backends 'company-restclient))
 
 ;;;; Typescript
 (defun ponelat/setup-tide-mode ()
@@ -1358,11 +1390,13 @@ eg: /one/two => two
   (helm-exit-and-execute-action #'helm-do-ag))
 
 ;;;; Projects
-
 (use-package projectile
   :init
-  (setq projectile-keymap-prefix (kbd "C-c p"))
-
+  (progn
+    (global-set-key (kbd "C-j") nil)
+    (setq projectile-keymap-prefix (kbd "C-j"))
+    (comment
+      (define-key projectile-mode-map (kbd "C-j") 'projectile-command-map)))
   :diminish projectile
   :config
   (progn
@@ -1613,12 +1647,20 @@ eg: /one/two => two
       )
     (add-hook 'adoc-mode-hook #'ponelat/adoc-imenu-expresssions)
 
-    (defun ponelat/adoc-imenu-to-org-headings ()
-      "Captures the imenu into the kill ring."
-      (interactive)
-      (kill-new (pp (imenu-create-index-function))))
+      ))
 
-    ))
+(defun ponelat/adoc-imenu-to-org-headings (&optional filename)
+      "Captures the imenu into the kill ring.  Optionally use FILENAME instead of current buffer."
+      (interactive)
+  (let* ((imenu-data (or (ponelat/grab-imenu-of filename) (imenu--make-index-alist)))
+              (titles-list (cdr (car (cdr imenu-data))))
+              (titles (mapcar (lambda (title-thing) (car title-thing)) titles-list))
+              (org-data
+                (mapcar (lambda (title)
+                          (org-element-create 'headline `(:title ,title :level 1)))
+                  titles)))
+        (kill-new (org-element-interpret-data org-data)
+          (pp titles-list))))
 
 ;;;; IMB Box symbols
 ;; ┌ ┬ ┐ ├ ┼ ┤ └ ┴ ┘ ─ │
@@ -1725,6 +1767,7 @@ eg: /one/two => two
           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "—"))))))
     (add-hook 'org-mode-hook 'variable-pitch-mode)
     (add-hook 'org-mode-hook #'ponelat/org-mode-styles)
+    (add-hook 'org-mode-hook (lambda () (setq electric-pair-local-mode nil)))
 
 ;;;; Org refile
     (setq org-refile-use-outline-path 'file)
@@ -2379,7 +2422,7 @@ Version 2017-12-27"
 (defvar ponelat:theme-window-loaded nil "A flag used to indicate that the GUI theme got loaded.")
 (defvar ponelat:theme-terminal-loaded nil "A flag used to indicate that the Terminal theme got loaded.")
 ;; (defvar ponelat:theme 'gruvbox-dark-medium "The initial theme.")
-(defvar ponelat:theme 'gruvbox "The initial theme.")
+(defvar ponelat:theme 'zerodark "The initial theme.")
 
 ;; Due to starting a daemon at the same time as our client
 ;; The follow code exists to ensure that the theme is loaded at the right time.
@@ -2452,7 +2495,7 @@ Interactively you can choose the FONT-NAME"
 (bind-key "C-x f" #'ponelat/cycle-default-font)
 
 ;;;; Scratch buffer, Emacs
-(setq initial-scratch-message ";; Start...\n\n")
+(setq initial-scratch-message ";; Emacs\n\n")
 
 ;;;; Eval, inline, Emacs lisp
 (use-package eros

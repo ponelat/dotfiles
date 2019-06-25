@@ -8,7 +8,7 @@ alias cjson="curl -sL -H 'accept: application/json' -H 'content-type: applicatio
 alias devcurl="curl -sLN -H 'accept: application/json' -H 'content-type: application/json' -H \"Authorization: $SWAGGERHUBDEV_TOKEN\""
 alias ls='ls -A --color=always --group-directories-first -1 -v'
 alias .z=". ~/.zshrc"
-alias j="fasd_cd -d"
+# alias j="fasd_cd -d"
 alias d="fasd -dl1"
 alias o='a -e xdg-open' # quick opening files with xdg-open
 alias open="xdg-open"
@@ -60,4 +60,12 @@ c() {
      from urls order by last_visit_time desc" |
   awk -F $sep '{printf "%-'$cols's  \x1b[36m%s\x1b[m\n", $1, $2}' |
   fzf --ansi --multi | sed 's#.*\(https*://\)#\1#' | xargs $open > /dev/null 2> /dev/null
+}
+
+j() {
+  if [[ $# -lt 1 ]] ; then
+    cd $(fasd_cd -dlR | fzf)
+    return
+  fi
+  fasd_cd -d $@
 }
