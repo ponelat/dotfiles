@@ -48,12 +48,13 @@ ZSH_CUSTOM=~/projects/dotfiles/zsh
 plugins=(fasd npm docker unaliases zsh-autosuggestions jira vi-mode-copy-paste aws curl kubectl mvn openssl)
 
 # Preferred editor for local and remote sessions
-# export EDITOR="emacsclient -t"
+export EDITOR="emacsclient -c"
+export VISUAL="emacsclient -c"
 # export ALTERNATE_EDITOR=""
 # export VISUAL="emacsclient -c -a emacs"
-export EDITOR="vim"
-export ALTERNATE_EDITOR=""
-export VISUAL="vim"
+# export EDITOR="vim"
+export ALTERNATE_EDITOR="vim"
+# export VISUAL="vim"
 
 source $ZSH/oh-my-zsh.sh
 export RPROMPT=
@@ -143,8 +144,15 @@ alias ddive="docker run --rm -it \
     -v $(which docker):/bin/docker \
     wagoodman/dive:latest"
 
+
+fpath=($HOME/.zsh-completion/ $fpath )
+
 # kitty
-# autoload -Uz compinit
-# compinit
+autoload -Uz compinit
+compinit
 # # Completion for kitty
 # kitty + complete setup zsh | source /dev/stdin
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="/home/josh/.sdkman"
+[[ -s "/home/josh/.sdkman/bin/sdkman-init.sh" ]] && source "/home/josh/.sdkman/bin/sdkman-init.sh"

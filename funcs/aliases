@@ -25,6 +25,8 @@ alias post="curl -X POST"
 alias put="curl -X PUT"
 alias curlt="curl -w 'time_namelookup:  %{time_namelookup}\n time_connect:  %{time_connect}\n time_appconnect:  %{time_appconnect}\n time_pretransfer:  %{time_pretransfer}\n time_redirect:  %{time_redirect}\n time_starttransfer:  %{time_starttransfer}\n ----------\n time_total:  %{time_total}\n'"
 
+alias aa="autorandr  | fzf | sed 's/ .*//' | xargs autorandr"
+
 function docker-id() {
   docker ps | fzf | awk '{ print $1 }'
 }

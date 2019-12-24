@@ -1,3 +1,4 @@
+
 ;;; init.el --- Just my dot file.
 ;;; -*- lexical-binding: t -*-
 ;;; Commentary:
@@ -32,6 +33,8 @@
 (electric-pair-mode t)
 
 ;;;; init.el helpers
+
+
 (defmacro comment (&rest body)
   "Comment out sexp (BODY)."
   nil)
@@ -175,6 +178,10 @@
 (define-key emacs-lisp-mode-map (kbd "C-c n") 'init-narrow-to-section)
 (define-key emacs-lisp-mode-map (kbd "C-c w") 'widen)
 
+;;;; Smooth scrolling
+(use-package smooth-scrolling)
+
+
 ;;;; Term, bash, zsh, shell
 ;; Set certain files to be in sh-mode automagically
 (progn
@@ -195,6 +202,19 @@
 (global-set-key (kbd "M-z") #'ponelat/term)
 
 
+(defun ponelat/methodpath-to-badge ()
+  "It takes an input string and pastes a URL badge into buffer."
+  (interactive)
+  (let* ((methodpath (read-string "method /path: "))
+          (method (downcase (car (split-string methodpath " "))))
+          (path (url-hexify-string (car (cdr (split-string methodpath)))))
+          (color (cond
+                 ((string= method "get") "1391FF")
+                 ((string= method "post") "009D77")
+                 ((string= method "put") "E97500")
+                 ((string= method "delete") "CF3030")
+                 "1391FF")))
+    (insert (format "<img:https://raster.shields.io/static/v1?label=%s&message=%s&color=%s>  /' %s %s '/" method path color   (upcase method) (url-unhex-string path)))))
 
 (ignore-errors
   (require 'ansi-color)
@@ -264,7 +284,23 @@ eg: \"Hello over there\" => \"hello-over-there\"
   "zoom"
   ("k" text-scale-increase "in")
   ("j" text-scale-decrease "out")
+  ("h" ponelat/visual-fill-column-width-decrease "narrow")
+  ("l" ponelat/visual-fill-column-width-increase "widen")
   ("0" (lambda () (interactive) (text-scale-decrease 0)) "reset"))
+
+
+(defun ponelat/visual-fill-column-width-decrease ()
+  "It decreases the `visual-fill-column-width' variable by 10."
+  (interactive)
+  (if visual-fill-column-width
+    (setq visual-fill-column-width (- visual-fill-column-width 10))))
+
+(defun ponelat/visual-fill-column-width-increase ()
+  "It increases the `visual-fill-column-width' variable by 10."
+  (interactive)
+  (if visual-fill-column-width
+    (setq visual-fill-column-width (+ visual-fill-column-width 10))))
+
 
 (progn
   (defhydra hydra-window-resize (global-map "C-x {")
@@ -277,7 +313,8 @@ eg: \"Hello over there\" => \"hello-over-there\"
   "Org files"
   ("o" (ponelat/open-notes "office.org") "office")
   ("t" (ponelat/open-notes "travel.org") "travel")
-  ("g" (ponelat/open-notes "get-well-onprem.org") "get-well")
+  ("a" (ponelat/open-notes "log.org") "log")
+  ("w" (ponelat/open-notes "web-office.org") "web office")
   ("f" (ponelat/open-notes "money.org") "money")
   ("b" (find-file (concat ponelat/projects-dir "/api-book/book/api-book.org")) "api-book")
   ("m" (ponelat/open-notes "meetups.org") "meetups")
@@ -285,7 +322,6 @@ eg: \"Hello over there\" => \"hello-over-there\"
   ("n" (ponelat/open-notes "notes.org") "notes")
   ("j" (ponelat/open-notes "jokes.org") "jokes")
   ("s" (ponelat/open-notes "shopping.org") "shopping")
-  ("a" (ponelat/open-notes "pain.org") "pain points")
   ("d" (ponelat/open-notes "docs.org") "docs")
   ("l" (org-capture-goto-last-stored) "(last)")
   ("e" (ponelat/open-notes "personal.org") "personal")
@@ -295,6 +331,14 @@ eg: \"Hello over there\" => \"hello-over-there\"
   "string case"
   ("s" string-inflection-all-cycle "all cycle"))
 
+;; (defmacro ponelat/first-macro (&rest body)
+;;   "The first macro (it use BODY)!!!"
+;;   `(progn ,@(mapcar (lambda (form) `(message (format "%s" ,form))) body)))
+
+;; (defmacro lambda-file (FILE)
+;;   "Return a lambda that opens a file."
+;;   (lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/i3/config" ponelat/projects-dir)))
+
 (defhydra edit-file (:color blue
                       :exit t
                       :pre (which-key-mode nil)
@@ -302,10 +346,13 @@ eg: \"Hello over there\" => \"hello-over-there\"
   "Special File"
   ("h" ponelat/edit-hosts-file "/etc/hosts")
   ("i" ponelat/emacs-lisp-imenu-init "init.el")
-  ("r" ponelat/jump-to-rest-scratch "rest-scratch")
+  ("r" ponelat/jump-to-restclient "rest-scratch")
   ("i" (lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/i3/config" ponelat/projects-dir))) "i3 config")
-  ("z" (lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) "i3 config")
-  ("p" (lambda () (interactive) (find-file (format "%s/dotfiles/dots/profile" ponelat/projects-dir))) "i3 config"))
+  ("z" (lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) ".zshrc")
+  ("p" (lambda () (interactive) (find-file (format "%s/dotfiles/dots/profile" ponelat/projects-dir))) ".profile")
+  ("s" (lambda () (interactive) (find-file "~/.ssh/config")) "ssh config")
+  ("k" (lambda () (interactive) (find-file "~/.kube/config")) "kube config")
+  ("k" (lambda () (interactive) (find-file "~/.kube/config")) "kubeconfig"))
 
 ;; Keyboard shortcuts for hydras
 (progn
@@ -357,7 +404,7 @@ eg: \"Hello over there\" => \"hello-over-there\"
   (writeroom-mode t)
   (git-gutter+-mode -1)
   (visual-line-mode t)
-  (flyspell-mode-on)
+  (flyspell-mode)
   (ponelat/add-frame-padding))
 
 
@@ -374,32 +421,133 @@ eg: \"Hello over there\" => \"hello-over-there\"
     (add-hook 'writeroom-mode-hook #'ponelat/inhibit-git-gutter+-mode))
   )
 
-;;;; Sudo, root, sudowrite, dired, tramp
-(require 'tramp)
+;;;; SSH, Sudo, root, sudowrite, dired, tramp
+(progn
+  (require 'tramp)
+  (eval-after-load 'tramp '(setenv "SHELL" "/bin/bash")))
+
+(use-package docker-tramp)
+
 (setq dired-dwim-target t)
+
 (setq tramp-default-method "ssh")
 (defun ponelat/sudo-this ()
   "Opens a Dired buffer with sudo priviledges."
   (interactive)
   (dired (format "/sudo::%s" (buffer-file-name))))
 
+;; (defun ponelat/ssh (&optional PREFIX)
+;;   "SSH into a server defined in ~/.ssh/config. With PREFIX it'll open _without_ sudo."
+;;   (interactive "P")
+;;   )
+
+;;;; Dired
+
 (use-package dired-narrow
   :bind (:map dired-mode-map
           ("C-c s" . dired-narrow)))
+(use-package vscode-icon
+  :commands (vscode-icon-for-file))
 
-(use-package docker-tramp
-  )
+(progn
+  (use-package treemacs
+    :config
+    (progn
+      ;; (setq treemacs-collapse-dirs             (if (executable-find "python3") 3 0)
+      ;;   treemacs-deferred-git-apply-delay      0.5
+      ;;   treemacs-display-in-side-window        t
+      ;;   treemacs-eldoc-display                 t
+      ;;   treemacs-file-event-delay              5000
+      ;;   treemacs-file-follow-delay             0.2
+      ;;   treemacs-follow-after-init             t
+      ;;   treemacs-git-command-pipe              ""
+      ;;   treemacs-goto-tag-strategy             'refetch-index
+      ;;   treemacs-indentation                   2
+      ;;   treemacs-indentation-string            " "
+      ;;   treemacs-is-never-other-window         nil
+      ;;   treemacs-max-git-entries               5000
+      ;;   treemacs-missing-project-action        'ask
+      ;;   treemacs-no-png-images                 nil
+      ;;   treemacs-no-delete-other-windows       t
+      ;;   treemacs-project-follow-cleanup        nil
+      ;;   ;; treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+      ;;   treemacs-recenter-distance             0.1
+      ;;   treemacs-recenter-after-file-follow    nil
+      ;;   treemacs-recenter-after-tag-follow     nil
+      ;;   treemacs-recenter-after-project-jump   'always
+      ;;   treemacs-recenter-after-project-expand 'on-distance
+      ;;   treemacs-show-cursor                   nil
+      ;;   treemacs-show-hidden-files             t
+      ;;   treemacs-silent-filewatch              nil
+      ;;   treemacs-silent-refresh                nil
+      ;;   treemacs-sorting                       'alphabetic-desc
+      ;;   treemacs-space-between-root-nodes      t
+      ;;   treemacs-tag-follow-cleanup            t
+      ;;   treemacs-tag-follow-delay              1.5
+      ;;   treemacs-width                         35)
+
+      ;; The default width and height of the icons is 22 pixels. If you are
+      ;; using a Hi-DPI display, uncomment this to double the icon size.
+      ;;(treemacs-resize-icons 44)
+
+      ;; (treemacs-follow-mode t)
+      ;; (treemacs-filewatch-mode t)
+      ;; (treemacs-fringe-indicator-mode t)
+      (comment pcase (cons (not (null (executable-find "git")))
+               (not (null (executable-find "python3"))))
+        (`(t . t)
+          (treemacs-git-mode 'deferred))
+        (`(t . _)
+          (treemacs-git-mode 'simple))))
+    :bind
+    (:map global-map
+      ("M-0"       . treemacs-select-window)
+      ("C-x t 1"   . treemacs-delete-other-windows)
+      ("C-x t t"   . treemacs)
+      ("C-x t B"   . treemacs-bookmark)
+      ("C-x t C-t" . treemacs-find-file)
+      ("C-x t M-t" . treemacs-find-tag)))
+
+  (use-package treemacs-evil
+    :after treemacs evil)
+
+  (use-package treemacs-projectile
+    :after treemacs projectile)
+
+  (use-package treemacs-icons-dired
+    :after treemacs dired
+    :config (treemacs-icons-dired-mode))
+
+  (use-package treemacs-magit
+    :after treemacs magit))
+
+;; (use-package dired-sidebar
+;;   :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
+;;   :commands (dired-sidebar-toggle-sidebar)
+;;   :init
+;;   (add-hook 'dired-sidebar-mode-hook
+;;             (lambda ()
+;;               (unless (file-remote-p default-directory)
+;;                 (auto-revert-mode))))
+;;   :config
+;;   (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
+;;   (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
+
+;;   (setq dired-sidebar-subtree-line-prefix "__")
+;;   (setq dired-sidebar-theme 'vscode)
+;;   (setq dired-sidebar-use-term-integration t)
+;;   (setq dired-sidebar-use-custom-font t))
+
 
 ;;;; Markdown
-
-(use-package markdown-mode
-  )
+(use-package markdown-mode)
 
  (defun ponelat/expand-lines ()
     (interactive)
     (let ((hippie-expand-try-functions-list
            '(try-expand-line-all-buffers)))
       (call-interactively 'hippie-expand)))
+
 
 ;;;; Evil, vim
 (use-package evil
@@ -409,14 +557,19 @@ eg: \"Hello over there\" => \"hello-over-there\"
     evil-want-integration t)
   :config
   (progn
-    (evil-mode 1)
+    (evil-mode)
     (evil-set-initial-state 'Info-mode 'normal)
     (define-key evil-normal-state-map (kbd "j") #'evil-next-visual-line)
     (define-key evil-normal-state-map (kbd "k") #'evil-previous-visual-line)
     (define-key evil-normal-state-map "\C-d" nil)
     (define-key evil-normal-state-map "\C-j" nil)
+    (define-key evil-insert-state-map "\C-k" nil)
     (define-key evil-normal-state-map "\M-." nil)
     (define-key evil-normal-state-map "go" 'org-open-at-point-global)))
+
+(use-package evil-numbers
+  :config (progn (global-set-key (kbd "C-c +") 'evil-numbers/inc-at-pt)
+            (global-set-key (kbd "C-c -") 'evil-numbers/dec-at-pt)))
 
 (use-package evil-collection
   :after evil
@@ -452,6 +605,7 @@ eg: \"Hello over there\" => \"hello-over-there\"
       "l" #'avy-goto-line
       "s" #'avy-goto-char-2
       "f" #'flycheck-list-errors
+      ;; "d" #'dired-sidebar-toggle-sidebar
       ;; "s" #'avy-goto-char-timer
       ";" #'delete-other-windows
       "i" #'helm-imenu)))
@@ -594,6 +748,7 @@ eg: \"Hello over there\" => \"hello-over-there\"
   (progn
     (setq emmet-expand-jsx-className? t)
     (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'web-mode 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'rjsx-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
     (evil-define-key 'visual emmet-mode-keymap (kbd "C-l") #'emmet-wrap-with-markup))
@@ -636,6 +791,8 @@ eg: \"Hello over there\" => \"hello-over-there\"
 
 (add-hook 'find-file-hook 'xml-find-file-hook t)
 (use-package web-mode
+  :init
+  (setq auto-mode-alist (cons '("\\.svelte$" . web-mode) auto-mode-alist))
   )
 
 ;; (comment use-package lispy
@@ -711,7 +868,7 @@ eg: \"Hello over there\" => \"hello-over-there\"
 ;; effect. Instead, we use of xsel, see
 ;; http://www.vergenet.net/~conrad/software/xsel/ -- "a command-line
 ;; program for getting and setting the contents of the X selection"
-(unless window-system
+(comment unless window-system
   (when (getenv "DISPLAY")
     ;; Callback for when user cuts
     (defun xsel-cut-function (text &optional push)
@@ -771,12 +928,13 @@ eg: \"Hello over there\" => \"hello-over-there\"
   '(openapi-yaml-mode :type git :host github :repo "magoyette/openapi-yaml-mode"))
 
 ;; Add command to jump into a restclient scratch, stored by projectile project.
-(defun ponelat/jump-to-rest-scratch ()
+(defun ponelat/jump-to-restclient (&optional project)
   "Jump to the restclient buffer for making rest calls.
 Will use `projectile-default-project-name' .rest as the file name."
   (interactive)
   (let* ((basedir (format "%s/restclient-scratch" ponelat/projects-dir))
           (project-name (cond
+                          (project (projectile-default-project-name project))
                           ((projectile-project-root) (projectile-default-project-name (projectile-project-root)))
                           (t "global")))
           (scratch-file (format "%s/%s.rest" basedir project-name)))
@@ -811,20 +969,23 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;; formats the buffer before saving
 ;; (add-hook 'before-save-hook 'tide-format-before-save)
 
-;;;; Mermaid
-;; It should be added to .emacs.d/custom: see 'load-path
+;;;; UML PlantUML
+
+(use-package plantuml-mode
+  :config
+  (add-to-list 'auto-mode-alist '(".puml\\'" . plantuml-mode))
+  (setq plantuml-output-type "png"
+    plantuml-default-exec-mode 'jar
+    plantuml-java-args '("-Djava.awt.headless=true" "-jar")))
 
 ;;;; CSV
 (use-package csv-mode
-  :disabled t
-  )
+  :disabled t)
 
 ;;;; Ruby, rspec
-(use-package ruby-mode
-  )
+(use-package ruby-mode)
 
-(use-package rspec-mode
-  )
+(use-package rspec-mode)
 
 ;;;; Rust, cargo
 (use-package rust-mode
@@ -859,6 +1020,11 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;; LDAP, LDIF, Active Directory
 (use-package ldap
   )
+
+;; Flutter dart
+
+(use-package dart-mode)
+
 
 ;;;; Java
 (use-package meghanada
@@ -1115,7 +1281,7 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 
 ;;;; $PATH environment variable
 ;; (setenv "PATH" (concat (getenv "PATH") ":/home/josh/.nix-profile/bin"))
-(setq exec-path (append exec-path '("~/.nix-profile/bin" exec-directory)))
+;; (setq exec-path (append exec-path '("~/.nix-profile/bin" exec-directory)))
 
 ;; So that we can access `./node_modules/.bin/eslint` mostly
 (use-package add-node-modules-path
@@ -1134,7 +1300,7 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 ;;;; Go lang
  (use-package go-mode
    :config
-   (setq gofmt-command "goimports")
+   (setq gofmt-command "gofmt")
    (add-hook 'before-save-hook 'gofmt-before-save)
    (evil-define-key 'normal go-mode-map "gd" #'godef-jump)
    )
@@ -1324,6 +1490,12 @@ eg: /one/two => two
   (let ((filename (file-name-nondirectory target-dir)))
     (async-shell-command (format "cd %s && npm unlink %s" base-dir filename))))
 
+(defun ponelat/get-hostnames-k8s ()
+  "It'll unlink TARGET-DIR from BASE-DIR project."
+  (interactive)
+  (let ((ip-addr (read-from-minibuffer "IPv4 of VM: ")))
+    (async-shell-command (format "~/bin/get-hostnames.sh %s" ip-addr))))
+
 (defun ponelat/helm-npm-run ()
   "Run npm-run, from the helm projectile buffer."
   (interactive)
@@ -1338,6 +1510,11 @@ eg: /one/two => two
   "Run npm-install-save, from the helm projectile buffer."
   (interactive)
   (helm-exit-and-execute-action #'ponelat/npm-install))
+
+(defun ponelat/helm-restclient ()
+  "Load the restclient file for the project."
+  (interactive)
+  (helm-exit-and-execute-action #'ponelat/jump-to-restclient))
 
 (defun ponelat/helm-npm-clone-and-link ()
   "Run npm-clone-and-link, from the helm projectile buffer."
@@ -1392,16 +1569,13 @@ eg: /one/two => two
 ;;;; Projects
 (use-package projectile
   :init
-  (progn
-    (global-set-key (kbd "C-j") nil)
-    (setq projectile-keymap-prefix (kbd "C-j"))
-    (comment
-      (define-key projectile-mode-map (kbd "C-j") 'projectile-command-map)))
   :diminish projectile
   :config
   (progn
     (projectile-mode)
-    (define-key projectile-command-map (kbd "n") #'ponelat/projectile-project-run)))
+    (define-key projectile-command-map (kbd "n") #'ponelat/projectile-project-run)
+    (global-set-key (kbd "C-j") nil)
+    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)))
 ;;;; Fuzzy, ido, helm
 
 ;; (put 'helm-ff-run-open-file-externally 'helm-only t)
@@ -1445,11 +1619,12 @@ eg: /one/two => two
       helm-completion-in-region-fuzzy-match t
       helm-buffer-max-length 40)
     (define-key helm-map [(control ?w)] 'backward-kill-word)
-
+    (define-key helm-map [(control ?j)] 'helm-next-line)
+    (define-key helm-map [(control ?k)] 'helm-previous-line)
     (helm-mode)))
 
-(use-package helm-ls-git
-  )
+
+(use-package helm-ls-git)
 
 (use-package helm-projectile
 
@@ -1461,6 +1636,7 @@ eg: /one/two => two
     (define-key helm-projectile-projects-map (kbd "C-l") #'ponelat/helm-npm-run)
     (define-key helm-projectile-projects-map (kbd "C-p") #'ponelat/helm-project-run)
     (define-key helm-projectile-projects-map (kbd "C-c n") #'ponelat/helm-npm-install)
+    (define-key helm-projectile-projects-map (kbd "C-c r") #'ponelat/helm-restclient)
     (define-key helm-projectile-projects-map (kbd "C-c l") #'ponelat/helm-npm-clone-and-link)
     (define-key helm-projectile-find-file-map (kbd "C-x C-x") #'ponelat/helm-execute-file)
     (define-key helm-projectile-projects-map (kbd "C-a") #'ponelat/helm-ag-do)))
@@ -1501,6 +1677,43 @@ eg: /one/two => two
     (define-key swiper-map [(control ?w)] 'backward-kill-word))
   )
 
+;;;; Jenkins, custom scripts
+(defun ponelat/jenkins-custom-frontend ()
+  "It builds a custom docker image in Jenkins."
+  (interactive)
+  (if (string-equal "/home/josh/projects/swaggerhub-frontend/" (projectile-project-root))
+    (let* ((branch (completing-read "Branch: " (vc-git-branches)))
+            (default-tag (replace-regexp-in-string "release/\\(.*\\)" "\\1"
+                    (replace-regexp-in-string ".*\\(sdes-[0-9]+\\).*" "\\1"
+                      branch)))
+            (tag (read-string "Docker tag: " default-tag))
+            (cmd (format "/home/josh/bin/jenkins-custom-sdes.sh '%s' '%s'" branch tag)))
+      (if (y-or-n-p (format "Wanna run the job %s?" cmd))
+        (shell-command cmd)))
+    (message "I only work with swaggerhub-frontend repo")))
+
+(defun ponelat/jenkins-demo-sdes ()
+  "It builds a custom demo image in Jenkins."
+  (interactive)
+  (if (string-equal "/home/josh/projects/swaggerhub-frontend/" (projectile-project-root))
+    (let* ((branch (completing-read "Branch: " (vc-git-branches)))
+            (tag (completing-read "SDES: " '("sdes-1" "sdes-2" "sdes-3" "sdes-4")))
+            (dns (read-string "DNS: " tag))
+            (cmd (format "/home/josh/bin/jenkins-sdes-demo.sh '%s' '%s' '%s'" branch tag dns)))
+      (if (y-or-n-p (format "Wanna run the job %s?" cmd))
+        (shell-command cmd)))
+    (message "I only work with swaggerhub-frontend repo")))
+
+;;;; Kubernetes
+(use-package kubernetes
+  :commands (kubernetes-overview)
+  :config (setq kubernetes-poll-frequency 3600
+            kubernetes-redraw-frequency 3600))
+
+;; If you want to pull in the Evil compatibility package.
+(use-package kubernetes-evil
+  :config (require 'kubernetes-evil)
+  :after kubernetes)
 ;;;; Git, magit
 
 (setq smerge-command-prefix "\C-cv")
@@ -1523,15 +1736,40 @@ eg: /one/two => two
   :config
   (progn
     (magit-define-popup-switch 'magit-log-popup ?f "first parent" "--first-parent")
-    (setq magit-list-refs-sortby "-creatordate"))
-  )
-(use-package evil-magit
-  )
+    (setq magit-list-refs-sortby "-creatordate")))
+
+(use-package evil-magit)
 
 ;;;; GhostText, browser, live
 (use-package atomic-chrome
   )
 ;;;; Jira
+(use-package org-jira
+  :init
+  (setq jiralib-url "https://smartbear.atlassian.net")
+  :config
+  (setq org-jira-custom-jqls
+    '(
+       (:jql "project = CC AND component = SwaggerHub AND resolution = Unresolved order by lastViewed DESC"
+         :limit 10
+         :filename "swaggerhub-cc")
+       (:jql "assignee = currentUser() and project = CC AND component = SwaggerHub AND resolution = Unresolved order by lastViewed DESC"
+         :limit 10
+         :filename "swaggerhub-cc-mine"))))
+
+
+(defun ponelat/get-jira-ccs ()
+  "It gets all CCs that are interesting to me."
+  (interactive)
+  (org-jira-get-issues-from-filter "project = CC AND component = SwaggerHub AND resolution = Unresolved"))
+
+(defun ponelat/get-jira-spikes ()
+  "It gets all Spikes that are interesting to me."
+  (interactive)
+  (org-jira-get-issues-from-filter "project = SONP AND resolution = Unresolved"))
+
+
+
 (use-package jira-markup-mode
   :config
   (add-to-list 'auto-mode-alist '("\\.confluence$" . jira-markup-mode))
@@ -1606,12 +1844,19 @@ eg: /one/two => two
   :diminish (git-gutter+-mode . "+="))
 
 ;; "^\\(=====[ 	]+\\)\\([^\t\n].*?\\)\\(\\([ \t]+=====\\)?[ \t]*\\(?:\n\\|\\'\\)\\)"
+(defun ponelat/grab-imenu-of (filename)
+  "Grabs the imenu-list of FILENAME"
+  (save-current-buffer
+    (set-buffer (find-file-noselect filename))
+    (imenu--make-index-alist)))
+
 (use-package adoc-mode
   :config
   (progn
 
     (add-to-list 'auto-mode-alist (cons "\\.adoc\\'" 'adoc-mode))
     (add-hook 'adoc-mode-hook (lambda() (buffer-face-mode t)))
+    (define-key adoc-mode-map (kbd "C-c C-c") #'ponelat/quick-build)
 
     (defun ponelat/adoc-imenu-create-index ()
       (let* ((index-alist)
@@ -1662,7 +1907,55 @@ eg: /one/two => two
         (kill-new (org-element-interpret-data org-data)
           (pp titles-list))))
 
-;;;; IMB Box symbols
+;;;; Quick build
+(defvar ponelat/quick-build-alist '(("api-book" . ponelat/quick-build-api-book)
+                                     ("dotfiles" . (lambda () "hello")))
+  "A list of quick-build mappings. Used by `ponelat/quick-build'")
+
+(setq ponelat/quick-build-alist '(("api-book" . ponelat/quick-build-api-book)
+                                   ("dotfiles" . (lambda () "hello"))
+                                   (josh . hezz)))
+
+(defun ponelat/quick-build-get-project-type (&optional NAME)
+  "Get the project type based on NAME or `projectile-project-name'."
+  (or NAME (projectile-project-name)))
+
+(defun ponelat/quick-build (&optional PREFIX)
+  "Run a compile/build step from the `ponelat/quick-build-alist' variable. Passes PREFIX onto the function to be applied."
+  (interactive "P")
+  (let* ((project (ponelat/quick-build-get-project-type))
+          (project-build-func (alist-get project ponelat/quick-build-alist nil nil #'string-match-p)))
+    (apply project-build-func PREFIX)))
+
+(defun ponelat/quick-build-api-book (&optional PREFIX)
+  "Compiles the current adoc file.  With PREFIX it will compile all PDFs files."
+  (interactive "P")
+  (save-buffer)
+  (shell-command
+    (format "cd %s && ./build.sh %s"
+      (projectile-project-root)
+      (if PREFIX "" (buffer-file-name)))
+    "*QuickBuild*")
+  (kill-buffer "*QuickBuild*")
+  (let* ((pdf-file (replace-regexp-in-string "\\.\\(.*\\)$" ".pdf" (buffer-file-name)))
+          (buf (find-buffer-visiting pdf-file)))
+    (if buf
+      (with-current-buffer buf
+        (revert-buffer t t t)))))
+
+
+
+
+
+(comment
+  (progn
+    (kill-new (replace-regexp-in-string "\\.\\(.*\\)$" ".pdf" "/home/josh/projects/api-book/book/chapters/chapter-08.adoc"))
+
+
+    (shell-command "ls" "Josh")
+    (kill-buffer "Josh")))
+
+;;;; IBM Box symbols
 ;; ┌ ┬ ┐ ├ ┼ ┤ └ ┴ ┘ ─ │
 
 ;;;; org-mode pre
@@ -1708,7 +2001,7 @@ eg: /one/two => two
           '(org-hide                  ((t (:inherit fixed-pitch))))
           '(org-document-info-keyword ((t (:inhert (shadow) :height 0.8))))
           '(org-document-info         ((t :height 1.0)))
-          '(org-link                  ((t :underline nil)))
+          '(org-link                  ((t (:inherit fixed-pitch) :underline nil)))
           '(org-meta-line             ((t (:inherit (font-lock-comment-face fixed-pitch) :height 0.8))))
           '(org-property-value        ((t (:inherit fixed-pitch))) t)
           '(org-special-keyword       ((t (:inherit (font-lock-comment-face fixed-pitch) :height 0.8))))
@@ -1730,6 +2023,7 @@ eg: /one/two => two
   :config
   (progn
     (define-key org-mode-map (kbd "C-c ;") nil)
+    ;; (define-key org-mode-map (kbd "C-j") nil)
     (define-key org-mode-map (kbd "C-c C-'") 'org-cycle-list-bullet)
     (global-set-key (kbd "C-c C-L") #'org-store-link)
     (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
@@ -2079,6 +2373,8 @@ Version 2019-01-18"
     (evil-define-key 'normal evil-org-mode-map
       "t" 'org-todo)
     (evil-define-key 'normal evil-org-mode-map
+      (kbd "C-j") nil)
+    (evil-define-key 'normal evil-org-mode-map
       (kbd "C-S-<return>") 'ponelat/org-insert-child-headline)
     (evil-define-key 'insert evil-org-mode-map
       (kbd "C-S-<return>") 'ponelat/org-insert-child-headline)
@@ -2240,10 +2536,13 @@ Version 2017-12-27"
       (set-face-attribute 'org-code nil :foreground (face-attribute 'org-formula :foreground))
       (set-face-attribute 'fringe nil :foreground bg-color :background bg-color))))
 
-(defun ponelat/add-frame-padding ()
-  "Add a padding to frame."
-  (interactive)
-  (set-frame-parameter nil 'internal-border-width 50))
+(defun ponelat/add-frame-padding (&optional PREFIX)
+  "Add a padding to frame.  Will give options when used with PREFIX.  "
+  (interactive "P")
+  (let* ((size (if PREFIX
+                 (string-to-number (read-from-minibuffer "Padding (number): " "50"))
+                 50)))
+    (set-frame-parameter nil 'internal-border-width size)))
 
 (defun ponelat/theme-soothe-extras ()
   "Add extra theme settings to THEME-ID theme."
@@ -2338,13 +2637,12 @@ Version 2017-12-27"
   )
 
 (use-package soothe-theme
-  :disabled t
+  :defer t
   :config
   (progn
     (gh/add-theme-hook
       'soothe
-      (lambda (a) (ponelat/theme-soothe-extras))))
-  )
+      (lambda (a) (ponelat/theme-soothe-extras)))))
 
 (use-package solarized-theme
   :defer t)
@@ -2409,10 +2707,11 @@ Version 2017-12-27"
   (mapc #'disable-theme custom-enabled-themes)
    (enable-theme theme))
 
-;;;; Window stuff
+;;;; Window stuff / Golden ratio
 (progn
   ;; This will auto-resize windows as you move between them.
   (use-package zoom
+    :disabled
     :config
     (evil-global-set-key 'normal (kbd "C-w =") #'zoom)
     (setq zoom-size '(0.618 . 0.618))
@@ -2481,7 +2780,7 @@ Interactively you can choose the FONT-NAME"
     (apply 'set-face-attribute (append '(default nil) font-props))))
 
 ;;;; Set default font
-(ponelat/default-font "Normal")
+(ponelat/default-font "Small")
 
 ;;;; Cycle through fonts
 (defvar ponelat/default-font-index 1)
