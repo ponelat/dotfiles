@@ -2943,8 +2943,27 @@ Interactively you can choose the FONT-NAME"
       command))
 
 
-  (defun ponelat/emacs-commands ()
-    "Runs emacs-commands from local project."
+   (defun ponelat/emacs-commands ()
+    "
+Runs emacs-commands from local project.
+
+In the root of your project get a file named .emacs-commands.xml with the following
+<emacs>
+  <command title=\"Some title\" dir=\".\" >
+
+    <cmd>
+      cowsay Hello $NAME
+    </cmd>
+
+    <arg name=\"NAME\" default=\"Josh\" >
+      <value> Hezzie </value>
+      <value> Josh </value>
+    </arg>
+
+  </command>
+
+</emacs>
+"
     (interactive)
     (let* ((emacs-command-name ".emacs-commands.xml")
             (base-dir (projectile-project-root))
