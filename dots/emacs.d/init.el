@@ -2858,6 +2858,103 @@ Interactively you can choose the FONT-NAME"
   (global-emojify-mode)
   (global-set-key (kbd "C-x 8 e") 'emojify-insert-emoji))
 
+
+(progn
+  ;;;; Maybe useful
+
+  (defun ponelat/read-file-into-string (filePath)
+    "Return a list of lines of a file at filePath."
+    (with-temp-buffer
+      (insert-file-contents filePath)
+      (buffer-string)))
+
+  (defun ponelat/read-file-into-cmd-lines (filePath)
+    "Read FILEPATH into a seq of non-empty lines while respecting escaped newlines."
+    (seq-filter (lambda (s) (not (string-empty-p s)))
+      (split-string
+        (replace-regexp-in-string "\\\\\n" " " (ponelat/read-file-into-string filePath))
+        "\n")))
+
+
+  (defun ponelat/regexp-list (regex string &optional index)
+    "Return a list of all matching REGEX in STRING.  Optionally using INDEX instead of the whole match."
+    ;; source: http://emacs.stackexchange.com/questions/7148/get-all-regexp-matches-in-buffer-as-a-list
+    (let ( (index (or index 0))
+           (pos 0)                      ; string marker
+           (matches ()))                ; return list
+      (while (string-match regex string pos)
+        (push (match-string index string) matches)
+        (setq pos (match-end index)))
+      (setq matches (reverse matches))
+      matches)))
+
+ (progn
+  ;;;; Emacs-Commands.xml, execute project files
+  (require 'seq)
+
+  (defun ec/string-template (hash str)
+    "Replace all instances of the HASH keys with their values in STR."
+    (seq-reduce
+      (lambda (acc key)
+        (replace-regexp-in-string key (gethash key hash) acc t t))
+      (hash-table-keys hash) str))
+
+  (defun ec/hash-get-arg-values (args-nodes &optional prefix)
+    "Extracts arguments out of the XML node ARGS-NODES. Optionally adds PREFIX to the key names."
+    (seq-reduce
+      (lambda (acc arg-node)
+        (let* ((key (xml-get-attribute arg-node 'name))
+                (values
+                  (mapcar
+                    (lambda (node)
+                      (string-trim (car (xml-node-children node))))
+                    (xml-get-children arg-node 'value)))
+                (value (completing-read (format "%s: " key) values)))
+          (puthash (format "$%s" key) value acc))
+        acc)
+      (xml-get-children args-nodes 'arg)
+      (make-hash-table :test 'equal)))
+
+
+  (defun ec/execute-command (command base-dir)
+    "It does something"
+    (let* (
+            (cmd-node (car (xml-get-children command 'cmd)))
+            (cmd-string (string-trim (car (xml-node-children cmd-node))))
+            (args (ec/hash-get-arg-values command "$"))
+            (title (xml-get-attribute command 'title))
+            (reldir (xml-get-attribute command 'dir))
+            (dir (concat (file-name-as-directory base-dir) reldir))
+            (cmd-compiled (ec/string-template args cmd-string)))
+
+      (async-shell-command
+        (format "cd %s && %s" dir cmd-compiled)
+        (format "*Emacs Commands %s*" title)
+        (format "*Emacs Command %s - Error*" title))))
+
+
+  (defun ec/pick-command (root-xml)
+    "Pick the command node based on `completing-read' on the command[title]."
+    (let* ((root-xml (car root-xml))
+            (commands (xml-get-children root-xml 'command))
+            (command-titles (mapcar (lambda (node) (string-trim (xml-get-attribute node 'title))) commands))
+            (command-pick (completing-read "Command: " command-titles))
+            (command (seq-find (lambda (command) (equal command-pick (xml-get-attribute command 'title)) ) commands)))
+      command))
+
+
+  (defun ponelat/emacs-commands ()
+    "Runs emacs-commands from local project."
+    (interactive)
+    (let* ((emacs-command-name ".emacs-commands.xml")
+            (base-dir (projectile-project-root))
+            (xml-path (concat (file-name-as-directory base-dir) emacs-command-name))
+            (xml-root (xml-parse-file xml-path))
+            (command (ec/pick-command xml-root)))
+      (ec/execute-command command base-dir)))
+
+   (global-set-key  (kbd "C-c r") 'ponelat/emacs-commands))
+
 ;;;; Custom.el file
 (load custom-file 'noerror)
 ;;; init.el ends here
