@@ -651,43 +651,49 @@ eg: \"Hello over there\" => \"hello-over-there\"
     (evil-collection-init)
     (evil-define-key 'normal image-mode-map "y" 'x11-yank-image-at-point-as-image)))
 
-(use-package evil-leader
-  :after evil
+;;; General, Leader, Key mapping
+
+(use-package general
   :config
-  (progn
-    (global-evil-leader-mode)
-    (evil-leader/set-leader "<SPC>")
-    (setq evil-normal-state-modes (append evil-motion-state-modes evil-normal-state-modes))
-    (setq evil-motion-state-modes nil)
-    (define-key evil-insert-state-map (kbd "C-x C-l") 'ponelat/expand-lines)
-    (global-set-key (kbd "C-S-l") #'evil-window-right)
-    (global-set-key (kbd "C-S-h") #'evil-window-left)
-    (global-set-key (kbd "C-S-k") #'evil-window-up)
-    (global-set-key (kbd "C-S-j") #'evil-window-down)
-    (evil-leader/set-key
-      ;; "q" #'kill-buffer-and-window
-      "q" #'quit-window
-      "Q" #'save-buffers-kill-terminal
-      "p" #'helm-projectile-switch-project
-      "hp" #'helm-projectile
-      "j" #'helm-M-x
-      "o" #'xah-open-in-external-app
-      "a" #'helm-do-ag-project-root
-      "b" #'helm-buffers-list
-      "w" #'save-buffer
-      "l" #'avy-goto-line
-      "s" #'avy-goto-char-2
-      "f" #'flycheck-list-errors
-      "d" #'dired
-      ;; "s" #'avy-goto-char-timer
-      ";" #'delete-other-windows
-      "i" #'helm-imenu)))
+  (general-evil-setup))
+;;; General
+(progn
+  (general-create-definer ponelat/leader
+    :prefix "SPC"
+    :states '(normal visual))
+
+  (ponelat/leader
+    :keymaps 'override
+    "Q" #'save-buffers-kill-terminal
+    "p" #'helm-projectile-switch-project
+    "hp" #'helm-projectile
+    "j" #'helm-M-x
+    "o" #'xah-open-in-external-app
+    "a" #'helm-do-ag-project-root
+    "b" #'helm-buffers-list
+    "w" #'save-buffer
+    "l" #'avy-goto-line
+    "s" #'avy-goto-char-2
+    "f" #'flycheck-list-errors
+    ;; "s" #'avy-goto-char-timer
+    ";" #'delete-other-windows
+    "i" #'helm-imenu
+    "d" #'dired-jump
+    "q" #'quit-window)
+
+  (general-def 'insert
+    "C-x C-l" #'ponelat/expand-lines)
+
+  (general-define-key
+   "C-S-l" #'evil-window-right
+   "C-S-h" #'evil-window-left
+   "C-S-k" #'evil-window-up
+   "C-S-j" #'evil-window-down))
 
 (use-package evil-matchit
   :config
   (progn
-    (global-evil-matchit-mode 1))
-  )
+    (global-evil-matchit-mode 1)))
 
 (evil-define-text-object rsb/textobj-inner-c-defun (count &optional beg end type)
   (save-excursion
@@ -924,8 +930,7 @@ eg: \"Hello over there\" => \"hello-over-there\"
     (define-key lispy-mode-map (kbd "\"") nil)
     (evil-define-key 'insert evil-lispy-mode-map "]" nil)
     (evil-define-key 'insert evil-lispy-mode-map (kbd "C-.") 'ponelat/slurp-forward)
-    (evil-define-key 'insert evil-lispy-mode-map (kbd "C-,") 'ponelat/barf-forward))
-  )
+    (evil-define-key 'insert evil-lispy-mode-map (kbd "C-,") 'ponelat/barf-forward)))
 
 ;;(setq show-paren-style 'expression)
 
