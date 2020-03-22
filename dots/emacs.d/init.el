@@ -666,14 +666,19 @@ eg: \"Hello over there\" => \"hello-over-there\"
   :config (global-evil-surround-mode t)
   )
 
-;;;; Hard core escape, super powerful keywords
-(defun ed/escape-normal-mode ()
-  "Stop any recursive edit and go into normal mode."
-  (interactive)
-  (keyboard-escape-quit)
-  (evil-normal-state))
-(global-set-key (kbd "C-g") #'ed/escape-normal-mode)
-(define-key key-translation-map (kbd "ESC") (kbd "C-g"))
+;; This seems to work well, compared to `ed/escape-normal-mode', in that it doesn't collapse frames
+(use-package evil-escape
+  :config
+  (global-set-key (kbd "C-g") 'evil-escape))
+
+;; ;;;; Hard core escape, super powerful keywords
+;; (defun ed/escape-normal-mode ()
+;;   "Stop any recursive edit and go into normal mode."
+;;   (interactive)
+;;   (keyboard-escape-quit)
+;;   (evil-normal-state))
+;; (global-set-key (kbd "C-g") #'ed/escape-normal-mode)
+;; (define-key key-translation-map (kbd "ESC") (kbd "C-g"))
 
 ;;;; Lisp, paredit
 (show-paren-mode 1)
