@@ -175,9 +175,6 @@
     (forward-line -1)
     (narrow-to-region (region-beginning) (region-end))))
 
-(define-key emacs-lisp-mode-map (kbd "C-c n") 'init-narrow-to-section)
-(define-key emacs-lisp-mode-map (kbd "C-c w") 'widen)
-
 ;;;; Smooth scrolling
 (use-package smooth-scrolling)
 
@@ -260,7 +257,7 @@
   (shell-command (concat "firefox" " " "\"" url "\"")))
 
 (setq vc-follow-symlinks t)
-(setq browse-url-browser-function #'browse-url-firefox)
+(setq browse-url-browser-function #'browse-url-x-www-browser)
 
 (use-package avy
   :config
@@ -283,17 +280,40 @@ eg: \"Hello over there\" => \"hello-over-there\"
     (interactive)
     (find-file "/sudo::/etc/hosts"))
   )
-;;;; Hydra, menus
 (use-package hydra
   )
+ ;;;; Hydra, menus
+
+(defun ponelat/size-increase ()
+  "Increase text/image size."
+  (interactive)
+  (call-interactively
+    (if (equal major-mode 'image-mode)
+      'image-increase-size
+      'text-scale-increase)))
+
+(defun ponelat/size-decrease ()
+  "Decrease text/image size."
+  (interactive)
+  (call-interactively
+    (if (equal major-mode 'image-mode)
+        'image-decrease-size
+      'text-scale-decrease)))
+
+(defun ponelat/size-reset ()
+  "Reset text/image size."
+  (interactive)
+  (if (equal major-mode 'image-mode)
+    (image-transform-reset)
+    (text-scale-decrease 0)))
 
 (defhydra hydra-zoom (global-map "C-x =")
   "zoom"
-  ("k" text-scale-increase "in")
-  ("j" text-scale-decrease "out")
+  ("k" ponelat/size-increase "in")
+  ("j" ponelat/size-decrease "out")
   ("h" ponelat/visual-fill-column-width-decrease "narrow")
   ("l" ponelat/visual-fill-column-width-increase "widen")
-  ("0" (lambda () (interactive) (text-scale-decrease 0)) "reset"))
+  ("0" ponelat/size-reset "reset"))
 
 
 (defun ponelat/visual-fill-column-width-decrease ()
@@ -583,7 +603,8 @@ eg: \"Hello over there\" => \"hello-over-there\"
   :custom (evil-collection-setup-minibuffer t)
   :config
   (progn
-    (evil-collection-init)))
+    (evil-collection-init)
+    (evil-define-key 'normal image-mode-map "y" 'x11-yank-image-at-point-as-image)))
 
 (use-package evil-leader
   :after evil
@@ -908,6 +929,31 @@ eg: \"Hello over there\" => \"hello-over-there\"
     ;; http://www.mail-archive.com/help-gnu-emacs@gnu.org/msg03577.html
     ))
 
+;; From https://emacs.stackexchange.com/questions/41016/how-can-i-yank-images-from-emacs
+(defun x11-yank-image-at-point-as-image ()
+  "Yank the image at point to the X11 clipboard as image/png."
+  (interactive)
+  (let ((image (get-text-property (point) 'display)))
+    (if (eq (car image) 'image)
+        (let ((data (plist-get (cdr image) ':data))
+              (file (plist-get (cdr image) ':file)))
+          (cond (data
+                 (with-temp-buffer
+                   (insert data)
+                   (call-shell-region
+                    (point-min) (point-max)
+                     "xclip -i -selection clipboard -t image/png")
+                   (message "Copied image to clipboard!")))
+                (file
+                 (if (file-exists-p file)
+                     (start-process
+                      "xclip-proc" nil "xclip"
+                      "-i" "-selection" "clipboard" "-t" "image/png"
+                       "-quiet" (file-truename file))
+                   (message "Copied image to clipboard!")))
+                (t
+                 (message "The image seems to be malformed."))))
+      (message "Point is not at an image."))))
 
 ;;;; Autosave
 ;; store all backup and autosave files in the tmp dir
@@ -1088,6 +1134,7 @@ Will use `projectile-default-project-name' .rest as the file name."
   "Run all feature tests."
   (interactive)
   (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name)))
+
 
 (defun shub/test-current-feature-staging (&rest extra)
   "Run all feature tests."
@@ -1633,6 +1680,9 @@ eg: /one/two => two
     (define-key helm-map [(control ?w)] 'backward-kill-word)
     (define-key helm-map [(control ?j)] 'helm-next-line)
     (define-key helm-map [(control ?k)] 'helm-previous-line)
+    (define-key helm-map (kbd "TAB") #'helm-execute-persistent-action)
+    (define-key helm-map (kbd "<tab>") #'helm-execute-persistent-action)
+    (define-key helm-map (kbd "C-z") #'helm-select-action)
     (helm-mode)))
 
 
@@ -2136,6 +2186,7 @@ eg: /one/two => two
   ("C-c n i" . org-roam-insert)
   ("C-c n g" . org-roam-show-graph))
 
+;;;; Time world clock
 (setq zoneinfo-style-world-list
   '(("America/New_York" "Boston")
     ("Europe/Dublin" "Galway")
@@ -2825,9 +2876,16 @@ Version 2017-12-27"
 
 
 ;;;; Font,face
+(defvar ponelat/default-font-family "SF Mono"
+  "The font family I like. Options...
+ - Noto Mono
+ - SF Mono
+")
+
 (defvar ponelat/fonts
-  '( ("Small"  (:family "Noto Mono"   :height 98  :weight normal))
-     ("Normal" (:family "Noto Mono"   :height 140 :weight normal))))
+  '( ("Small"  (:family ponelat/default-font-family :height 98  :weight normal))
+     ("Normal" (:family ponelat/default-font-family :height 140 :weight normal))))
+
 (defun ponelat/default-font (font-name)
 "Set the font.  FONT-NAME is the key found in ponelat/fonts.
 Interactively you can choose the FONT-NAME"
