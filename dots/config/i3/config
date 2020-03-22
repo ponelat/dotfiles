@@ -132,6 +132,11 @@ bindsym $mod+d focus child
 # Used for testing Selenium/Chrome
 # for_window [class=".*"] fullscreen enable
 
+# WM_NAME(UTF8_STRING) = "data:, - Google Chrome"
+# for_window [title="data"] fullscreen enable
+# for_window [class=".*"] fullscreen enable
+
+
 bindsym $mod+p exec "shutter -s"
 # set $work1 1:slack
 # set $work2 2:incog
