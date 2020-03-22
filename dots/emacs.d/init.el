@@ -2999,7 +2999,11 @@ Interactively you can choose the FONT-NAME"
 (bind-key "C-c l o" 'helm-org-rifle)
 
 (bind-key "C-c ;" 'delete-other-windows)
-(bind-key "C-c :" 'delete-window)
+(bind-key "C-c C-;"
+  (lambda () (interactive)
+    (delete-window)
+    (balance-windows)))
+
 (bind-key "C-c C-a" 'helm-do-ag-project-root)
 
 (bind-key "C-h l" #'find-library)
