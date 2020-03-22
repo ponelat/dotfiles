@@ -1133,28 +1133,19 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 
 ;;;; Java
-(use-package meghanada
-  :config
-  (progn (add-hook 'java-mode-hook
-           (lambda ()
-             ;; meghanada-mode on
-             (meghanada-mode t)
-             (flycheck-mode +1)
-             (setq c-basic-offset 2)))
+(progn
+  (require 'cc-mode)
 
-    (cond
-      ((eq system-type 'windows-nt)
-        (setq meghanada-java-path (expand-file-name "bin/java.exe" (getenv "JAVA_HOME")))
-        (setq meghanada-maven-path "mvn.cmd"))
-      (t
-        (setq meghanada-java-path "java")
-        (setq meghanada-maven-path "mvn")))
-    ))
-
-;; (use-package jdee
-;;   :config
-;;   (setq jdee-server-dir "~/jars")
-;;   )
+  (use-package lsp-mode :ensure t)
+  (use-package company-lsp :ensure t)
+  (use-package lsp-ui :ensure t)
+  (use-package lsp-java :ensure t :after lsp
+    :config (add-hook 'java-mode-hook 'lsp))
+  (use-package dap-mode
+    :ensure t :after lsp-mode
+    :config
+    (dap-mode t)
+    (dap-ui-mode t)))
 
 ;;;; Java - automation
 
