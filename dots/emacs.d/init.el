@@ -2388,11 +2388,6 @@ Version 2019-01-18"
 (use-package htmlize
   )
 
-(defun ponelat/open-project-org ()
-  "Open the default notes (org-mode) file."
-  (interactive)
-  (find-file (concat ponelat/today-dir "/projects.org")))
-
 (defun ponelat/org-open-link-shub (link)
   "Open LINK as JIRA issue, if it matches shub-xxxx."
   (cond ((string-match "\\(\\(shub|sdes|sonp|splat|steam|scons\\)-[0-9]\\{4\\}\\)" link) ; [[shub-xxxx]]
