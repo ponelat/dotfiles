@@ -202,6 +202,12 @@
 (global-set-key (kbd "M-z") #'ponelat/term)
 
 
+;;;; shell commands, chmod
+(defun ponelat/chmodx ()
+  "Make this file executable."
+  (interactive)
+  (chmod (buffer-file-name) 509))
+
 (defun ponelat/methodpath-to-badge ()
   "It takes an input string and pastes a URL badge into buffer."
   (interactive)
