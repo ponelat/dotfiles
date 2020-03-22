@@ -10,7 +10,8 @@ PROJECTS="$HOME/projects"
 [ -d "$HOME/projects/change_adsl" ] && export PATH+=:"$HOME/projects/change_adsl"
 
 # Java
-[ -d /usr/lib/jvm/java-7-openjdk-amd64/ ] && export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/; export PATH+=:"$JAVA_HOME/bin"
+export JAVA_HOME=/usr
+export PATH+=:"$JAVA_HOME/bin"
 
 # NVM ----------------------------------------------------
 [ -d "$HOME/.nvm" ] && export NVM_DIR="$HOME/.nvm"
