@@ -230,7 +230,8 @@
   (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
 
 ;;;; Dirs
-(defvar ponelat/today-dir "~/Dropbox/org" "My base ORG-MODE folder.")
+(defvar ponelat/org-dir "~/Dropbox/org" "My base ORG-MODE folder.")
+(defvar ponelat/org-roam-dir "~/Dropbox/org/roam" "My base ORG-MODE Roam folder.")
 (defvar ponelat/projects-dir "~/projects" "My base projects folder, used with PROJECTILE and others.")
 
 ;;;; Startup
@@ -2012,7 +2013,7 @@ eg: /one/two => two
           '(org-hide                  ((t (:inherit fixed-pitch))))
           '(org-document-info-keyword ((t (:inhert (shadow) :height 0.8))))
           '(org-document-info         ((t :height 1.0)))
-          '(org-link                  ((t (:inherit fixed-pitch) :underline nil)))
+          '(org-link                  ((t (:inherit (fixed-pitch) :weight semi-bold))))
           '(org-meta-line             ((t (:inherit (font-lock-comment-face fixed-pitch) :height 0.8))))
           '(org-property-value        ((t (:inherit fixed-pitch))) t)
           '(org-special-keyword       ((t (:inherit (font-lock-comment-face fixed-pitch) :height 0.8))))
@@ -2050,6 +2051,10 @@ eg: /one/two => two
     (setq org-agenda-start-on-weekday nil)
     (setq org-deadline-warning-days 1)
     (setq org-confirm-babel-evaluate nil)
+    (setq org-export-with-toc nil)
+    (setq org-export-initial-scope 'subtree)
+    (setq org-goto-interface 'outline-path-completionp)
+    (setq org-outline-path-complete-in-steps nil)
 
 ;;;; Babel
     (progn
@@ -2060,6 +2065,15 @@ eg: /one/two => two
              (shell . t))))
       (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
       (add-to-list 'org-babel-tangle-lang-exts '("js" . "js")))
+
+;;;; Org link keymap
+    (comment progn
+      ;; TODO: Figure out how to make this work for all "TYPES"
+      (org-link-set-parameters
+        "file"
+        :keymap (let ((map (copy-keymap org-mouse-map)))
+                  (define-key map (kbd "TAB") 'org-toggle-link-display)
+                  map)))
 
 ;;;; Styles
     (setq
@@ -2135,6 +2149,16 @@ eg: /one/two => two
        (insert log-str))
      log-str))
 
+;;;; Agenda, reminders
+(progn
+
+  (defun ponelat/org-agenda-to-appt ()
+    "Rebuild all appt reminders"
+    (interactive)
+    (setq appt-time-msg-list nil)
+    (org-agenda-to-appt))
+  (add-hook 'org-agenda-mode-hook 'ponelat/org-agenda-to-appt 'append)
+  (appt-activate t))
 
 (defun ponelat/refresh-agenda-buffers (fn)
   "Refresh all org agenda buffers, saving before.  Call FN inbetween."
@@ -2395,23 +2419,28 @@ Version 2019-01-18"
                 (url (concat "https://smartbear.atlassian.net/browse/" (url-encode-url (upcase shub)))))
            (browse-url url)))))
 
-(use-package evil-org
+ (use-package evil-org
+  :after org
   :config
-  (add-hook 'org-mode-hook (lambda () (evil-org-mode t)))
-  (progn
-    (evil-define-key 'normal evil-org-mode-map
-      "t" 'org-todo)
-    (evil-define-key 'normal evil-org-mode-map
-      (kbd "C-j") nil)
-    (evil-define-key 'normal evil-org-mode-map
-      (kbd "C-S-<return>") 'ponelat/org-insert-child-headline)
-    (evil-define-key 'insert evil-org-mode-map
-      (kbd "C-S-<return>") 'ponelat/org-insert-child-headline)
-    (evil-define-key 'insert evil-org-mode-map
-      (kbd "M-h") 'org-metaleft)
-    (evil-define-key 'insert evil-org-mode-map
-      (kbd "M-l") 'org-metaright))
-  )
+  (add-hook 'evil-org-mode-hook
+    (lambda ()
+      (progn
+        (evil-org-set-key-theme)
+        (require 'evil-org-agenda)
+        (evil-org-agenda-set-keys)
+        (evil-define-key 'normal evil-org-mode-map
+          "t" 'org-todo)
+        (evil-define-key 'normal evil-org-mode-map
+          (kbd "C-j") nil)
+        (evil-define-key 'normal evil-org-mode-map
+          (kbd "C-S-<return>") (evil-org-define-eol-command ponelat/org-insert-child-headline))
+        (evil-define-key 'insert evil-org-mode-map
+          (kbd "C-S-<return>") (evil-org-define-eol-command ponelat/org-insert-child-headline))
+        (evil-define-key 'insert evil-org-mode-map
+          (kbd "M-h") 'org-metaleft)
+        (evil-define-key 'insert evil-org-mode-map
+          (kbd "M-l") 'org-metaright))))
+  (add-hook 'org-mode-hook 'evil-org-mode))
 
 ;; TODO: fix this
 (defun ponelat/archive (type)
@@ -2433,7 +2462,7 @@ Version 2019-01-18"
   :config
   (progn
     (setq org-projectile-projects-file
-      (concat ponelat/today-dir "/projects.org"))
+      (concat org-directory "/projects.org"))
     (push (org-projectile-project-todo-entry) org-capture-templates)
     ))
 
