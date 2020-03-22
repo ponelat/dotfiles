@@ -2957,7 +2957,7 @@ Interactively you can choose the FONT-NAME"
         (replace-regexp-in-string key (gethash key hash) acc t t))
       (hash-table-keys hash) str))
 
-  (defun ec/hash-get-arg-values (args-nodes &optional prefix)
+  (defun ec/hash-get-arg-values (args-nodes)
     "Extracts arguments out of the XML node ARGS-NODES. Optionally adds PREFIX to the key names."
     (seq-reduce
       (lambda (acc arg-node)
@@ -2967,7 +2967,8 @@ Interactively you can choose the FONT-NAME"
                     (lambda (node)
                       (string-trim (car (xml-node-children node))))
                     (xml-get-children arg-node 'value)))
-                (value (completing-read (format "%s: " key) values)))
+                (default-value (xml-get-attribute-or-nil arg-node 'default))
+                (value (completing-read (format "%s: " key) values nil nil default-value)))
           (puthash (format "$%s" key) value acc))
         acc)
       (xml-get-children args-nodes 'arg)
@@ -2979,7 +2980,7 @@ Interactively you can choose the FONT-NAME"
     (let* (
             (cmd-node (car (xml-get-children command 'cmd)))
             (cmd-string (string-trim (car (xml-node-children cmd-node))))
-            (args (ec/hash-get-arg-values command "$"))
+            (args (ec/hash-get-arg-values command))
             (title (xml-get-attribute command 'title))
             (reldir (xml-get-attribute command 'dir))
             (dir (concat (file-name-as-directory base-dir) reldir))
