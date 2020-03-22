@@ -175,8 +175,13 @@
     (forward-line -1)
     (narrow-to-region (region-beginning) (region-end))))
 
-;;;; Smooth scrolling
-(use-package smooth-scrolling)
+;;;; Scroll, smooth, pixel, bar
+(progn
+  (pixel-scroll-mode 1)
+  (setq scroll-conservatively 101) ;; move minimum when cursor exits view, instead of recentering
+  (setq mouse-wheel-scroll-amount '(1)) ;; mouse scroll moves 1 line at a time, instead of 5 lines
+  (setq mouse-wheel-progressive-speed nil)) ;; on a long mouse scroll keep scrolling by 1 line
+;; Not using the `smooth-scrolling' package as its a little slow
 
 
 ;;;; Term, bash, zsh, shell
@@ -1805,6 +1810,8 @@ eg: /one/two => two
 ;;;; GhostText, browser, live
 (use-package atomic-chrome
   )
+;;;; Copy as format (for pasting into GitHub/Jira/Confluence)
+(use-package copy-as-format)
 ;;;; Jira
 (use-package org-jira
   :init
@@ -1912,6 +1919,7 @@ eg: /one/two => two
     (set-buffer (find-file-noselect filename))
     (imenu--make-index-alist)))
 
+;;;; Asciidoc, adoc
 (use-package adoc-mode
   :config
   (progn
