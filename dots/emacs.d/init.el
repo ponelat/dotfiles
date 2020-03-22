@@ -2039,8 +2039,8 @@ eg: /one/two => two
     (global-set-key (kbd "C-c C-L") #'org-store-link)
     (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
 
-    (setq org-directory ponelat/today-dir)
-    (setq org-agenda-files (list ponelat/today-dir))
+    (setq org-directory ponelat/org-dir)
+    (setq org-agenda-files (list ponelat/org-dir))
     (setq org-default-notes-file "notes.org")
     (setq org-confirm-elisp-link-function nil)
     (setq org-src-fontify-natively t)
@@ -2104,7 +2104,23 @@ eg: /one/two => two
          ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
            "* LOOSE %?\n  %i\n  %a")))))
 
-;;;; Time world clock
+;;;; Org Roam
+
+(use-package org-roam
+  :after org
+  :hook
+  ((org-mode . org-roam-mode)
+    (after-init . org-roam--build-cache-async) ;; optional!
+    )
+  :straight (:host github :repo "jethrokuan/org-roam" :branch "develop")
+  :custom
+  (org-roam-directory ponelat/org-roam-dir)
+  :bind
+  ("C-c n l" . org-roam)
+  ("C-c n t" . org-roam-today)
+  ("C-c n f" . org-roam-find-file)
+  ("C-c n i" . org-roam-insert)
+  ("C-c n g" . org-roam-show-graph))
 
 (setq zoneinfo-style-world-list
   '(("America/New_York" "Boston")
@@ -2227,10 +2243,13 @@ is positive, move after, and if negative, move before."
   )
 
 (use-package org-journal
-  :config
-  (setq org-journal-dir (concat org-directory "/journal"))
-  )
-
+  :bind
+  ("C-c n j" . org-journal-new-entry)
+  :custom
+  (org-journal-date-prefix "#+TITLE: ")
+  (org-journal-file-format "%Y-%m-%d.org")
+  (org-journal-dir ponelat/org-roam-dir)
+  (org-journal-date-format "%A, %d %B %Y"));;;; Helper functions
 
 ;;;; Helper functions
 (defun ponelat/link-at-point ()
@@ -2294,8 +2313,12 @@ is positive, move after, and if negative, move before."
   (org-demote)
   (call-interactively 'evil-insert))
 
-(use-package ox-jira
-  )
+;;;; Ox / Org Mode Exporters
+(use-package ox-jira)
+
+(use-package ox-slack)
+
+(require 'ox-josh)
 
 ;;;; Open with external tools
 (defun xah-open-in-external-app (&optional @fname)
