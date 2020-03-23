@@ -1134,7 +1134,6 @@ Will use `projectile-default-project-name' .rest as the file name."
   )
 
 ;; Flutter dart
-
 (use-package dart-mode)
 
 
@@ -1884,18 +1883,10 @@ eg: /one/two => two
   (add-to-list 'auto-mode-alist '("\\.confluence$" . jira-markup-mode))
   (add-to-list 'auto-mode-alist '("\\.jira" . jira-markup-mode))
   (add-to-list 'auto-mode-alist '("/itsalltext/.*jira.*\\.txt$" . jira-markup-mode)))
-;;; GitHub
-;; Required for magithub until they move to `transient' https://github.com/magit/magit/issues/3749
-(use-package forge
- :requires magit)
 
-; (use-package magit-popup)
-; (use-package magithub
-;   :requires magit-popup
-;   :config
-;   (magithub-feature-autoinject t)
-;   (setq magithub-clone-default-directory "~/projects")
-;   )
+;;; GitHub
+(use-package forge
+ :after magit)
 
 (use-package gist)
 
