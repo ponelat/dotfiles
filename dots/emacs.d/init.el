@@ -1724,9 +1724,11 @@ eg: /one/two => two
     (define-key helm-map [(control ?w)] 'backward-kill-word)
     (define-key helm-map [(control ?j)] 'helm-next-line)
     (define-key helm-map [(control ?k)] 'helm-previous-line)
+    ;; This allows TAB to complete folder/filenames when writing files (ie: C-x C-w) and still using helm
     (define-key helm-map (kbd "TAB") #'helm-execute-persistent-action)
     (define-key helm-map (kbd "<tab>") #'helm-execute-persistent-action)
-    (define-key helm-map (kbd "C-z") #'helm-select-action)
+;;; Show helm action
+    (define-key helm-map (kbd "C-SPC") #'helm-select-action)
     (helm-mode)))
 
 
@@ -1738,7 +1740,18 @@ eg: /one/two => two
   :config
   (progn
     (helm-projectile-on)
+
+    (defun ponelat/helm-projectile-find-dir-action
+      (project)
+      (let ((projectile-completion-system 'helm)
+             ;;  Hack, override the  default switch project action
+             (projectile-switch-project-action #'projectile-find-dir))
+        (projectile-switch-project-by-name project)))
+
+    (helm-add-action-to-source "Find dir in project `C-c d'" #'ponelat/helm-projectile-find-dir-action helm-source-projectile-projects)
+
     (helm-projectile-define-key helm-projectile-projects-map (kbd "C-c g") #'helm-projectile-vc)
+    (helm-projectile-define-key helm-projectile-projects-map (kbd "C-c d") #'ponelat/helm-projectile-find-dir-action)
     (define-key helm-projectile-projects-map (kbd "C-l") #'ponelat/helm-npm-run)
     (define-key helm-projectile-projects-map (kbd "C-p") #'ponelat/helm-project-run)
     (define-key helm-projectile-projects-map (kbd "C-c n") #'ponelat/helm-npm-install)
