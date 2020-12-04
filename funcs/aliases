@@ -59,7 +59,7 @@ c() {
     google_history="$HOME/Library/Application Support/Google/Chrome/Default/History"
     open=open
   else
-    google_history="$HOME/.config/google-chrome-unstable/Default/History"
+    google_history="$HOME/.config/google-chrome/Default/History"
     open=xdg-open
   fi
   cp -f "$google_history" /tmp/h
@@ -77,3 +77,6 @@ j() {
   fi
   fasd_cd -d $@
 }
+
+alias pingsound="aplay /usr/share/sounds/LinuxMint/stereo/dialog-question.wav > /dev/null 2>&1"
+alias tellme="pingsound; notify-send -t 30 -u critical -i "notification-message-IM" 'Im telling you'"
