@@ -130,6 +130,7 @@
               directory)))
     (copy-file file-to-copy dest-file)))
 
+
 ;;; Config management
 (defun imenu-elisp-sections ()
   "Create a list of sections from config file."
@@ -613,9 +614,9 @@ Version 2017-01-11"
   (editorconfig-mode 1))
 
 ;;; Autoindent
-(use-package auto-indent-mode
-  :config
-  (add-hook 'rjsx-mode 'auto-indent-mode))
+; (use-package auto-indent-mode
+;   :config
+;   (add-hook 'rjsx-mode 'auto-indent-mode))
 
 ;;; Writeroom, writing, book
 (defun ponelat/write ()
@@ -623,6 +624,7 @@ Version 2017-01-11"
   (interactive)
   (writeroom-mode t)
   (git-gutter+-mode -1)
+  (setq visual-fill-column-width 160)
   (visual-line-mode t)
   (flyspell-mode)
   (ponelat/add-frame-padding))
@@ -637,6 +639,7 @@ Version 2017-01-11"
 
 (use-package writeroom-mode
   :config
+  (setq writeroom-bottom-divider-width 0)
   (comment progn                        ; Doesn't seem to work. Want to disable git-gutter+-mode when in writeroom-mode
     (add-hook 'writeroom-mode-hook #'ponelat/inhibit-git-gutter+-mode))
   )
@@ -944,7 +947,8 @@ Version 2017-01-11"
 (use-package racket-mode)
 (use-package pollen-mode)
 
-(use-package lozenge)
+
+(use-package xmlgen)
 
 (show-paren-mode 1)
 (use-package parinfer
@@ -1006,11 +1010,11 @@ Version 2017-01-11"
 ;;   (add-hook 'json-mode-hook 'enable-paredit-mode)
 ;;   )
 
-;;; Color
-(use-package rainbow-mode
-  :config
-  (rainbow-mode 1)
-  )
+;; ;;; Color
+;; (use-package rainbow-mode
+;;   :config
+;;   (rainbow-mode 1)
+;;   )
 
 ;;; html,xml, markup
 (use-package emmet-mode
@@ -1123,7 +1127,7 @@ Version 2017-01-11"
 
 (use-package rg)
 
-(use-package helm-rg)
+;; (use-package helm-rg)
 
 
 ;;; Clipboard
@@ -1199,6 +1203,13 @@ Version 2017-01-11"
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
+;; Reloads buffer if file changes on disk. Won't overwrite modifications
+(global-auto-revert-mode t)
+
+;; These files have a pattern of \.#.* and are used to prevent multiple users editing the file.
+;; I'm disabling it because it causes create-react-app to have a fuss.
+(setq create-lockfiles nil)
+
 ;;; Cuccumber, test, geherkin
 (use-package feature-mode
   )
@@ -1248,6 +1259,7 @@ Will use `projectile-default-project-name' .rest as the file name."
   (interactive)
   (tide-setup)
   (eldoc-mode +1)
+  (setq-local flycheck-check-syntax-automatically nil)
   (tide-hl-identifier-mode +1))
 
 (defun ponelat/setup-tide-if-tsx ()
@@ -1321,11 +1333,7 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package ldap
   )
 
-;; Flutter dart
-(use-package dart-mode)
-
 (use-package json-mode)
-
 
 ;;; LSP, language server protocol
 (use-package lsp-mode
@@ -1333,6 +1341,18 @@ Will use `projectile-default-project-name' .rest as the file name."
           (json-mode . lsp)
           (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
+
+;; Optional Flutter packages
+;; Flutter dart
+(use-package dart-mode
+  :config
+
+  )
+(use-package lsp-dart
+  :hook (dart-mode . lsp)
+  :config  (setq lsp-dart-sdk-dir "~/snap/flutter/common/flutter/bin/cache/dart-sdk"))
+
+(comment use-package hover) ;; run app from desktop without emulator
 
 (use-package company-lsp )
 (use-package lsp-ui )
@@ -1428,13 +1448,13 @@ Will use `projectile-default-project-name' .rest as the file name."
   "Convert the BEGIN END region into JSON.  Putting the result into the kill ring."
   (interactive "r")
   (kill-new
-    (ponelat/shell-command-on-region-to-string begin end "yaml json write -")))
+    (ponelat/shell-command-on-region-to-string begin end "rq -yJ")))
 
 (defun ponelat/json-to-yaml (begin end)
   "Convert the BEGIN END region into YAML  Putting the result into the kill ring."
   (interactive "r")
   (kill-new
-    (ponelat/shell-command-on-region-to-string begin end "yaml json read -")))
+    (ponelat/shell-command-on-region-to-string begin end "rq -jY")))
 
 (defun ponelat/beautify-json ()
   "Will prettify JSON."
@@ -2004,14 +2024,28 @@ eg: /one/two => two
   )
 ;;; Ivy, counsel, swiper
 (setq enable-recursive-minibuffers t)
+
 (use-package ivy
+  :diminish (ivy-mode . "")
   :bind (("C-s" . swiper))
   :config
   (progn
     (define-key swiper-map [(control ?w)] 'backward-kill-word)
     (define-key swiper-map [(control ?j)] 'next-line)
     (define-key swiper-map [(control ?k)] 'previous-line))
-  )
+  ;; (ivy-mode 1)
+  ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
+  (setq ivy-use-virtual-buffers t)
+  ;; number of result lines to display
+  (setq ivy-height 10)
+  ;; does not count candidates
+  (setq ivy-count-format "")
+  ;; no regexp by default
+  (setq ivy-initial-inputs-alist nil)
+  ;; configure regexp engine.
+  (setq ivy-re-builders-alist
+	;; allow input not in order
+        '((t   . ivy--regex-ignore-order))))
 
 ;;; Jenkins, custom scripts
 (defun ponelat/jenkins-custom-frontend ()
@@ -2028,17 +2062,18 @@ eg: /one/two => two
         (shell-command cmd)))
     (message "I only work with swaggerhub-frontend repo")))
 
-(defun ponelat/jenkins-demo-sdes ()
+(defun ponelat/jenkins-demo-steam ()
   "It builds a custom demo image in Jenkins."
   (interactive)
   (if (string-equal "/home/josh/projects/swaggerhub-frontend/" (projectile-project-root))
     (let* ((branch (completing-read "Branch: " (vc-git-branches)))
-            (tag (completing-read "SDES: " '("sdes-1" "sdes-2" "sdes-3" "sdes-4")))
+            (tag (completing-read "STEAM: " '("steam-1" "steam-2" "steam-3" "steam-4")))
             (dns (read-string "DNS: " tag))
-            (cmd (format "/home/josh/bin/jenkins-sdes-demo.sh '%s' '%s' '%s'" branch tag dns)))
+            (cmd (format "/home/josh/bin/jenkins-steam-demo.sh '%s' '%s' '%s'" branch tag dns)))
       (if (y-or-n-p (format "Wanna run the job %s?" cmd))
         (shell-command cmd)))
     (message "I only work with swaggerhub-frontend repo")))
+
 
 ;;; Kubernetes
 (use-package kubernetes
@@ -2185,7 +2220,7 @@ eg: /one/two => two
   (progn
 
     (add-to-list 'auto-mode-alist (cons "\\.adoc\\'" 'adoc-mode))
-    (add-hook 'adoc-mode-hook (lambda() (buffer-face-mode t)))
+    ;; (add-hook 'adoc-mode-hook (lambda() (buffer-face-mode t)))
     (define-key adoc-mode-map (kbd "C-c C-c") #'ponelat/quick-build)
 
     (defun ponelat/adoc-imenu-create-index ()
@@ -2217,13 +2252,11 @@ eg: /one/two => two
       "Create only the top level titles. With proper titles"
       (setq-local imenu-create-index-function #'ponelat/adoc-imenu-create-index)
       ;; (setq imenu-create-index-function #'imenu-default-create-index-function)
-      (setq-local imenu-prev-index-position-function nil)
-      ;; (add-to-list 'imenu-generic-expression '("Title" "^\\(=+[ \t]*[^ \t].+\\)\n$" 1 t))
-      ;; (add-to-list 'imenu-generic-expression '("Images" "^[ \t]*image::?\\(\\)\\[.*\\]\n?" 1 t))
-      )
-    (add-hook 'adoc-mode-hook #'ponelat/adoc-imenu-expresssions)
+      (setq-local imenu-prev-index-position-function nil))
 
-      ))
+
+    (add-hook 'adoc-mode-hook #'ponelat/adoc-imenu-expresssions)
+    (add-hook 'adoc-mode-hook #'visual-line-mode) ))
 
 (defun ponelat/adoc-imenu-to-org-headings (&optional filename)
       "Captures the imenu into the kill ring.  Optionally use FILENAME instead of current buffer."
@@ -2337,8 +2370,12 @@ eg: /one/two => two
           '(org-verbatim              ((t (:inherit (shadow fixed-pitch))))))))
     (ponelat/face-extras)))
 
+(use-package ob-restclient)
+
+
 ;;; org-mode
 (use-package org
+  :hook ((org-mode . org-display-inline-images))
   :config
   (progn
     (define-key org-mode-map (kbd "C-c ;") nil)
@@ -2369,7 +2406,8 @@ eg: /one/two => two
         (append
           org-babel-load-languages
           '((js . t)
-             (shell . t))))
+             (shell . t)
+             (restclient . t))))
       (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
       (add-to-list 'org-babel-tangle-lang-exts '("js" . "js")))
 
@@ -2425,21 +2463,20 @@ eg: /one/two => two
          ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
            "* LOOSE %?\n  %i\n  %a")))))
 
+(use-package ox-reveal
+  :config
+  (setq org-reveal-root "file:///home/josh/revealjs"))
+
 ;;; Org Trello
 (use-package org-trello)
 
-;;; Org Roam
+(use-package org-download)
 
+
+;;; Org Roam
 (use-package org-roam
-  :after org
-  :hook
-  ((org-mode . org-roam-mode)
-    (after-init . org-roam--build-cache-async) ;; optional!
-    )
-  :straight (:host github :repo "jethrokuan/org-roam" :branch "develop")
-  :custom
-  (org-roam-directory ponelat/org-roam-dir)
- )
+  :hook (after-init . org-roam-mode)
+  :custom (org-roam-directory ponelat/org-roam-dir))
 
 
 (use-package deft
@@ -2657,7 +2694,7 @@ is positive, move after, and if negative, move before."
 
 (use-package ox-slack)
 
-(require 'ox-josh)
+(require 'ox-pointy)
 
 ;;; Open with external tools
 (defun xah-open-in-external-app (&optional @fname)
@@ -2743,17 +2780,17 @@ Version 2019-01-18"
         (evil-org-set-key-theme)
         (require 'evil-org-agenda)
         (evil-org-agenda-set-keys)
-        (evil-define-key 'normal evil-org-mode-map
+        (evil-define-key 'normal 'evil-org-mode
           "t" 'org-todo)
-        (evil-define-key 'normal evil-org-mode-map
+        (evil-define-key 'normal 'evil-org-mode
           (kbd "C-j") nil)
-        (evil-define-key 'normal evil-org-mode-map
+        (evil-define-key 'normal 'evil-org-mode
           (kbd "C-S-<return>") (evil-org-define-eol-command ponelat/org-insert-child-headline))
-        (evil-define-key 'insert evil-org-mode-map
+        (evil-define-key 'insert 'evil-org-mode
           (kbd "C-S-<return>") (evil-org-define-eol-command ponelat/org-insert-child-headline))
-        (evil-define-key 'insert evil-org-mode-map
+        (evil-define-key 'insert 'evil-org-mode
           (kbd "M-h") 'org-metaleft)
-        (evil-define-key 'insert evil-org-mode-map
+        (evil-define-key 'insert 'evil-org-mode
           (kbd "M-l") 'org-metaright))))
   (add-hook 'org-mode-hook 'evil-org-mode))
 
@@ -2882,11 +2919,11 @@ Version 2017-12-27"
 ;; (use-package xmlgen)
 ;; (use-package ocodo-svg-modelines)
 
-(use-package minimal-theme)
+(use-package minimal-theme
+  :disabled)
+
 (use-package mood-line
   :config (mood-line-mode))
-
-
 
 ;; "gh" is from http://www.greghendershott.com/2017/02/emacs-themes.html
 (defvar gh/theme-hooks nil
@@ -3013,9 +3050,50 @@ Version 2017-12-27"
     `(company-tooltip-selection ((,class (:background ,gray-3bg :weight bold)))))))
 ;; Provides leuven which is good for daylight coding
 
+;;; for zerodark - markup/adoc
+(defun ponelat/markup-fonts ()
+  "It changes the faces in zerodark them for markup and adoc."
+  (interactive)
+
+    (let* ((variable-tuple
+             (cond ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
+               ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+               ((x-list-fonts "Noto Sans")         '(:font "Noto Sans"))
+               ((x-list-fonts "Verdana")         '(:font "Verdana"))
+               ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
+               (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+            (fixed-tuple
+              (cond ((x-list-fonts "Noto Mono") '(:font "Noto Mono"))
+                (nil (warn "Cannot find a Sans Serif Font.  Install Noto Sans"))))
+            (base-font-color     (face-foreground 'default nil 'default))
+            (headline           `(:inherit default :foreground ,base-font-color)))
+      (progn
+        (custom-theme-set-faces
+          'user
+          `(variable-pitch ((t ( ,@variable-tuple :height ,(face-attribute 'default :height) :weight light))))
+          `(fixed-pitch    ((t ( ,@fixed-tuple :slant normal :weight normal :height ,(face-attribute 'default :height) :width normal)))))
+
+        (custom-theme-set-faces
+          'user
+          `(markup-gen-face ((t (,@headline ,@variable-tuple :height 1.0))))
+          `(markup-title-0-face ((t (,@headline ,@variable-tuple :height 1.0))))
+          `(markup-typewriter-face ((t (,@headline ,@variable-tuple :height 1.0))))
+          `(markup-verbatim-face ((t (,@headline ,@variable-tuple :height 1.0))))
+          ))))
+
+
+
+
+
 (use-package zerodark-theme
-  :defer t
+  :config
+  (setq
+    zerodark-buffer-coding nil
+    zerodark-use-paddings-in-mode-line nil
+    )
   )
+
+
 
 (use-package gruvbox-theme
   :defer t
@@ -3107,7 +3185,8 @@ Version 2017-12-27"
 (defvar ponelat:theme-window-loaded nil "A flag used to indicate that the GUI theme got loaded.")
 (defvar ponelat:theme-terminal-loaded nil "A flag used to indicate that the Terminal theme got loaded.")
 ;; (defvar ponelat:theme 'gruvbox-dark-medium "The initial theme.")
-(defvar ponelat:theme 'gruvbox-dark-hard "The initial theme.")
+;; (defvar ponelat:theme 'gruvbox-dark-hard "The initial theme.")
+(defvar ponelat:theme 'zerodark "The initial theme.")
 
 ;; Due to starting a daemon at the same time as our client
 ;; The follow code exists to ensure that the theme is loaded at the right time.
@@ -3635,6 +3714,14 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "M-h" 'org-promote-subtree)
 
 
+   (general-define-key
+    :keymaps 'org-journal
+     "C-," nil)
+
+   (general-define-key
+    :keymaps 'override
+    "M-u" 'evil-scroll-up)
+
   (general-def 'insert
     "C-x C-l" #'ponelat/expand-lines)
 
@@ -3647,6 +3734,10 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "ga" '(:wk "avy")
      "gas" #'avy-goto-char-timer)
 
+  (general-define-key
+    :states 'normal
+    :keymaps 'tide-mode-map
+    "C-c C-c" 'flycheck-buffer)
 
   (general-define-key
    "C-S-l" #'evil-window-right
