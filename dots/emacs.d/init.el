@@ -4,6 +4,12 @@
 ;;; Commentary:
 ;;; Code:
 
+;;; Custom variables stored here...
+(setq emacs-dir "~/.emacs.d")
+(setq custom-file (concat emacs-dir "/custom.el"))
+(add-to-list 'load-path "~/.emacs.d/custom")
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -17,31 +23,6 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-;;; Custom variables stored here...
-(setq emacs-dir "~/.emacs.d")
-(setq custom-file (concat emacs-dir "/custom.el"))
-
-(defun imenu-fn ()
-  (call-interactively #'counsel-imenu))
-
-;; Add custom files
-;; Be sure to run "rcup" for stuff you've added to projects/dotfiles to show up here
-(add-to-list 'load-path "~/.emacs.d/custom")
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-
-;; Allows use to create closures for functions ( in my case, for sentinel callbacks )
-(setq lexical-binding t)
-(windmove-default-keybindings)
-(auto-image-file-mode 1)
-(electric-pair-mode t)
-
-;;; init.el helpers
-
-
-(defmacro comment (&rest body)
-  "Comment out sexp (BODY)."
-  nil)
-
 ;;;;;;;;;; Packages ...
 ;; Install `use-package'
 (straight-use-package 'use-package)
@@ -52,6 +33,19 @@
 
 ;; Load org quickly! Before it could be loaded by some nafarious package, breaking it from straight.el
 (straight-use-package 'org)
+
+(setq lexical-binding t)
+(windmove-default-keybindings)
+(auto-image-file-mode 1)
+(electric-pair-mode t)
+;;; init.el helpers
+
+(defun imenu-fn ()
+  (call-interactively #'counsel-imenu))
+
+(defmacro comment (&rest body)
+  "Comment out sexp (BODY)."
+  nil)
 
 ;; Disable
 (defun ponelat/toggle-trace-request ()
@@ -764,9 +758,6 @@ Version 2017-01-11"
       ("C-x t C-t" . treemacs-find-file)
       ("C-x t M-t" . treemacs-find-tag)))
 
-  (use-package treemacs-evil
-    :after treemacs evil)
-
   (use-package treemacs-projectile
     :after treemacs projectile)
 
@@ -810,7 +801,8 @@ Version 2017-01-11"
   :init
   (setq
     evil-want-keybinding nil
-    evil-want-integration t)
+    evil-want-integration t
+    evil-undo-system 'undo-redo)
   :config
   (progn
     (evil-mode)
@@ -823,6 +815,9 @@ Version 2017-01-11"
     (define-key evil-insert-state-map "\C-k" nil)
     (define-key evil-normal-state-map "\M-." nil)
     (define-key evil-normal-state-map "go" 'org-open-at-point-global)))
+
+(use-package treemacs-evil
+  :after treemacs evil)
 
 (use-package evil-numbers
   :config (progn (global-set-key (kbd "C-c +") 'evil-numbers/inc-at-pt)
@@ -1837,6 +1832,74 @@ eg: /one/two => two
             (ponelat/get-links (projectile-project-root)))))
   (ponelat/npm-unlink (projectile-project-root) link-path))
 
+;;; fasd, files, recent
+(use-package fasd
+  :config
+  (global-fasd-mode 1))
+
+;;; Ivy, counsel, swiper
+(setq enable-recursive-minibuffers t)
+
+(use-package ivy
+  :diminish (ivy-mode . "")
+  :bind (("C-s" . swiper))
+  :config
+  (progn
+  ;; (ivy-mode 1)
+  ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
+  (setq ivy-use-virtual-buffers t)
+  ;; number of result lines to display
+  (setq ivy-height 30)
+  ;; does not count candidates
+  (setq ivy-count-format "(%d/%d) ")
+  ;; no regexp by default
+  (setq ivy-initial-inputs-alist nil)
+  ;; configure regexp engine.
+  (setq ivy-re-builders-alist
+    ;; allow input not in order
+    '((t   . ivy--regex-ignore-order)))
+  (progn
+
+    (define-key swiper-map [(control ?w)] 'backward-kill-word)
+    (define-key swiper-map [(control ?j)] 'next-line)
+    (define-key swiper-map [(control ?k)] 'previous-line))
+
+    (define-key ivy-minibuffer-map [(control ?w)] 'backward-kill-word)
+    (define-key ivy-minibuffer-map [(control ?e)] 'end-of-line)
+    (define-key ivy-minibuffer-map [(control ?a)] 'beginning-of-line)
+    (define-key ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
+    (define-key ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
+
+    (define-key ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
+    (define-key ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
+    (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
+    (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+
+    ;; (evil-define-key 'insert ivy-minibuffer-map [(control ?')] 'ivy-avy)
+
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?e)] #'end-of-line)
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?')] #'ivy-avy)
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?a)] #'beginning-of-line))
+  (ivy-mode 1))
+
+(use-package counsel
+  :ensure t
+  :bind("M-i" . counsel-imenu)
+  :config
+  (counsel-mode t)
+  (setq ivy-initial-inputs-alist nil))
+
+(progn
+  (use-package prescient)
+  (use-package ivy-prescient
+    :config
+    (ivy-prescient-mode 1)))
+
 ;;; Projects
 (use-package projectile
   :diminish projectile
@@ -1860,60 +1923,6 @@ eg: /one/two => two
   :config
   (counsel-projectile-mode 1))
 
-;;; fasd, files, recent
-(use-package fasd
-  :config
-  (global-fasd-mode 1))
-
-;;; Ivy, counsel, swiper
-(setq enable-recursive-minibuffers t)
-
-(use-package ivy
-  :diminish (ivy-mode . "")
-  :bind (("C-s" . swiper))
-  :config
-  (progn
-    (define-key swiper-map [(control ?w)] 'backward-kill-word)
-    (define-key swiper-map [(control ?j)] 'next-line)
-    (define-key swiper-map [(control ?k)] 'previous-line))
-  ;; (ivy-mode 1)
-  ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
-  (setq ivy-use-virtual-buffers t)
-  ;; number of result lines to display
-  (setq ivy-height 30)
-  ;; does not count candidates
-  (setq ivy-count-format "(%d/%d) ")
-  ;; no regexp by default
-  (setq ivy-initial-inputs-alist nil)
-  ;; configure regexp engine.
-  (setq ivy-re-builders-alist
-    ;; allow input not in order
-    '((t   . ivy--regex-ignore-order)))
-  (progn
-    (define-key ivy-minibuffer-map [(control ?w)] 'backward-kill-word)
-    (define-key ivy-minibuffer-map [(control ?e)] 'end-of-line)
-    (define-key ivy-minibuffer-map [(control ?a)] 'beginning-of-line)
-    (define-key ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
-    (define-key ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
-
-    (define-key ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
-    (define-key ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
-
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
-    (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
-
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?e)] #'end-of-line)
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?')] #'ivy-avy)
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?a)] #'beginning-of-line))
-  (ivy-mode 1))
-
-(use-package counsel
-  :ensure t
-  :bind("M-i" . counsel-imenu)
-  :config
-  (counsel-mode t)
-  (setq ivy-initial-inputs-alist nil))
-
 (setq smerge-command-prefix "\C-cv")
 
 (defun ponelat/reset-head-soft ()
@@ -1933,8 +1942,6 @@ eg: /one/two => two
   (progn
     (magit-define-popup-switch 'magit-log-popup ?f "first parent" "--first-parent")
     (setq magit-list-refs-sortby "-creatordate")))
-
-(use-package evil-magit)
 
 ;;; GhostText, browser, live
 (use-package atomic-chrome
@@ -2242,12 +2249,19 @@ eg: /one/two => two
          ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
            "* LOOSE %?\n  %i\n  %a")))))
 
+(use-package org-journal
+  :custom
+  (org-journal-date-prefix "#+TITLE: ")
+  (org-journal-file-format "%Y-%m-%d.org")
+  (org-journal-dir ponelat/org-roam-dir)
+  (org-journal-date-format "%A, %d %B %Y"))
+
 (use-package ox-reveal
   :config
   (setq org-reveal-root "file:///home/josh/revealjs"))
 
 ;;; Org Trello
-(use-package org-trello)
+;; (use-package org-trello)
 
 (use-package org-download)
 
@@ -2393,24 +2407,19 @@ is positive, move after, and if negative, move before."
     (org-export-json)))
 
 
-(use-package org-journal
-  :custom
-  (org-journal-date-prefix "#+TITLE: ")
-  (org-journal-file-format "%Y-%m-%d.org")
-  (org-journal-dir ponelat/org-roam-dir)
-  (org-journal-date-format "%A, %d %B %Y"));;; Helper functions
-
 ;;; Helper functions
+;;; Helper functions
+
 (defun ponelat/link-at-point ()
-  "It uses org-mode functions to get link at point."
+  "It uses org-mode functions to get link at point. ff"
   (cond
    ((org-in-regexp org-plain-link-re)
     (buffer-substring
      (match-beginning 0)
-     (match-end 0)))))
-
+      (match-end 0)))))
 ;;; PDFs / doc view
- (progn
+
+(progn
    (setq doc-view-continuous nil)
    (evil-define-key 'normal doc-view-mode-map "j" (lambda () (interactive) (doc-view-scroll-down-or-previous-page 1)))
 
@@ -2428,13 +2437,12 @@ is positive, move after, and if negative, move before."
        (setq pdf-annot-activate-created-annotations t)
        ;; use normal isearch
        (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))))
+ ;;; External Org mode, Office, Gmail
 
-;;; External Org mode, Office, Gmail
 (defun ponelat/get-office-data ()
   (interactive)
   "Get Office evnets for the week"
   (shell-command "n use 8.9.1 ~/projects/scripts/microsoft-graph-client/get-event-data.js" "*Import Office365 Events*"))
-
 (defun ponelat/get-all-data ()
   "Gets all external org data."
   (interactive)
@@ -2455,21 +2463,22 @@ is positive, move after, and if negative, move before."
   (shell-command "source ~/.env && ical2org-pto.awk <(curl -Ls -o - $ICAL_PTO) > ~/Dropbox/org/ical-pto.org" "*Importing Confluence PTO Calendar*"))
 
 ;;; Org mode helpers
+
 (defun ponelat/org-insert-child-headline ()
   "It inserts a child headline ( ie: Lower than the current."
   (interactive)
   (org-insert-heading-respect-content)
   (org-demote)
   (call-interactively 'evil-insert))
-
 ;;; Ox / Org Mode Exporters
-(use-package ox-jira)
 
+(use-package ox-jira)
 (use-package ox-slack)
 
 (require 'ox-pointy)
 
 ;;; Open with external tools
+
 (defun xah-open-in-external-app (&optional @fname)
   "Open the current file or dired marked files in external app.
 The app is chosen from your OS's preference.
@@ -2504,8 +2513,7 @@ Version 2019-01-18"
         (mapc
          (lambda ($fpath) (let ((process-connection-type nil))
                        (start-process "" nil "xdg-open" $fpath))) $file-list))))))
-
- ;; (use-package openwith
+;; (use-package openwith
  ;;  :config
  ;;  (progn
  ;;     (setq openwith-associations
@@ -2517,7 +2525,7 @@ Version 2019-01-18"
  ;;    (openwith-mode 1))
  ;;  )
 
-(defun ponelat/open-notes (filename)
+ (defun ponelat/open-notes (filename)
   "Open the default FILENAME from default org dir."
   (interactive)
   (find-file (concat org-directory "/" filename)))
@@ -2544,7 +2552,7 @@ Version 2019-01-18"
                 (url (concat "https://smartbear.atlassian.net/browse/" (url-encode-url (upcase shub)))))
            (browse-url url)))))
 
- (use-package evil-org
+(use-package evil-org
   :after org
   :config
   (add-hook 'evil-org-mode-hook
@@ -2567,14 +2575,14 @@ Version 2019-01-18"
           (kbd "M-l") 'org-metaright))))
   (add-hook 'org-mode-hook 'evil-org-mode))
 
-;; TODO: fix this
+ ;; TODO: fix this
+
 (defun ponelat/archive (type)
   "Archive all TODOs with TYPE."
   (interactive
     (list
       (completing-read "Choose type: " (ponelat/org-todo-keywords))))
   (org-map-entries 'org-archive-subtree (format "/%s" type) 'agenda))
-
 (comment use-package org-pomodoro
 
   :commands (org-pomodoro)
@@ -2592,24 +2600,23 @@ Version 2019-01-18"
     ))
 
 ;;; Package stuff
+
 (defun package-menu-find-marks ()
   "Find packages marked for action in *Packages*."
   (interactive)
   (occur "^[A-Z]"))
-
 ;; Only in Emacs 25.1+
+
 (defun package-menu-filter-by-status (status)
   "Filter the *Packages* buffer by status."
   (interactive
    (list (completing-read
            "Status: " '("new" "installed" "dependency" "obsolete"))))
   (package-menu-filter (concat "status:" status)))
-
 (define-key package-menu-mode-map "s" #'package-menu-filter-by-status)
+
 (define-key package-menu-mode-map "a" #'package-menu-find-marks)
 ;;; Run current file
-
-
 (defun xah/run-this-file-fn (filename)
   "Execute FILENAME
 The file can be Emacs Lisp, PHP, Perl, Python, Ruby, JavaScript, TypeScript, Bash, Ocaml, Visual Basic, TeX, Java, Clojure.
@@ -2664,6 +2671,7 @@ Version 2017-12-27"
               (async-shell-command -cmd-str "*Run this*"))
           (message "No recognized program file suffix for this file."))))))
 
+
 (defun xah/run-this-file ()
   "Execute the current file.
 For example, if the current buffer is x.py, then it'll call 「python x.py」 in a shell.
@@ -2692,20 +2700,19 @@ Version 2017-12-27"
 ;; (use-package xmlgen)
 ;; (use-package ocodo-svg-modelines)
 
-(use-package minimal-theme
-  :disabled)
+;; (use-package minimal-theme
+;;   :disabled)
 
 (use-package mood-line
   :config (mood-line-mode))
 
 ;; "gh" is from http://www.greghendershott.com/2017/02/emacs-themes.html
+
 (defvar gh/theme-hooks nil
   "((theme-id . function) ...)")
-
 (defun gh/add-theme-hook (theme-id hook-func)
   "Add (THEME-ID . HOOK-FUNC) to 'gh/theme-hooks'."
   (add-to-list 'gh/theme-hooks (cons theme-id hook-func)))
-
 
 (defun gh/load-theme-advice (f theme-id &optional no-confirm no-enable &rest args)
   "Enhances `load-theme' in two ways:
@@ -2719,9 +2726,11 @@ Version 2017-12-27"
         (pcase (assq theme-id gh/theme-hooks)
           (`(,id . ,f) (funcall f id)))))))
 
+
 (advice-add 'load-theme :around #'gh/load-theme-advice)
 
 ;;; Faces, font, style
+
 (defun ponelat/face-extras ()
   "Change some faces, regardless of theme.  To my liking."
   (interactive)
@@ -2730,7 +2739,6 @@ Version 2017-12-27"
       (set-face-attribute 'org-hide nil :foreground bg-color :background bg-color)
       (set-face-attribute 'org-code nil :foreground (face-attribute 'org-formula :foreground))
       (set-face-attribute 'fringe nil :foreground bg-color :background bg-color))))
-
 (defun ponelat/add-frame-padding (&optional PREFIX)
   "Add a padding to frame.  Will give options when used with PREFIX.  "
   (interactive "P")
@@ -2821,6 +2829,7 @@ Version 2017-12-27"
     `(company-tooltip-common-selection ((,class (:foreground ,gray-1 :background ,gray-1bg))))
     `(company-tooltip-mouse ((,class (:inherit highlight))))
     `(company-tooltip-selection ((,class (:background ,gray-3bg :weight bold)))))))
+
 ;; Provides leuven which is good for daylight coding
 
 ;;; for zerodark - markup/adoc
@@ -2866,33 +2875,30 @@ Version 2017-12-27"
     )
   )
 
+;; (use-package gruvbox-theme
+;;   :defer t
+;;   )
 
+;; (use-package soothe-theme
+;;   :defer t
+;;   :config
+;;   (progn
+;;     (gh/add-theme-hook
+;;       'soothe
+;;       (lambda (a) (ponelat/theme-soothe-extras)))))
 
-(use-package gruvbox-theme
-  :defer t
-  )
-
-(use-package soothe-theme
-  :defer t
-  :config
-  (progn
-    (gh/add-theme-hook
-      'soothe
-      (lambda (a) (ponelat/theme-soothe-extras)))))
-
-(use-package solarized-theme
-  :defer t)
+;; (use-package solarized-theme
+;;   :defer t)
 
 ;; (with-eval-after-load 'zerodark-theme ())
 ;; This can only run in window mode...
-(use-package org-beautify-theme
-  :defer t
-  )
 
-(use-package sublime-themes
-  :defer t
-  :disabled t
-  )
+(use-package org-beautify-theme :defer t)
+
+;; (use-package sublime-themes
+;;   :defer t
+;;   :disabled t
+;;   )
 
 (use-package org-bullets
 
@@ -3304,7 +3310,9 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "s" #'save-buffer
      "l" #'avy-goto-line
      "j" #'counsel-M-x
-     "b" #'counsel-buffer-or-recentf
+     "b" #'ivy-switch-buffer
+     "a" #'counsel-rg
+
      ;; "s" #'avy-goto-char-2
      "fe" #'flycheck-list-errors
      "ff" #'find-file
@@ -3511,6 +3519,6 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
 ;;; Custom.el file
 (load custom-file 'noerror)
+(put 'narrow-to-region 'disabled nil)
 ;;; init.el ends here
 (provide 'init)
-(put 'narrow-to-region 'disabled nil)
