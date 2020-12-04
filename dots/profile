@@ -52,6 +52,7 @@ done
 [ -d "$HOME/go/bin" ] && PATH="$PATH:$HOME/go/bin"
 [ -d "$HOME/.cargo/bin" ] && PATH="$PATH:$HOME/.cargo/bin"
 [ -d "$HOME/.nix-profile/bin" ] && PATH="$PATH:$HOME/.nix-profile/bin"
+[ -d "/snap/bin" ] && PATH="$PATH:/snap/bin"
 
 export PATH=$PATH
 
