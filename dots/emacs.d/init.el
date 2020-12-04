@@ -21,6 +21,9 @@
 (setq emacs-dir "~/.emacs.d")
 (setq custom-file (concat emacs-dir "/custom.el"))
 
+(defun imenu-fn ()
+  (call-interactively #'counsel-imenu))
+
 ;; Add custom files
 ;; Be sure to run "rcup" for stuff you've added to projects/dotfiles to show up here
 (add-to-list 'load-path "~/.emacs.d/custom")
@@ -79,6 +82,9 @@
 ;; (use-package ssh-mode
 ;;   )
 
+;;; Authentication, ssh, gpg
+(setq auth-source '("~/.authinfo.gpg" "~/.authinfo" "~/.netrc"))
+
 ;;; Macrostep
 (use-package macrostep)
 
@@ -119,7 +125,7 @@
 (global-set-key  (kbd "C-x RET RET") (lambda () (interactive) (revert-buffer t t nil)))
 
 (defun ponelat/copy-file-from-downloads ()
-  "It copies a file from ~/Downloads, using Helm."
+  "It copies a file from ~/Downloads."
   (interactive)
   (let* ((file-to-copy (read-file-name "File to copy: " "~/Downloads/"))
           (directory default-directory)
@@ -152,7 +158,7 @@
   (interactive "P")
   (find-file-existing "~/projects/dotfiles/dots/emacs.d/init.el")
   (widen)
-  (helm-imenu)
+  (imenu-fn)
   (if p (init-narrow-to-section)))
 
 (defun init-imenu (p)
@@ -160,7 +166,7 @@
   (interactive "P")
   (find-file-existing "~/.emacs.d/init.el")
   (widen)
-  (helm-imenu)
+  (imenu-fn)
   (if p (init-narrow-to-section)))
 
 (defun init-narrow-to-section ()
@@ -1127,9 +1133,6 @@ Version 2017-01-11"
 
 (use-package rg)
 
-;; (use-package helm-rg)
-
-
 ;;; Clipboard
 
 ;; https://hugoheden.wordpress.com/2009/03/08/copypaste-with-emacs-in-terminal/
@@ -1418,6 +1421,9 @@ Will use `projectile-default-project-name' .rest as the file name."
     (setq js2-mode-show-strict-warnings nil)
     (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
 
+;; Javascript
+(use-package indium)
+
 (comment use-package mocha
   (progn
     (define-key js2-mode-map  (kbd "C-c C-t f") 'mocha-test-file)
@@ -1535,27 +1541,6 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
   (define-key rjsx-mode-map (kbd "C-c r") #'rjsx-rename-tag-at-point)
   )
 
-(use-package indium
-  )
-
-(defun ponelat/find-incoming-js-imports (project filename)
-  "Find all files within PROJECT, that import the FILENAME, and present a helm buffer to jump to."
-  (interactive)
-  ;; get regexp results ( from within project )
-  ;; (Combine multiple results?)
-  ;; Display in helm buffer
-  ;; TODO Sunday-funday
-  t)
-
-;;; Scaffolding, scaffolds
-;;  Writing CPS style code
-
-;; (defmacro with-process-shell-command (name buffer command &rest sentinel-forms)
-;;   "Run a process, with the given sentinel.\nProccess args are NAME BUFFER COMMAND and SENTINEL-FORMS."
-;;   `(let ((proc (start-process-shell-command ,name ,buffer ,command)))
-;;      (let ((sentinel-cb (lambda (process signal)
-;;                           ,@sentinel-forms)))
-;;        (set-process-sentinel proc sentinel-cb))))
 
 (defun create-react-app ()
   "Create a react app, by unzipping a .tar.gz into ~/projects/NAME, firing up the server and opening src/App.js."
@@ -1827,38 +1812,6 @@ eg: /one/two => two
   (let ((ip-addr (read-from-minibuffer "IPv4 of VM: ")))
     (async-shell-command (format "~/bin/get-hostnames.sh %s" ip-addr))))
 
-(defun ponelat/helm-npm-run ()
-  "Run npm-run, from the helm projectile buffer."
-  (interactive)
-  (helm-exit-and-execute-action #'ponelat/npm-run))
-
-(defun ponelat/helm-project-run ()
-  "Run `ponelat/project-run', from the helm projectile buffer."
-  (interactive)
-  (helm-exit-and-execute-action #'ponelat/project-run))
-
-(defun ponelat/helm-npm-install ()
-  "Run npm-install-save, from the helm projectile buffer."
-  (interactive)
-  (helm-exit-and-execute-action #'ponelat/npm-install))
-
-(defun ponelat/helm-restclient ()
-  "Load the restclient file for the project."
-  (interactive)
-  (helm-exit-and-execute-action #'ponelat/jump-to-restclient))
-
-(defun ponelat/helm-npm-clone-and-link ()
-  "Run npm-clone-and-link, from the helm projectile buffer."
-  (interactive)
-  (helm-exit-and-execute-action #'ponelat/npm-clone-and-link))
-
-(comment defun ponelat/helm-get-env ()
-  "Get a secret from .env file and yank into clipboard."
-  (interactive)
-  (with-temp-buffer
-    (insert-file-contents "~/.env")
-    (keep-lines "(:alphanum:)+=(:alphanum:)")))
-
 (defun ponelat/projectile-npm-run ()
   "Run an npm command in the current project."
   (interactive)
@@ -1868,14 +1821,6 @@ eg: /one/two => two
   "Run build command in the current project."
   (interactive "P")
   (ponelat/project-run prefix (projectile-project-root)))
-
-;; (defun ponelat/test-universal (prefix)
-;;   "It does something"
-;;   (interactive "P")
-;;   (if prefix
-;;     (message "Prefix!")
-;;     (message "Not prefix.")))
-
 
 (defun ponelat/projectile-npm-link (link-path)
   "Run an npm link against LINK-PATH."
@@ -1892,136 +1837,34 @@ eg: /one/two => two
             (ponelat/get-links (projectile-project-root)))))
   (ponelat/npm-unlink (projectile-project-root) link-path))
 
-(defun ponelat/helm-ag-do ()
-  "Run npm-run, from the helm projectile buffer."
-  (interactive)
-  (helm-exit-and-execute-action #'helm-do-ag))
-
 ;;; Projects
 (use-package projectile
-  :init
   :diminish projectile
   :config
   (progn
-    (projectile-mode)
+    (setq
+        projectile-completion-system 'ivy
+        ;; projectile-sort-order 'recently-active
+        ;; projectile-dynamic-mode-line t
+      ;; projectile-indexing-method 'hybrid
+        ;; projectile-mode-line-function '(lambda () (format " [%s]" (projectile-project-name)))
+      )
     (define-key projectile-command-map (kbd "n") #'ponelat/projectile-project-run)
     (global-set-key (kbd "C-j") nil)
-    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)))
-;;; Fuzzy, ido, helm
+    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+    (projectile-mode 1)))
 
-;; (put 'helm-ff-run-open-file-externally 'helm-only t)
-
-(defun ponelat/helm-execute-file ()
-  "Run open file externally command action from `helm-source-find-files'."
-  (interactive)
-  (with-helm-alive-p
-    (helm-exit-and-execute-action #'xah/run-this-file-fn)))
-
-;; From https://www.reddit.com/r/emacs/comments/bxt0cz/helm_and_the_tab_key/
-(progn
-  (defun ponelat/double-flash-mode-line ()
-    "Flash the modeline"
-    (let ((flash-sec (/ 1.0 20)))
-      (invert-face 'mode-line)
-      (run-with-timer flash-sec nil #'invert-face 'mode-line)
-      (run-with-timer (* 2 flash-sec) nil #'invert-face 'mode-line)
-      (run-with-timer (* 3 flash-sec) nil #'invert-face 'mode-line)))
-  (defun ponelat/helm-execute-if-single-persistent-action (&optional attr split-onewindow)
-    "Execute persistent action if the candidate list is less than 2"
-    (interactive)
-    (with-helm-alive-p
-      (if (> (helm-get-candidate-number) 2)
-        (ponelat/double-flash-mode-line)
-        (helm-execute-persistent-action)))))
-
-(use-package helm
-  :defines helm-mode-fuzzy-match helm-completion-in-region-fuzzy-match helm-M-x-fuzzy-match
-  :diminish helm-mode
-  :bind (("M-x" . helm-M-x))
-  ;; :bind* (:map helm-map
-  ;;          ([tab] . ponelat/helm-execute-if-single-persistent-action)
-  ;;          ("C-i" . ponelat/helm-execute-if-single-persistent-action))
-
+;;; Fuzzy, ido
+(use-package counsel-projectile
+  :ensure t
   :config
-  (progn
-    (setq helm-adaptive-history-file (concat emacs-dir "/helm-adaptive-history.el"))
-    (helm-adaptive-mode)
-    (setq helm-mode-fuzzy-match t
-      helm-completion-in-region-fuzzy-match t
-      helm-buffer-max-length 40)
-    (define-key helm-map [(control ?w)] 'backward-kill-word)
-    (define-key helm-map [(control ?j)] 'helm-next-line)
-    (define-key helm-map [(control ?k)] 'helm-previous-line)
-    ;; This allows TAB to complete folder/filenames when writing files (ie: C-x C-w) and still using helm
-    (define-key helm-map (kbd "TAB") #'helm-execute-persistent-action)
-    (define-key helm-map (kbd "<tab>") #'helm-execute-persistent-action)
-;;; Show helm action
-    (define-key helm-map (kbd "C-SPC") #'helm-select-action)
-    (helm-mode)))
-
-(use-package helm-chrome-history)
-
-(use-package helm-ls-git)
-
-(use-package helm-projectile
-
-  :defer 1
-  :config
-  (progn
-    (helm-projectile-on)
-
-    (defun ponelat/find-dir (path)
-      (find-file
-        (file-name-directory path)))
-
-    (defun ponelat/helm-projectile-find-dir-action
-      (project)
-      (let ((projectile-completion-system 'helm)
-             ;;  Hack, override the  default switch project action
-             (projectile-switch-project-action #'projectile-find-dir))
-        (projectile-switch-project-by-name project)))
-
-    (helm-add-action-to-source "Find dir in project `C-c d'" #'ponelat/helm-projectile-find-dir-action helm-source-projectile-projects)
-
-
-    (helm-projectile-define-key helm-projectile-projects-map (kbd "C-c g") #'helm-projectile-vc)
-    (helm-projectile-define-key helm-projectile-projects-map (kbd "C-c d") #'ponelat/helm-projectile-find-dir-action)
-    (helm-projectile-define-key helm-projectile-find-file-map (kbd "C-d") #'helm-point-file-in-dired)
-    (define-key helm-projectile-projects-map (kbd "C-l") #'ponelat/helm-npm-run)
-    (define-key helm-projectile-projects-map (kbd "C-p") #'ponelat/helm-project-run)
-    (define-key helm-projectile-projects-map (kbd "C-c n") #'ponelat/helm-npm-install)
-    (define-key helm-projectile-projects-map (kbd "C-c r") #'ponelat/helm-restclient)
-    (define-key helm-projectile-projects-map (kbd "C-c l") #'ponelat/helm-npm-clone-and-link)
-    (define-key helm-projectile-find-file-map (kbd "C-x C-x") #'ponelat/helm-execute-file)
-    (define-key helm-projectile-projects-map (kbd "C-a") #'ponelat/helm-ag-do)))
-
-
-(use-package helm-ag
-  )
-
-(use-package helm-fuzzier
-
-  :config
-  (progn
-    (helm-fuzzier-mode 1)))
-
-(defun helm-buffer-switch-to-new-window (_candidate)
-  "Display buffers in new windows."
-  ;; Select the bottom right window
-  (require 'winner)
-  (select-window (car (last (winner-sorted-window-list))))
-  ;; Display buffers in new windows
-  (dolist (buf (helm-marked-candidates))
-    (select-window (split-window-right))
-    (switch-to-buffer buf))
-  ;; Adjust size of windows
-  (balance-windows))
+  (counsel-projectile-mode 1))
 
 ;;; fasd, files, recent
 (use-package fasd
   :config
-  (global-fasd-mode 1)
-  )
+  (global-fasd-mode 1))
+
 ;;; Ivy, counsel, swiper
 (setq enable-recursive-minibuffers t)
 
@@ -2037,54 +1880,39 @@ eg: /one/two => two
   ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
   (setq ivy-use-virtual-buffers t)
   ;; number of result lines to display
-  (setq ivy-height 10)
+  (setq ivy-height 30)
   ;; does not count candidates
-  (setq ivy-count-format "")
+  (setq ivy-count-format "(%d/%d) ")
   ;; no regexp by default
   (setq ivy-initial-inputs-alist nil)
   ;; configure regexp engine.
   (setq ivy-re-builders-alist
-	;; allow input not in order
-        '((t   . ivy--regex-ignore-order))))
+    ;; allow input not in order
+    '((t   . ivy--regex-ignore-order)))
+  (progn
+    (define-key ivy-minibuffer-map [(control ?w)] 'backward-kill-word)
+    (define-key ivy-minibuffer-map [(control ?e)] 'end-of-line)
+    (define-key ivy-minibuffer-map [(control ?a)] 'beginning-of-line)
+    (define-key ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
+    (define-key ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
 
-;;; Jenkins, custom scripts
-(defun ponelat/jenkins-custom-frontend ()
-  "It builds a custom docker image in Jenkins."
-  (interactive)
-  (if (string-equal "/home/josh/projects/swaggerhub-frontend/" (projectile-project-root))
-    (let* ((branch (completing-read "Branch: " (vc-git-branches)))
-            (default-tag (replace-regexp-in-string "release/\\(.*\\)" "\\1"
-                    (replace-regexp-in-string ".*\\(sdes-[0-9]+\\).*" "\\1"
-                      branch)))
-            (tag (read-string "Docker tag: " default-tag))
-            (cmd (format "/home/josh/bin/jenkins-custom-sdes.sh '%s' '%s'" branch tag)))
-      (if (y-or-n-p (format "Wanna run the job %s?" cmd))
-        (shell-command cmd)))
-    (message "I only work with swaggerhub-frontend repo")))
+    (define-key ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
+    (define-key ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
 
-(defun ponelat/jenkins-demo-steam ()
-  "It builds a custom demo image in Jenkins."
-  (interactive)
-  (if (string-equal "/home/josh/projects/swaggerhub-frontend/" (projectile-project-root))
-    (let* ((branch (completing-read "Branch: " (vc-git-branches)))
-            (tag (completing-read "STEAM: " '("steam-1" "steam-2" "steam-3" "steam-4")))
-            (dns (read-string "DNS: " tag))
-            (cmd (format "/home/josh/bin/jenkins-steam-demo.sh '%s' '%s' '%s'" branch tag dns)))
-      (if (y-or-n-p (format "Wanna run the job %s?" cmd))
-        (shell-command cmd)))
-    (message "I only work with swaggerhub-frontend repo")))
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
+    (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
 
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?e)] #'end-of-line)
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?')] #'ivy-avy)
+    (evil-define-key 'insert ivy-minibuffer-map [(control ?a)] #'beginning-of-line))
+  (ivy-mode 1))
 
-;;; Kubernetes
-(use-package kubernetes
-  :commands (kubernetes-overview)
-  :config (setq kubernetes-poll-frequency 3600
-            kubernetes-redraw-frequency 3600))
-
-;; If you want to pull in the Evil compatibility package.
-(use-package kubernetes-evil
-  :config (require 'kubernetes-evil)
-  :after kubernetes)
+(use-package counsel
+  :ensure t
+  :bind("M-i" . counsel-imenu)
+  :config
+  (counsel-mode t)
+  (setq ivy-initial-inputs-alist nil))
 
 (setq smerge-command-prefix "\C-cv")
 
@@ -2098,8 +1926,6 @@ eg: /one/two => two
   (interactive)
   (if (y-or-n-p (format "Are you sure you want to wipe out your changes in %s? " buffer-file-name))
     (magit-file-checkout "HEAD" buffer-file-name)))
-
-(setq auth-source '("~/.authinfo.gpg" "~/.authinfo" "~/.netrc"))
 
 ;;; Git, magit
 (use-package magit
@@ -2268,53 +2094,6 @@ eg: /one/two => two
           (titles-list (cdr (car (cdr imenu-data))))
           (titles (mapcar (lambda (title-thing) (car title-thing)) titles-list)))
     (pp (kill-new (format "%s" (string-join titles "\n"))))))
-;;; Quick build
-(defvar ponelat/quick-build-alist '(("api-book" . ponelat/quick-build-api-book)
-                                     ("dotfiles" . (lambda () "hello")))
-  "A list of quick-build mappings. Used by `ponelat/quick-build'")
-
-(setq ponelat/quick-build-alist '(("api-book" . ponelat/quick-build-api-book)
-                                   ("dotfiles" . (lambda () "hello"))
-                                   (josh . hezz)))
-
-(defun ponelat/quick-build-get-project-type (&optional NAME)
-  "Get the project type based on NAME or `projectile-project-name'."
-  (or NAME (projectile-project-name)))
-
-(defun ponelat/quick-build (&optional PREFIX)
-  "Run a compile/build step from the `ponelat/quick-build-alist' variable. Passes PREFIX onto the function to be applied."
-  (interactive "P")
-  (let* ((project (ponelat/quick-build-get-project-type))
-          (project-build-func (alist-get project ponelat/quick-build-alist nil nil #'string-match-p)))
-    (apply project-build-func PREFIX)))
-
-(defun ponelat/quick-build-api-book (&optional PREFIX)
-  "Compiles the current adoc file.  With PREFIX it will compile all PDFs files."
-  (interactive "P")
-  (save-buffer)
-  (shell-command
-    (format "cd %s && ./build.sh %s"
-      (projectile-project-root)
-      (if PREFIX "" (buffer-file-name)))
-    "*QuickBuild*")
-  (kill-buffer "*QuickBuild*")
-  (let* ((pdf-file (replace-regexp-in-string "\\.\\(.*\\)$" ".pdf" (buffer-file-name)))
-          (buf (find-buffer-visiting pdf-file)))
-    (if buf
-      (with-current-buffer buf
-        (revert-buffer t t t)))))
-
-
-
-
-
-(comment
-  (progn
-    (kill-new (replace-regexp-in-string "\\.\\(.*\\)$" ".pdf" "/home/josh/projects/api-book/book/chapters/chapter-08.adoc"))
-
-
-    (shell-command "ls" "Josh")
-    (kill-buffer "Josh")))
 
 ;;; IBM Box symbols
 ;; ┌ ┬ ┐ ├ ┼ ┤ └ ┴ ┘ ─ │
@@ -2613,12 +2392,6 @@ is positive, move after, and if negative, move before."
     (message "Exporting to JSON: %s" (car command-line-args-left))
     (org-export-json)))
 
-
-(use-package helm-org-rifle
-  :config
-  (progn
-    (setq helm-org-rifle-show-path t))
-  )
 
 (use-package org-journal
   :custom
@@ -3317,16 +3090,12 @@ Interactively you can choose the FONT-NAME"
 (bind-key "C-x y" #'eval-buffer)
 
 (bind-key "C-c l l" #'imenu)
-(bind-key "C-c l a" 'helm-org-rifle-agenda-files)
-(bind-key "C-c l o" 'helm-org-rifle)
 
 (bind-key "C-c ;" 'delete-other-windows)
 (bind-key "C-c C-;"
   (lambda () (interactive)
     (delete-window)
     (balance-windows)))
-
-(bind-key "C-c C-a" 'helm-do-ag-project-root)
 
 (bind-key "C-h l" #'find-library)
 (bind-key "C-x a n" #'ponelat/spotify-next)
@@ -3510,7 +3279,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   (general-auto-unbind-keys t)
   )
 
-;;; General
+;;; General, keys
 (progn
   (defconst ponelat/global-leader-key "SPC")
   (defconst ponelat/local-leader-key ",")
@@ -3528,18 +3297,14 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      :prefix ponelat/local-leader-key
      :states '(normal visual))
 
-  (ponelat/global-leader
+   (ponelat/global-leader
      "Q" #'save-buffers-kill-terminal
-
      "p" #'projectile-command-map
-
      "w" #'evil-window-map
-
-     "j" #'helm-M-x
-     "a" #'helm-do-ag-project-root
-     "b" #'helm-buffers-list
      "s" #'save-buffer
      "l" #'avy-goto-line
+     "j" #'counsel-M-x
+     "b" #'counsel-buffer-or-recentf
      ;; "s" #'avy-goto-char-2
      "fe" #'flycheck-list-errors
      "ff" #'find-file
@@ -3548,14 +3313,12 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
 ;;; Open stuff
       "o" '(:wk "open")
-      "ou" '(helm-chrome-history :wk "Chrome")
       "oh" '(ponelat/edit-hosts-file :wk "/etc/hosts")
       "oe" '(ponelat/emacs-lisp-imenu-init :wk "init.el")
       "or" '(ponelat/jump-to-restclient :wk "rest-scratch")
       "od" `(,(lambda () (interactive) (find-file "~/Downloads")) :wk "Downloads")
       "oi" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/i3/config" ponelat/projects-dir))) :wk "i3 config")
       "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
-      "op" `(,(lambda () (interactive) (helm-find-files-1 "~/projects/")))
       ;; "op" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/profile" ponelat/projects-dir))) :wk ".profile")
       "os" `(,(lambda () (interactive) (find-file "~/.ssh/config")) :wk "ssh config")
       "ok" `(,(lambda () (interactive) (find-file "~/.kube/config")) :wk "kube config")
@@ -3578,9 +3341,9 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "co" #'ponelat/emacs-commands-open
 
      ";" #'delete-other-windows
-     "i" #'helm-imenu
+     "i" #'imenu
      "d" #'dired-jump
-    "q" #'quit-window)
+     "q" #'quit-window)
 
 
 ;;; Local keybindings
