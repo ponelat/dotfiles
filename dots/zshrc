@@ -88,6 +88,7 @@ setopt nolistbeep     # No bell on ambiguous completion!!
 ### User credentials (dont check this into your repo)
 . ~/projects/dotfiles/funcs/aliases
 . ~/projects/dotfiles/funcs/funcs
+[[ -e ~/projects/dotfiles/funcs/private ]] && . ~/projects/dotfiles/funcs/private
 
 ## Ruby
 # export RBENV_ROOT="$HOME/.linuxbrew/var/rbenv"

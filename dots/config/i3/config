@@ -225,7 +225,7 @@ bindsym $mod+r mode "resize"
 # Disable window titles
 for_window [class="^.*"] border pixel 0
 # gaps outer 4
-gaps inner 8
+gaps inner 6
 
 # set $mode_gaps Gaps: (o) outer, (i) inner
 # set $mode_gaps_outer Outer Gaps: +|-|0 (local), Shift + +|-|0 (global)

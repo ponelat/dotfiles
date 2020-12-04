@@ -55,4 +55,11 @@ done
 
 export PATH=$PATH
 
+# Android Studio
+[ -d "$HOME/Android/Sdk/platform-tools" ] && PATH="$PATH:$HOME/Android/Sdk/platform-tools"
+[ -d "$HOME/Android/Sdk/emulator/" ] && PATH="$PATH:$HOME/Android/Sdk/emulator"
+export ANDROID_HOME=$HOME/Android/sdk
+export ANDROID_SDK_ROOT=$HOME/Android/sdk
+export ANDROID_AVD_HOME=$HOME/.android/avd
+
 export ETCDCTL_API=3

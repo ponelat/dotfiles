@@ -158,10 +158,11 @@ a communication channel."
      (plain-text . org-josh-plain-text))
 
   :menu-entry
-  '(?s "Export to Slack/Josh syntax"
-       ((?s "To temporary buffer"
-            (lambda (a s v b) (org-josh-export-as-josh a s v)))))
-  )
+  '(?s "Export to Josh syntax"
+       ((?s "buffer - slack"
+          (lambda (a s v b) (org-josh-export-as-josh a s v)))
+         (?n "buffer - numbered"
+          (lambda (a s v b) (org-josh-export-as-josh a s v))))))
 
 (provide 'ox-josh)
 
