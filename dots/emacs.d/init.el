@@ -666,6 +666,9 @@ Version 2017-01-11"
 
 ;;; Dired and Dired hacks (see: https://github.com/Fuco1/dired-hacks)
 
+(setq dired-listing-switches "-alh"
+  dired-recursive-copies "always")
+
 (use-package dired-narrow
   :bind (:map dired-mode-map
           ("C-c s" . dired-narrow)))
@@ -695,6 +698,23 @@ Version 2017-01-11"
     (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
     (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
     (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*")))
+
+(defun xah-dired-sort ()
+  "Sort dired dir listing in different ways.
+Prompt for a choice.
+URL `http://ergoemacs.org/emacs/dired_sort.html'
+Version 2018-12-23"
+  (interactive)
+  (let ($sort-by $arg)
+    (setq $sort-by (ido-completing-read "Sort by:" '( "date" "size" "name" )))
+    (cond
+     ((equal $sort-by "name") (setq $arg "-Al "))
+     ((equal $sort-by "date") (setq $arg "-Al -t"))
+     ((equal $sort-by "size") (setq $arg "-Al -S"))
+     ;; ((equal $sort-by "dir") (setq $arg "-Al --group-directories-first"))
+     (t (error "logic error 09535" )))
+    (dired-sort-other $arg )))
+
 
 ;; (use-package vscode-icon
 ;;   :commands (vscode-icon-for-file))
@@ -948,33 +968,11 @@ Version 2017-01-11"
 (use-package racket-mode)
 (use-package pollen-mode)
 
-
 (use-package xmlgen)
 
 (show-paren-mode 1)
-(use-package parinfer
-  :disabled t
-
-  :bind
-  (("C-," . parinfer-toggle-mode))
-  :init
-  (progn
-    (setq parinfer-extensions
-      '(defaults       ; should be included.
-         pretty-parens  ; different paren styles for different modes.
-         evil           ; If you use Evil.
-         lispy          ; If you use Lispy. With this extension, you should install Lispy and do not enable lispy-mode directly.
-         paredit        ; Introduce some paredit commands.
-         smart-tab      ; C-b & C-f jump positions and smart shift with tab & S-tab.
-         smart-yank))   ; Yank behavior depend on mode.
-    (add-hook 'clojure-mode-hook #'parinfer-mode)
-    (add-hook 'emacs-lisp-mode-hook #'parinfer-mode)
-    (add-hook 'common-lisp-mode-hook #'parinfer-mode)
-    (add-hook 'scheme-mode-hook #'parinfer-mode)
-    (add-hook 'lisp-mode-hook #'parinfer-mode)))
 
 ;;; Pretty symbols, lambda
-
 (add-hook 'emacs-lisp-mode-hook
   (lambda ()
     (setq prettify-symbols-alist '(("lambda" . 955)))
@@ -988,9 +986,6 @@ Version 2017-01-11"
                                     (";;" . 955)))
     (prettify-symbols-mode)))
 
-(use-package highlight-sexp
-  :config (highlight-sexp-mode 1))
-
 ;; (defun ponelat/non-lisp-paredit()
 ;;   "Turn on paredit mode for non-lisps."
 ;;   (interactive)
@@ -998,24 +993,12 @@ Version 2017-01-11"
 ;;        '((lambda (endp delimiter) nil)))
 ;;   (paredit-mode 1))
 
-;; (use-package paredit
-;;
-;;   :init
-;;   (add-hook 'rjsx-mode-hook 'ponelat/non-lisp-paredit))
-
-;; (use-package evil-paredit
-;;   :init
-;;   (add-hook 'cider-repl-mode-hook 'evil-paredit-mode)
-;;   (add-hook 'ielm-mode-hook 'evil-paredit-mode)
-;;   (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode)
-;;   (add-hook 'json-mode-hook 'enable-paredit-mode)
-;;   )
-
-;; ;;; Color
-;; (use-package rainbow-mode
-;;   :config
-;;   (rainbow-mode 1)
-;;   )
+(use-package paredit)
+(use-package evil-paredit
+  :init
+  (add-hook 'cider-repl-mode-hook 'evil-paredit-mode)
+  (add-hook 'ielm-mode-hook 'evil-paredit-mode)
+  (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode))
 
 ;;; html,xml, markup
 (use-package emmet-mode
@@ -1070,57 +1053,6 @@ Version 2017-01-11"
   :init
   (setq auto-mode-alist (cons '("\\.svelte$" . web-mode) auto-mode-alist))
   )
-
-;; (comment use-package lispy
-;;
-;;   :config
-;;   (add-hook 'clojure-mode-hook 'lispy-mode)
-;;   (add-hook 'emacs-lisp-mode-hook 'lispy-mode)
-;;   (add-hook 'lisp-mode-hook 'lispy-mode)
-;;   (define-key lispy-mode-map (kbd "M-n") nil))
-
-(defun ponelat/lispy-kill-sexp ()
-  "It'll kill the next balanced sexp and then jump back into lispy mode."
-  (interactive)
-  (kill-sexp)
-  (delete-blank-lines)
-  (next-line)
-  (evil-lispy/enter-state-left))
-
-(defun ponelat/lispy-clone ()
-  "It'll clone the sexp, then run."
-  (interactive)
-  (special-lispy-clone)
-  (special-lispy-down)
-  (special-lispy-ace-symbol-replace))
-
-(defun ponelat/slurp-forward ()
-  "It tries to slurp forward in different langs, starting with Lisp."
-  (interactive)
-  (lispy-forward-slurp-sexp 1))
-
-(defun ponelat/barf-forward ()
-  "It tries to barf forward in different langs, starting with Lisp."
-  (interactive)
-  (lispy-forward-barf-sexp 1))
-
-(use-package evil-lispy
-  :init
-  (add-hook 'clojure-mode-hook 'evil-lispy-mode)
-  (add-hook 'emacs-lisp-mode-hook 'evil-lispy-mode)
-  (add-hook 'lisp-mode-hook 'evil-lispy-mode)
-  :config
-  (progn
-    (evil-define-key 'insert evil-lispy-mode-map "[" nil)
-    (evil-define-key 'insert evil-lispy-mode-map ")" nil)
-    (define-key lispy-mode-map (kbd "C-d") 'ponelat/lispy-kill-sexp)
-    (define-key lispy-mode-map (kbd "c") 'ponelat/lispy-clone)
-    (define-key lispy-mode-map (kbd "\"") nil)
-    (evil-define-key 'insert evil-lispy-mode-map "]" nil)
-    (evil-define-key 'insert evil-lispy-mode-map (kbd "C-.") 'ponelat/slurp-forward)
-    (evil-define-key 'insert evil-lispy-mode-map (kbd "C-,") 'ponelat/barf-forward)))
-
-;;(setq show-paren-style 'expression)
 
 ;;; Ag, RipGrep
 ;; use the_silver_searcher when available
@@ -1373,8 +1305,11 @@ Will use `projectile-default-project-name' .rest as the file name."
     :after lsp
     :config (add-hook 'java-mode-hook 'lsp)))
 
-;;; Java - automation
+(use-package gradle-mode)
 
+(use-package groovy-mode)
+
+;;; SHUB - automation
 ;; mvn verify -Dmaven.test.failure.ignore=true -Denv=dev -Dselenium=browser.chrome
 (defun shub/test-features (&rest extra)
   (interactive)
@@ -1416,15 +1351,11 @@ Will use `projectile-default-project-name' .rest as the file name."
     (setq js2-mode-show-strict-warnings nil)
     (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
 
-;; Javascript
 (use-package indium)
 
-(comment use-package mocha
-  (progn
-    (define-key js2-mode-map  (kbd "C-c C-t f") 'mocha-test-file)
-    (define-key js2-mode-map  (kbd "C-c C-t p") 'mocha-test-at-point)
-    (define-key js2-mode-map  (kbd "C-c C-t a") 'mocha-test-project))
-  )
+(use-package jest
+  :after (js2-mode)
+  :hook (js2-mode . jest-minor-mode))
 
 (use-package nodejs-repl
   )
@@ -1507,12 +1438,6 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
     (setq alist (cdr (assoc (pop keys) alist))))
   alist)
 
-;; TODO finish this
-(comment defun ponelat/ag (filename folder)
-  "Search for uses of FILENAME, within FOLDER."
-  (ag-regexp (format "import .* from *['\"]%s(.js|.jsx)?['\"]" filename) folder))
-
-(comment defun ponelat/get-babel-aliases (project-dir)
 (let* ((file-path (concat project-dir "package.json"))
           (json-data (json-read-file file-path))
           (scripts (assoc-recursive json-data 'babel ))
@@ -1575,15 +1500,6 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
     (setq flycheck-highlighting-mode 'lines)
     (global-flycheck-mode))
 
-(use-package pos-tip
-  )
-
-(use-package flycheck-pos-tip
-
-  :config
-  (with-eval-after-load 'flycheck
-    (flycheck-pos-tip-mode)))
-
 ;;; $PATH environment variable
 ;; (setenv "PATH" (concat (getenv "PATH") ":/home/josh/.nix-profile/bin"))
 ;; (setq exec-path (append exec-path '("~/.nix-profile/bin" exec-directory)))
@@ -1640,9 +1556,7 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
     (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
     (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion)))
 
-(use-package flycheck-joker
-  )
-
+;;; Clojure
 (use-package clojure-mode
 
   :config
@@ -1650,9 +1564,11 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
                                  (clj-refactor-mode)
                                  (yas-minor-mode 1)
                                  (cljr-add-keybindings-with-prefix "C-c C-m"))))
+;;; Clojure, flycheck
+(use-package flycheck-joker)
 
-(use-package clj-refactor
-  )
+
+(use-package clj-refactor)
 
 ; Auto load buffer, when in jacked-in
 (add-hook 'cider-mode-hook
@@ -1842,10 +1758,8 @@ eg: /one/two => two
 
 (use-package ivy
   :diminish (ivy-mode . "")
-  :bind (("C-s" . swiper))
   :config
   (progn
-  ;; (ivy-mode 1)
   ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
   (setq ivy-use-virtual-buffers t)
   ;; number of result lines to display
@@ -1858,38 +1772,39 @@ eg: /one/two => two
   (setq ivy-re-builders-alist
     ;; allow input not in order
     '((t   . ivy--regex-ignore-order)))
-  (progn
-
-    (define-key swiper-map [(control ?w)] 'backward-kill-word)
-    (define-key swiper-map [(control ?j)] 'next-line)
-    (define-key swiper-map [(control ?k)] 'previous-line))
-
-    (define-key ivy-minibuffer-map [(control ?w)] 'backward-kill-word)
-    (define-key ivy-minibuffer-map [(control ?e)] 'end-of-line)
-    (define-key ivy-minibuffer-map [(control ?a)] 'beginning-of-line)
-    (define-key ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
-    (define-key ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
-
-    (define-key ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
-    (define-key ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
-
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
-    (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
-
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
-    (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
-
-    ;; (evil-define-key 'insert ivy-minibuffer-map [(control ?')] 'ivy-avy)
-
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?e)] #'end-of-line)
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?')] #'ivy-avy)
-    (evil-define-key 'insert ivy-minibuffer-map [(control ?a)] #'beginning-of-line))
   (ivy-mode 1))
+
+(progn
+  (define-key ivy-minibuffer-map [(control ?w)] 'backward-kill-word)
+  (define-key ivy-minibuffer-map [(control ?e)] 'end-of-line)
+  (define-key ivy-minibuffer-map [(control ?a)] 'beginning-of-line)
+  (define-key ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
+  (define-key ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
+
+  (define-key ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
+  (define-key ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+
+  (evil-define-key 'insert ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
+  (evil-define-key 'insert ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
+  (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+
+  (evil-define-key 'insert ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
+  (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+
+  ;; (evil-define-key 'insert ivy-minibuffer-map [(control ?')] 'ivy-avy)
+
+  (evil-define-key 'insert ivy-minibuffer-map [(control ?e)] #'end-of-line)
+  (evil-define-key 'insert ivy-minibuffer-map [(control ?')] #'ivy-avy)
+  (evil-define-key 'insert ivy-minibuffer-map [(control ?a)] #'beginning-of-line)))
 
 (use-package counsel
   :ensure t
-  :bind("M-i" . counsel-imenu)
+  :bind ((("C-s" . swiper)
+          ("M-i" . counsel-imenu))
+          :map swiper-map
+          (("C-w" . 'backward-kill-word)
+            ("C-j" . 'next-line)
+            ("C-k" . 'previous-line)))
   :config
   (counsel-mode t)
   (setq ivy-initial-inputs-alist nil))
@@ -2863,10 +2778,6 @@ Version 2017-12-27"
           `(markup-verbatim-face ((t (,@headline ,@variable-tuple :height 1.0))))
           ))))
 
-
-
-
-
 (use-package zerodark-theme
   :config
   (setq
@@ -2875,9 +2786,8 @@ Version 2017-12-27"
     )
   )
 
-;; (use-package gruvbox-theme
-;;   :defer t
-;;   )
+(use-package gruvbox-theme
+  )
 
 ;; (use-package soothe-theme
 ;;   :defer t
@@ -3044,6 +2954,9 @@ Interactively you can choose the FONT-NAME"
     (setq ponelat/default-font-index next-index)))
 (bind-key "C-x f" #'ponelat/cycle-default-font)
 
+;;; General Emacs stuff
+(setq warning-minimum-level :error)
+
 ;;; Scratch buffer, Emacs
 (setq initial-scratch-message ";; Emacs\n\n")
 
@@ -3107,6 +3020,9 @@ Interactively you can choose the FONT-NAME"
 (bind-key "C-x a n" #'ponelat/spotify-next)
 (bind-key "C-x a p" #'ponelat/spotify-previous)
 (bind-key "C-x a SPC" #'ponelat/spotify-play-toggle)
+
+;;; Search
+(use-package noccur)
 
 ;;; Visual regexp, search replace
 (use-package visual-regexp)
@@ -3279,6 +3195,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
 ;;; General, Leader, Key mapping
 
+
 (use-package general
   :config
   (general-evil-setup)
@@ -3351,6 +3268,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      ";" #'delete-other-windows
      "i" #'imenu
      "d" #'dired-jump
+
+;;; Quit keys
      "q" #'quit-window)
 
 
@@ -3433,31 +3352,36 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "ch" #'org-journal-open-previous-entry
     "cl" #'org-journal-open-next-entry)
 
-  (ponelat/local-leader
-    :modes 'org-trello
+   (ponelat/local-leader
+    :modes 'js2-mode
     :state '(normal)
-    "t" '(:wk "trello")
+     "t" #'jest-popup)
 
-    "tv" 'org-trello-version
-    "ti" 'org-trello-install-key-and-token
-    "tI" 'org-trello-install-board-metadata
-    "tc" 'org-trello-sync-card
-    "ts" 'org-trello-sync-buffer
-    "ta" 'org-trello-assign-me
-    "td" 'org-trello-check-setup
-    "tD" 'org-trello-delete-setup
-    "tb" 'org-trello-create-board-and-install-metadata
-    "tk" 'org-trello-kill-entity
-    "tK" 'org-trello-kill-cards
-    "ta" 'org-trello-archive-card
-    "tA" 'org-trello-archive-cards
-    "tj" 'org-trello-jump-to-trello-card
-    "tJ" 'org-trello-jump-to-trello-board
-    "tC" 'org-trello-add-card-comments
-    "to" 'org-trello-show-card-comments
-    "tl" 'org-trello-show-card-labels
-    "tu" 'org-trello-update-board-metadata
-    "th" 'org-trello-help-describing-bindings)
+
+  ;; (ponelat/local-leader
+  ;;   :modes 'org-trello
+  ;;   :state '(normal)
+  ;;   "t" '(:wk "trello")
+  ;;   "tv" 'org-trello-version
+  ;;   "ti" 'org-trello-install-key-and-token
+  ;;   "tI" 'org-trello-install-board-metadata
+  ;;   "tc" 'org-trello-sync-card
+  ;;   "ts" 'org-trello-sync-buffer
+  ;;   "ta" 'org-trello-assign-me
+  ;;   "td" 'org-trello-check-setup
+  ;;   "tD" 'org-trello-delete-setup
+  ;;   "tb" 'org-trello-create-board-and-install-metadata
+  ;;   "tk" 'org-trello-kill-entity
+  ;;   "tK" 'org-trello-kill-cards
+  ;;   "ta" 'org-trello-archive-card
+  ;;   "tA" 'org-trello-archive-cards
+  ;;   "tj" 'org-trello-jump-to-trello-card
+  ;;   "tJ" 'org-trello-jump-to-trello-board
+  ;;   "tC" 'org-trello-add-card-comments
+  ;;   "to" 'org-trello-show-card-comments
+  ;;   "tl" 'org-trello-show-card-labels
+  ;;   "tu" 'org-trello-update-board-metadata
+  ;;   "th" 'org-trello-help-describing-bindings)
 
 
   ;; (general-unbind
@@ -3514,8 +3438,14 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    "C-S-l" #'evil-window-right
    "C-S-h" #'evil-window-left
    "C-S-k" #'evil-window-up
-    "C-S-j" #'evil-window-down))
+    "C-S-j" #'evil-window-down)
 
+(progn
+  (require 'dired)
+  (general-define-key
+    :states 'normal
+    :keymaps 'dired-mode-map
+    "s" #'xah-dired-sort)))
 
 ;;; Custom.el file
 (load custom-file 'noerror)
