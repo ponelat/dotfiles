@@ -697,7 +697,7 @@ Version 2017-01-11"
 
 (use-package dired-narrow
   :bind (:map dired-mode-map
-          ("C-c s" . dired-narrow)))
+          (("C-c s" . dired-narrow))))
 
 (use-package dired-filter)
 (use-package dired-collapse)
