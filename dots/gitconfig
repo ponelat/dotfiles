@@ -39,7 +39,7 @@
   cleanup = "!git branch --merged | grep  -v '\\*\\|master\\|develop' | xargs -n 1 git branch -d"
   pullclean = "!git pull && git cleanup ; git remote prune origin"
   wipe = "!git checkout . ; git clean -df"
-  pushu ="!git-push-u-origin"
+  pushu ="!git push -u origin `git rev-parse --symbolic-full-name HEAD`; echo Pushed"
   rblame="!git-rblame $@"
 [push]
   default = simple

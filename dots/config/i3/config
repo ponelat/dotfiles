@@ -48,6 +48,9 @@ floating_modifier $mod
 # start a terminal
 bindsym $mod+Tab exec i3-sensible-terminal
 bindsym $mod+Return exec "emacsclient -c -a ''"
+bindsym $mod+o exec "emacsclient -e '(cm/emacs-expander-frame)'"
+
+
 # Hotkeys
 bindsym $mod+Shift+w exec "i3-sensible-terminal -e vim"
 bindsym $mod+Shift+t exec "chrome"
@@ -224,6 +227,10 @@ bindsym $mod+r mode "resize"
 
 # Disable window titles
 for_window [class="^.*"] border pixel 0
+
+
+# Disable window titles
+for_window [title=".*emacs-expander.*"] border pixel 1 floating enable
 # gaps outer 4
 gaps inner 6
 

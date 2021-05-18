@@ -27,12 +27,18 @@
 ;; Install `use-package'
 (straight-use-package 'use-package)
 
+
 ;; Tell straight.el to overwrite use-package, such it uses straight.el instead of package.el by default.
 ;; ...to NOT use straight.el, add `:straigh nil` to `use-package'
 (setq straight-use-package-by-default t)
 
 ;; Load org quickly! Before it could be loaded by some nafarious package, breaking it from straight.el
 (straight-use-package 'org)
+
+;;; Scratch buffer, Emacs
+(setq initial-scratch-message "#+TITLE: Emacs\n\n")
+;; This breaks shit, not sure why??
+;;(setq initial-major-mode 'org-mode )
 
 (setq lexical-binding t)
 (windmove-default-keybindings)
@@ -117,6 +123,10 @@
 
 ;;; Revert buffer/file reload
 (global-set-key  (kbd "C-x RET RET") (lambda () (interactive) (revert-buffer t t nil)))
+(comment
+  (global-set-key  (kbd "M-j") #'move-line-down)
+  (global-set-key  (kbd "M-k") #'move-line-up)
+  )
 
 (defun ponelat/copy-file-from-downloads ()
   "It copies a file from ~/Downloads."
@@ -206,9 +216,25 @@
 	      components (cdr components)))
       (concat str (reduce (lambda (a b) (concat a "/" b)) components))))
 
+  (defun eshell/j (str)
+    "Use fasd to change directory."
+    (let ((dir
+            (string-trim
+              (shell-command-to-string
+                (format "fasd -d -1 %s" str)))))
+      (eshell/cd dir)))
+
+  (defun eshell/f ()
+    "Opens projectile-find-file."
+    (interactive)
+    (counsel-projectile-find-file))
+
+
   (defun ponelat/rjs-eshell-prompt-function ()
     (concat (ponelat/shortened-path (eshell/pwd) 40)
 	    (if (= (user-uid) 0) " # " " $ ")))
+
+
 
   (setq eshell-prompt-function 'ponelat/rjs-eshell-prompt-function))
 
@@ -239,7 +265,7 @@
   (interactive)
   (chmod (buffer-file-name) 509))
 
-(defun ponelat/methodpath-to-badge ()
+(comment defun ponelat/methodpath-to-badge ()
   "It takes an input string and pastes a URL badge into buffer."
   (interactive)
   (let* ((methodpath (read-string "method /path: "))
@@ -719,7 +745,7 @@ Version 2018-12-23"
 ;; (use-package vscode-icon
 ;;   :commands (vscode-icon-for-file))
 
-(progn
+(comment progn
   (use-package treemacs
     :config
     (progn
@@ -771,12 +797,11 @@ Version 2018-12-23"
           (treemacs-git-mode 'simple))))
     :bind
     (:map global-map
-      ("M-0"       . treemacs-select-window)
-      ("C-x t 1"   . treemacs-delete-other-windows)
+     '(("M-0"       . treemacs-select-window)
       ("C-x t t"   . treemacs)
       ("C-x t B"   . treemacs-bookmark)
       ("C-x t C-t" . treemacs-find-file)
-      ("C-x t M-t" . treemacs-find-tag)))
+      ("C-x t M-t" . treemacs-find-tag))))
 
   (use-package treemacs-projectile
     :after treemacs projectile)
@@ -807,7 +832,9 @@ Version 2018-12-23"
 
 
 ;;; Markdown
-(use-package markdown-mode)
+(use-package markdown-mode
+  :config
+  (setq auto-mode-alist (cons '("\\.mdx$" . markdown-mode) auto-mode-alist)))
 
  (defun ponelat/expand-lines ()
     (interactive)
@@ -922,6 +949,12 @@ Version 2018-12-23"
 (define-key evil-inner-text-objects-map "f" 'rsb/textobj-inner-c-defun)
 (define-key evil-outer-text-objects-map "f" 'rsb/textobj-outer-c-defun)
 
+;;; FOlding
+(use-package origami
+  :config
+  (global-origami-mode t) )
+
+
 (use-package ace-link
   :config
   (progn
@@ -1010,6 +1043,7 @@ Version 2018-12-23"
     (add-hook 'web-mode 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'rjsx-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
+    (add-hook 'markdown-mode  'emmet-mode) ;;
     (evil-define-key 'visual emmet-mode-keymap (kbd "C-l") #'emmet-wrap-with-markup))
   )
 
@@ -1267,25 +1301,27 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 ;;; LSP, language server protocol
 (use-package lsp-mode
-  :hook (
-          (json-mode . lsp)
+  :hook '((json-mode . lsp)
           (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
 ;; Optional Flutter packages
 ;; Flutter dart
-(use-package dart-mode
-  :config
-
-  )
+(use-package dart-mode)
 (use-package lsp-dart
-  :hook (dart-mode . lsp)
+  :hook '((dart-mode . lsp))
   :config  (setq lsp-dart-sdk-dir "~/snap/flutter/common/flutter/bin/cache/dart-sdk"))
 
 (comment use-package hover) ;; run app from desktop without emulator
 
 (use-package company-lsp )
 (use-package lsp-ui )
+
+(use-package company-tabnine
+  :disabled
+  :config
+  (add-to-list 'company-backends #'company-tabnine))
+
 
 ;;; Debugging, LSP
 (use-package dap-mode
@@ -1312,6 +1348,7 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;; SHUB - automation
 ;; mvn verify -Dmaven.test.failure.ignore=true -Denv=dev -Dselenium=browser.chrome
 (defun shub/test-features (&rest extra)
+
   (interactive)
   "Run features, with EXTRA flags."
   (let*
@@ -1354,8 +1391,8 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package indium)
 
 (use-package jest
-  :after (js2-mode)
-  :hook (js2-mode . jest-minor-mode))
+  :after '((js2-mode))
+  :hook (js2-mode . 'jest-minor-mode))
 
 (use-package nodejs-repl
   )
@@ -1438,6 +1475,12 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
     (setq alist (cdr (assoc (pop keys) alist))))
   alist)
 
+;; TODO finish this
+(comment defun ponelat/ag (filename folder)
+  "Search for uses of FILENAME, within FOLDER."
+  (ag-regexp (format "import .* from *['\"]%s(.js|.jsx)?['\"]" filename) folder))
+
+(comment defun ponelat/get-babel-aliases (project-dir)
 (let* ((file-path (concat project-dir "package.json"))
           (json-data (json-read-file file-path))
           (scripts (assoc-recursive json-data 'babel ))
@@ -1688,6 +1731,14 @@ eg: /one/two => two
     (shell-command-to-string
       (format "find %s -type l -not -ipath '*/.bin/*'" directory))))
 
+(defun ponelat/shell-command-to-list (cmd)
+  "Execute CMD and returns the results as a list."
+  (split-string (shell-command-to-string cmd) "\n"))
+
+(defun ponelat/read-directory-glob (glob &optional base-dir)
+  "Returns a list of files from DIR."
+  (ponelat/shell-command-to-list (format "cd %s && ls %s" (or base-dir ".") glob)))
+
 (defun ponelat/npm-clone-and-link (project-dir)
   "Fetch a list of npm scripts from PROJECT-DIR/package.json and async execute it."
   (interactive (list (projectile-project-root)))
@@ -1797,10 +1848,23 @@ eg: /one/two => two
   (evil-define-key 'insert ivy-minibuffer-map [(control ?')] #'ivy-avy)
   (evil-define-key 'insert ivy-minibuffer-map [(control ?a)] #'beginning-of-line)))
 
+
+(defun ponelat/swiper-region-or-symbol ()
+  (interactive)
+  (if (region-active-p)
+        (let (($beg (region-beginning))
+               ($end (region-end)))
+        (deactivate-mark)
+        (swiper-isearch (buffer-substring-no-properties $beg $end)))
+    (swiper-thing-at-point)))
+
+;;; Counsel/swiper
 (use-package counsel
   :ensure t
   :bind ((("C-s" . swiper)
-          ("M-i" . counsel-imenu))
+           ("M-i" . counsel-imenu)
+           ("C-*" . ponelat/swiper-region-or-symbol)
+           ("C-&" . (lambda () (interactive) (rg (thing-at-point-or-mark 'symbol) "*.*" (projectile-project-root)))))
           :map swiper-map
           (("C-w" . 'backward-kill-word)
             ("C-j" . 'next-line)
@@ -2131,6 +2195,7 @@ eg: /one/two => two
       '(("^ *\\([-]\\) "
           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "—"))))))
     (add-hook 'org-mode-hook 'variable-pitch-mode)
+    (add-hook 'org-mode-hook 'visual-line-mode)
     (add-hook 'org-mode-hook #'ponelat/org-mode-styles)
     (add-hook 'org-mode-hook (lambda () (setq electric-pair-local-mode nil)))
 
@@ -2164,6 +2229,20 @@ eg: /one/two => two
          ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
            "* LOOSE %?\n  %i\n  %a")))))
 
+
+;;; Org screenshots
+
+(use-package org-attach-screenshot
+  :config
+  (let ((screenshot-entry '((?p ?\C-p)
+            org-attach-screenshot
+            "Grab a screenshot and attach it to the task, using `org-attach-screenshot-command-line'.")))
+
+    (setq org-attach-commands
+      (cons screenshot-entry org-attach-commands))))
+
+
+
 (use-package org-journal
   :custom
   (org-journal-date-prefix "#+TITLE: ")
@@ -2183,7 +2262,7 @@ eg: /one/two => two
 
 ;;; Org Roam
 (use-package org-roam
-  :hook (after-init . org-roam-mode)
+  :hook '((after-init . org-roam-mode))
   :custom (org-roam-directory ponelat/org-roam-dir))
 
 
@@ -2198,6 +2277,9 @@ eg: /one/two => two
   (deft-directory ponelat/org-roam-dir))
 
 ;;; Time world clock
+(defun insert-timestamp ()
+  (interactive)
+  (insert (format-time-string "%Y-%m-%dT%H:%M:%SZ")))
 (setq zoneinfo-style-world-list
   '(("America/New_York" "Boston")
     ("Europe/Dublin" "Galway")
@@ -2467,6 +2549,16 @@ Version 2019-01-18"
                 (url (concat "https://smartbear.atlassian.net/browse/" (url-encode-url (upcase shub)))))
            (browse-url url)))))
 
+(defun ponelat/evil-org->-on-line ()
+  "Uses `evil-org->' but without waiting for a vim motion. Operates on the current line."
+  (interactive)
+  (evil-org-> (line-beginning-position) (line-end-position) 1))
+
+(defun ponelat/evil-org-<-on-line ()
+  "Uses `evil-org-<' but without waiting for a vim motion. Operates on the current line."
+  (interactive)
+  (evil-org-< (line-beginning-position) (line-end-position) 1))
+
 (use-package evil-org
   :after org
   :config
@@ -2482,12 +2574,14 @@ Version 2019-01-18"
           (kbd "C-j") nil)
         (evil-define-key 'normal 'evil-org-mode
           (kbd "C-S-<return>") (evil-org-define-eol-command ponelat/org-insert-child-headline))
+        (evil-define-key 'normal 'evil-org-mode
+          (kbd "<return>") 'evil-org-org-insert-heading-respect-content-below)
         (evil-define-key 'insert 'evil-org-mode
           (kbd "C-S-<return>") (evil-org-define-eol-command ponelat/org-insert-child-headline))
-        (evil-define-key 'insert 'evil-org-mode
-          (kbd "M-h") 'org-metaleft)
-        (evil-define-key 'insert 'evil-org-mode
-          (kbd "M-l") 'org-metaright))))
+        (evil-define-key '(insert normal) 'evil-org-mode
+          (kbd "M-h") #'ponelat/evil-org-<-on-line)
+        (evil-define-key '(insert normal) 'evil-org-mode
+          (kbd "M-l") #'ponelat/evil-org->-on-line))))
   (add-hook 'org-mode-hook 'evil-org-mode))
 
  ;; TODO: fix this
@@ -2620,6 +2714,25 @@ Version 2017-12-27"
 
 (use-package mood-line
   :config (mood-line-mode))
+
+(use-package doom-themes
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-one t)
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  (doom-themes-neotree-config)
+  ;; or for treemacs users
+  (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+  (doom-themes-treemacs-config)
+
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
 ;; "gh" is from http://www.greghendershott.com/2017/02/emacs-themes.html
 
@@ -2818,6 +2931,17 @@ Version 2017-12-27"
     org-bullets-face-name 'shadow)
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
+;;; Window background
+(comment progn
+  (defun highlight-selected-window ()
+    "Highlight selected window with a different background color."
+    (walk-windows (lambda (w)
+                    (unless (eq w (selected-window))
+                      (with-current-buffer (window-buffer w)
+                        (buffer-face-set '(:background "#3D3A49"))))))
+    (buffer-face-set 'default))
+  (add-hook 'buffer-list-update-hook 'highlight-selected-window))
+
 ;; Disabling for now...
 (defun ponelat/setup-mode-line ()
   "Set up the modeline."
@@ -2875,7 +2999,7 @@ Version 2017-12-27"
 (defvar ponelat:theme-terminal-loaded nil "A flag used to indicate that the Terminal theme got loaded.")
 ;; (defvar ponelat:theme 'gruvbox-dark-medium "The initial theme.")
 ;; (defvar ponelat:theme 'gruvbox-dark-hard "The initial theme.")
-(defvar ponelat:theme 'zerodark "The initial theme.")
+(defvar ponelat:theme 'doom-dracula "The initial theme.")
 
 ;; Due to starting a daemon at the same time as our client
 ;; The follow code exists to ensure that the theme is loaded at the right time.
@@ -2957,9 +3081,6 @@ Interactively you can choose the FONT-NAME"
 ;;; General Emacs stuff
 (setq warning-minimum-level :error)
 
-;;; Scratch buffer, Emacs
-(setq initial-scratch-message ";; Emacs\n\n")
-
 ;;; Eval, inline, Emacs lisp
 (use-package eros
   :bind (("C-c C-c" . #'eval-defun))
@@ -3024,6 +3145,15 @@ Interactively you can choose the FONT-NAME"
 ;;; Search
 (use-package noccur)
 
+(defun thing-at-point-or-mark (&optional type)
+  (let* ((bounds
+           (if (use-region-p)
+             (cons (region-beginning) (region-end))
+             (bounds-of-thing-at-point (or type 'symbol))))
+          ($from (car bounds))
+          ($to (cdr bounds)))
+    (buffer-substring-no-properties $from $to)))
+
 ;;; Visual regexp, search replace
 (use-package visual-regexp)
 
@@ -3086,14 +3216,19 @@ Interactively you can choose the FONT-NAME"
     (seq-reduce
       (lambda (acc arg-node)
         (let* ((key (xml-get-attribute arg-node 'name))
-                (values
+                (file-from (xml-get-attribute-or-nil arg-node 'file-from))
+                (file-values (if file-from (ponelat/read-directory-glob file-from (projectile-project-root))))
+                (child-values
                   (mapcar
                     (lambda (node)
                       (string-trim (car (xml-node-children node))))
                     (xml-get-children arg-node 'value)))
+                (values (append child-values file-values ))
                 (default-value (xml-get-attribute-or-nil arg-node 'default))
-                (value (completing-read (format "%s: " key) values nil nil default-value)))
-          (puthash (format "$%s" key) value acc))
+                (value
+                  (completing-read (format "%s: " key) values nil nil default-value)))
+          (puthash (format "$%s" key) value acc)
+          )
         acc)
       (xml-get-children args-nodes 'arg)
       (make-hash-table :test 'equal)))
@@ -3192,6 +3327,37 @@ In the root of your project get a file named .emacs-commands.xml with the follow
        (insert ponelat/emacs-commands-template))))
 
 
+;; ;;; Stupid stuff
+;; (defun ponelat/sentence-macro ()
+;;   "Moves to the start of the line, downcases the first word and moves to insert-mode."
+;;   (interactive)
+;;   (move-beginning-of-line 1)
+;;   (let ((char (following-char)))
+;;     (message (format "Char: %c" char))
+;;     (delete-char 1 nil)
+;;     (insert-char (downcase char) 1)
+;;     (move-beginning-of-line 1)
+;;     (insert-char ?  1)
+;;     (move-beginning-of-line 1)
+;;     (evil-insert-state)))
+
+
+;; (defun ponelat/sentence-macro-push ()
+;;   "Downcases the first word and moves to insert-mode."
+;;   (interactive)
+;;   (let ((char (following-char)))
+;;     (delete-char 1 nil)
+;;     (insert-char (downcase char) 1)
+;;     (backward-char 1)
+;;     (insert-char ?  1)
+;;     (backward-char 1)
+;;     (evil-insert-state)))
+
+  ;; ;;; Org keys
+  ;;  (ponelat/local-leader
+  ;;   "ss" #'ponelat/sentence-macro
+  ;;   "sh" #'ponelat/sentence-macro-push)
+
 
 ;;; General, Leader, Key mapping
 
@@ -3240,6 +3406,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
       "o" '(:wk "open")
       "oh" '(ponelat/edit-hosts-file :wk "/etc/hosts")
       "oe" '(ponelat/emacs-lisp-imenu-init :wk "init.el")
+      "oo" '(xah-open-in-external-app :wk "<external>")
       "or" '(ponelat/jump-to-restclient :wk "rest-scratch")
       "od" `(,(lambda () (interactive) (find-file "~/Downloads")) :wk "Downloads")
       "oi" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/i3/config" ponelat/projects-dir))) :wk "i3 config")
@@ -3259,7 +3426,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "rj" 'org-journal-new-entry
      "rl" 'org-roam
      "rn" 'org-capture
-     "rt" 'org-roam-today
+     "rt" 'org-journal-open-current-journal-file
 
 ;;; Move this into projectile
      "cr" #'ponelat/emacs-commands
@@ -3268,6 +3435,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      ";" #'delete-other-windows
      "i" #'imenu
      "d" #'dired-jump
+     "e" #'eshell
 
 ;;; Quit keys
      "q" #'quit-window)
@@ -3330,6 +3498,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "r" '(:wk "replace")
     "rr" #'vr/replace
     "rq" #'vr/query-replace
+    "rt" #'string-rectangle
 
     "b" '(:wk "buffer")
     "bk" 'kill-this-buffer
@@ -3351,6 +3520,13 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "c" '(:wk "org-journal")
     "ch" #'org-journal-open-previous-entry
     "cl" #'org-journal-open-next-entry)
+
+  (ponelat/local-leader
+    :modes 'org-mode
+    :state '(normal)
+    "o" '(:wk "org-mode")
+    "h" #'org-toggle-heading)
+
 
    (ponelat/local-leader
     :modes 'js2-mode
@@ -3388,6 +3564,13 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   ;;   :mode 'js2-mode
   ;;   :state '(normal)
   ;;   "c")
+
+  ;;; Eshell keys
+  (general-define-key
+    :states '(normal insert)
+    :keymaps 'eshell-mode-map
+    "C-k" 'eshell-previous-matching-input-from-input
+    "C-j" 'eshell-next-matching-input-from-input)
 
   ;;; Avy keys
   (general-define-key
