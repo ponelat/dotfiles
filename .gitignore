@@ -1,3 +1,5 @@
 .env
 **/npm-debug.log
-./funcs/private
+funcs/private
+funcs/work
+dots/emacs.d/private-functions.el
