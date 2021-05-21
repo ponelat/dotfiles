@@ -68,6 +68,10 @@
       (message "Tracing Requests disabled"))))
 
 
+;;; Utilities
+(defun pairs-to-cons (al)
+  "Converts AL from ((one 1) (two 2)) => ((one . 1) (two . 2))."
+  (mapcar (lambda (p) (cons (car p) (car (cdr p)))) al))
 
 
 (defun with-num-at-point (&optional fn)
@@ -435,7 +439,7 @@ becomes
 
     `(("base" . ,base)
        ("path" . ,path)
-       ("query" . ,query))))
+       ("query" . ,(pairs-to-cons query)))))
 
 
 ;;; x509 certificate wrap with header/footer and crop to 64 chars
