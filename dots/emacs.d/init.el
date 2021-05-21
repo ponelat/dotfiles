@@ -68,6 +68,17 @@
       (message "Tracing Requests disabled"))))
 
 
+
+
+(defun with-num-at-point (&optional fn)
+  "Apply FN to number at point. Using json rules."
+  (when (save-excursion (skip-chars-backward "[0-9.]") (looking-at json-mode-number-re))
+    (let ((num (apply fn (list (string-to-number (buffer-substring-no-properties (match-beginning 0) (match-end 0))))))
+          (pt (point)))
+      (delete-region (match-beginning 0) (match-end 0))
+      (insert (number-to-string num))
+      (goto-char pt))))
+
 (defun ponelat/sum-numbers-in-region (start end)
   "Sum the numbers in the current buffer, from START to END."
   (interactive "r")
@@ -406,6 +417,25 @@ becomes
 -----END CERTIFICATE----- "
   (interactive)
   (ponelat/replace-region #'ponelat/pretty-cert))
+
+;;; URL stuff
+
+(defun ponelat/explode-url (url)
+  "Return an alist of URL components."
+  (let* ((url-struct (url-generic-parse-url url))
+          (host (url-host url-struct))
+          (type (url-type url-struct))
+          (port (url-portspec url-struct))
+          (portstr (if port (format ":%s" port) ""))
+          (base (format "%s://%s%s" type host portstr))
+          (path-and-query (url-path-and-query url-struct))
+          (path (car path-and-query))
+          (query (url-parse-query-string
+                   (cdr path-and-query))))
+
+    `(("base" . ,base)
+       ("path" . ,path)
+       ("query" . ,query))))
 
 
 ;;; x509 certificate wrap with header/footer and crop to 64 chars
@@ -1031,7 +1061,9 @@ Version 2018-12-23"
   :init
   (add-hook 'cider-repl-mode-hook 'evil-paredit-mode)
   (add-hook 'ielm-mode-hook 'evil-paredit-mode)
-  (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode))
+  (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode)
+  :config
+  (general-define-key ))
 
 ;;; html,xml, markup
 (use-package emmet-mode
@@ -1175,17 +1207,30 @@ Version 2018-12-23"
 (setq create-lockfiles nil)
 
 ;;; Cuccumber, test, geherkin
-(use-package feature-mode
-  )
+(use-package feature-mode)
 
 ;;; Yaml
-(use-package yaml-mode
-  )
+(use-package yaml-mode)
 
 (use-package yaml-imenu
   :config
-  (yaml-imenu-enable)
-  )
+  (yaml-imenu-enable))
+
+(straight-use-package
+  '(yaml :type git :host github :repo "zkry/yaml.el"))
+
+(defun ponelat/edit-url ()
+  "It opens a temp buffer with the exploded (via `ponelat/explode-url') URL."
+  (interactive)
+  (let* ((url (thing-at-point-or-mark 'url))
+          (xbuff (generate-new-buffer (format "*Editing: %s*" url))))
+    (princ
+      (yaml-encode (ponelat/explode-url url))
+      xbuff)
+    (switch-to-buffer xbuff)))
+
+;; (straight-use-package
+;;   '(libyaml :type git :host github :repo "syohex/emacs-libyaml"))
 
 ;; (use-package openapi-yaml-mode
 ;;   :after '(yaml yaml-imenu))
@@ -3154,6 +3199,30 @@ Interactively you can choose the FONT-NAME"
           ($to (cdr bounds)))
     (buffer-substring-no-properties $from $to)))
 
+(defun ponelat/replace-thing-at-point-or-mark (fn &optional thing)
+  "Replace THING at point or Mark by running that text though FN."
+  (interactive)
+  (let* ((bounds (if (use-region-p)
+                     (cons (region-beginning) (region-end))
+                   (bounds-of-thing-at-point (or thing 'symbol))))
+         (text   (buffer-substring-no-properties (car bounds) (cdr bounds))))
+    (when bounds
+      (delete-region (car bounds) (cdr bounds))
+      (insert (apply fn (list text))))))
+
+(progn
+;; Type a symbol then hit C-j to wrap it in parens.
+  (defun ponelat/emmet-for-lisp ()
+    "Wraps the previous symbol with parens."
+    (interactive)
+    (ponelat/replace-thing-at-point-or-mark (lambda (str) (format "(%s )" str)) 'symbol)
+    (backward-char))
+
+  (general-define-key
+    :states '(visual normal insert)
+    :keymaps 'emacs-lisp-mode-map
+    "C-j" 'ponelat/emmet-for-lisp))
+
 ;;; Visual regexp, search replace
 (use-package visual-regexp)
 
@@ -3475,6 +3544,9 @@ In the root of your project get a file named .emacs-commands.xml with the follow
               (yes-or-no-p "Delete all DAP sessions")
               (dap-delete-all-sessions)))
 
+    "e" '(:wk "edit")
+    "eu" 'ponelat/edit-url
+
     "v" '(:wk "diff")
     "vv" 'vdiff-hydra/body
     "vb" 'vdiff-buffers
@@ -3565,14 +3637,22 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   ;;   :state '(normal)
   ;;   "c")
 
-  ;;; Eshell keys
+;;; Eshell keys
   (general-define-key
     :states '(normal insert)
     :keymaps 'eshell-mode-map
     "C-k" 'eshell-previous-matching-input-from-input
     "C-j" 'eshell-next-matching-input-from-input)
 
-  ;;; Avy keys
+
+;;; Lisp/Paredit keys
+  (general-define-key
+    :states '(normal insert)
+    :keymaps 'emacs-lisp-mode-map
+    "C-." 'paredit-forward-slurp-sexp
+    "C-," 'paredit-forward-barf-sexp)
+
+;;; Avy keys
   (general-define-key
     :states 'normal
     :keymaps 'override
@@ -3582,7 +3662,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "o" 'avy-org-goto-heading-timer
     "t" 'avy-org-refile-as-child)
 
-  ;;; Org keys
+;;; Org keys
    (general-define-key
     :states 'insert
     :keymaps 'override
