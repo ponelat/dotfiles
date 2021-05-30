@@ -434,15 +434,15 @@ becomes
           (base (format "%s://%s%s" type host portstr))
           (path-and-query (url-path-and-query url-struct))
           (path (car path-and-query))
-          (query (url-parse-query-string
-                   (cdr path-and-query))))
-
+          (query-list (cdr path-and-query))
+          (query (if query-list
+                   (pairs-to-cons
+                     (url-parse-query-string
+                       (cdr path-and-query))))))
     `(("base" . ,base)
        ("path" . ,path)
-       ("query" . ,(pairs-to-cons query)))))
+       ("query" . ,query))))
 
-
-;;; x509 certificate wrap with header/footer and crop to 64 chars
 (defun ponelat/pretty-cert (cert)
   "Wrap CERT with BEGIN/END certificate and crop to 64 chars."
   (concat
@@ -1065,9 +1065,7 @@ Version 2018-12-23"
   :init
   (add-hook 'cider-repl-mode-hook 'evil-paredit-mode)
   (add-hook 'ielm-mode-hook 'evil-paredit-mode)
-  (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode)
-  :config
-  (general-define-key ))
+  (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode))
 
 ;;; html,xml, markup
 (use-package emmet-mode
@@ -1223,15 +1221,93 @@ Version 2018-12-23"
 (straight-use-package
   '(yaml :type git :host github :repo "zkry/yaml.el"))
 
+(defun xah-hash-to-list (@hash-table)
+  "Return a list that represent the @HASH-TABLE
+Each element is a list: '(key value).
+
+http://ergoemacs.org/emacs/elisp_hash_table.html
+Version 2019-06-11"
+  (let ($result)
+    (maphash
+     (lambda (k v)
+       (push (list k v) $result))
+     @hash-table)
+    $result))
+
+(require 'yaml)
+(defun ponelat/edit-url--normalize-query-item (val)
+  "Changes t to \"true\". nil => \"\". Leaves all other values"
+  (message (format "josh: %s" val))
+  (cond
+   ((equal val t) "true")
+   ((equal val :false) "false")
+   ((equal val :null) "")
+   ((equal val nil) "")
+   (t val)))
+
+(defun ponelat/edit-url--normalize-query-list (l)
+  "It changes t => \"true\" and nil => \"\""
+  (mapcar (lambda (pair)
+	          (list
+              (car pair)
+              (ponelat/edit-url--normalize-query-item (car (cdr pair)))))
+	  l))
+
+(defun ponelat/edit-url--build-url-from-httphash (hash)
+  "HASH is a hashtable with (base \"https://localhost:3000\" path \"/one\" query <hash>). Turns into into a URL again."
+  (let* ((base (gethash "base" hash))
+          (path (gethash "path" hash))
+          (query (gethash "query" hash))
+          (query-str (if (hash-table-p query)
+                       (url-build-query-string
+                         (ponelat/edit-url--normalize-query-list (xah-hash-to-list query))))))
+    (concat
+      base ; http://localhost:3000
+      path ; /one
+      (if query-str (format "?%s" query-str)))))
+
 (defun ponelat/edit-url ()
   "It opens a temp buffer with the exploded (via `ponelat/explode-url') URL."
   (interactive)
-  (let* ((url (thing-at-point-or-mark 'url))
-          (xbuff (generate-new-buffer (format "*Editing: %s*" url))))
+  (let* (($bounds (bounds-of-thing-at-point 'url))
+          ($url (buffer-substring-no-properties (car $bounds) (cdr $bounds)))
+          (xbuff (generate-new-buffer (format "*Editing: %s*" $url)))
+          ($point (point))
+          ($buffer (buffer-name)))
     (princ
-      (yaml-encode (ponelat/explode-url url))
+      (yaml-encode (ponelat/explode-url $url))
       xbuff)
-    (switch-to-buffer xbuff)))
+    (switch-to-buffer xbuff)
+    (yaml-mode)
+    (ponelat/edit-url-mode)
+    (setq-local
+      edit-url--position $point
+      edit-url--buffer $buffer
+      edit-url--bounds $bounds)))
+
+(defun ponelat/implode-edit-url-buffer ()
+  "Decodes the region from yaml to lisp."
+  (interactive)
+  (let* ((hash
+	  (json-parse-string
+	   (ponelat/yaml-to-json (point-min) (point-max))))
+	 (url (ponelat/edit-url--build-url-from-httphash hash))
+	 (pos edit-url--position)
+	 (bounds edit-url--bounds)
+	 (buf edit-url--buffer))
+    (kill-buffer)
+    (switch-to-buffer buf)
+    (replace-bounds url bounds)
+    (goto-char pos)))
+
+(define-minor-mode ponelat/edit-url-mode
+  "Edit a URL then use C-c to replace the URL or C-k to cancel."
+  :lighter " Edit URL"
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c C-c") 'ponelat/implode-edit-url-buffer)
+            (define-key map (kbd "C-c C-k") (lambda () (interactive) (kill-buffer)))
+            map))
+
 
 ;; (straight-use-package
 ;;   '(libyaml :type git :host github :repo "syohex/emacs-libyaml"))
@@ -3214,18 +3290,13 @@ Interactively you can choose the FONT-NAME"
       (delete-region (car bounds) (cdr bounds))
       (insert (apply fn (list text))))))
 
-(progn
-;; Type a symbol then hit C-j to wrap it in parens.
-  (defun ponelat/emmet-for-lisp ()
-    "Wraps the previous symbol with parens."
-    (interactive)
-    (ponelat/replace-thing-at-point-or-mark (lambda (str) (format "(%s )" str)) 'symbol)
-    (backward-char))
-
-  (general-define-key
-    :states '(visual normal insert)
-    :keymaps 'emacs-lisp-mode-map
-    "C-j" 'ponelat/emmet-for-lisp))
+(defun replace-bounds (str bounds)
+  "Replace BOUNDS with STR."
+  (let ((beg (car bounds))
+         (end (cdr bounds)))
+    (goto-char beg)
+    (delete-region (car bounds) (cdr bounds))
+    (insert str)))
 
 ;;; Visual regexp, search replace
 (use-package visual-regexp)
@@ -3438,8 +3509,20 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 (use-package general
   :config
   (general-evil-setup)
-  (general-auto-unbind-keys t)
-  )
+  (general-auto-unbind-keys t))
+
+(progn
+;; Type a symbol then hit C-j to wrap it in parens.
+  (defun ponelat/emmet-for-lisp ()
+    "Wraps the previous symbol with parens."
+    (interactive)
+    (ponelat/replace-thing-at-point-or-mark (lambda (str) (format "(%s )" str)) 'symbol)
+    (backward-char))
+  (general-define-key
+    :states '(visual normal insert)
+    :keymaps 'emacs-lisp-mode-map
+    "C-j" 'ponelat/emmet-for-lisp))
+
 
 ;;; General, keys
 (progn
