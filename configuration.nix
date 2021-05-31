@@ -7,6 +7,7 @@
 let
   unstable = import (fetchTarball
     "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
+      config.allowUnfree = true;
       overlays = [
         (import (builtins.fetchTarball {
           url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;
@@ -54,16 +55,16 @@ in {
   #   keyMap = "us";
   # };
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
+  fonts.fonts = with pkgs; [
+    noto-fonts
+  ];
+
+
   # Map capslock => control key
   services.xserver.xkbOptions = "ctrl:nocaps";
   console.useXkbConfig = true;
 
-
   # Enable the GNOME 3 Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome3.enable = true;
   
 
   # Configure keymap in X11
@@ -84,7 +85,7 @@ in {
   users.users.josh = {
     isNormalUser = true;
     home = "/home/josh";
-    extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "docker" ]; # 'wheel' enables ‘sudo’ for the user.
   };
 
   # List packages installed in system profile. To search, run:
@@ -94,16 +95,70 @@ in {
 	  # "google-chrome"
   # ];
 
+  # Docker
+  virtualisation.docker.enable = true;
 
   environment.systemPackages = with pkgs; [
     curl wget vim git fasd jq sqlite unzip ripgrep
 
     binutils gcc libgccjit
 
+    noto-fonts
+
     firefox google-chrome
 
+    unstable.dropbox-cli
     unstable.emacsGcc
   ];
+
+  # Dropbox
+  networking.firewall = {
+    allowedTCPPorts = [ 17500 ];
+    allowedUDPPorts = [ 17500 ];
+  };
+  systemd.services.dropbox = {
+    description = "Dropbox";
+    wantedBy = [ "graphical-session.target" ];
+    environment = {
+      QT_PLUGIN_PATH = "/run/current-system/sw/" + pkgs.qt5.qtbase.qtPluginPrefix;
+      QML2_IMPORT_PATH = "/run/current-system/sw/" + pkgs.qt5.qtbase.qtQmlPrefix;
+    };
+    serviceConfig = {
+      ExecStart = "${pkgs.dropbox.out}/bin/dropbox";
+      ExecReload = "${pkgs.coreutils.out}/bin/kill -HUP $MAINPID";
+      KillMode = "control-group"; # upstream recommends process
+      Restart = "on-failure";
+      PrivateTmp = true;
+      ProtectSystem = "full";
+      Nice = 10;
+    };
+  };
+
+  # i3 Window Manager
+  environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw 
+  services.xserver = {
+    # Enable the X11 windowing system.
+    enable = true;
+    desktopManager = {
+      xterm.enable = false;
+      gnome3.enable = true;
+    };
+    displayManager = {
+        defaultSession = "none+i3";
+        gdm.enable = true;
+    };
+
+    windowManager.i3 = {
+      enable = true;
+      package = pkgs.i3-gaps;
+      extraPackages = with pkgs; [
+        dmenu #application launcher most people use
+        i3status # gives you the default i3 status bar
+        i3lock #default i3 screen locker
+        i3blocks #if you are planning on using i3blocks over i3status
+     ];
+    };
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

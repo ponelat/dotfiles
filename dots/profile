@@ -25,13 +25,15 @@ if [ -n "$DESKTOP_SESSION" ];then
 fi
 
 ### Linuxbrew
-[ -d "$HOME/.linuxbrew" ] && PATH="$HOME/.linuxbrew/bin:$PATH"
-[ -d "$HOME/.linuxbrew" ] && PATH="$HOME/.linuxbrew/sbin:$PATH"
-[ -d "$HOME/.linuxbrew/include/bin" ] && PATH="$HOME/.linuxbrew/include/bin:$PATH"
-export XDG_DATA_DIRS="$HOME/.linuxbrew/share:$XDG_DATA_DIRS"
+if [ -d "$HOME/.linuxbrew" ] ; then
+    PATH="$HOME/.linuxbrew/bin:$PATH"
+    PATH="$HOME/.linuxbrew/sbin:$PATH"
+    PATH="$HOME/.linuxbrew/include/bin:$PATH"
+    export XDG_DATA_DIRS="$HOME/.linuxbrew/share:$XDG_DATA_DIRS"
+    ### N ( node.js manager )
+    export N_PREFIX="$HOME/.linuxbrew/include"
+fi
 
-### N ( node.js manager )
-export N_PREFIX="$HOME/.linuxbrew/include"
 [ -d "$HOME/.yarn/bin" ] && PATH="$PATH:$HOME/.yarn/bin"
 
 ### Path
