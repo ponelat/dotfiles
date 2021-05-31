@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ $# -lt 1 ]]; then
     echo "$0: Pass URL to download as argument"

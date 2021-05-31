@@ -8,3 +8,6 @@ var/
 session.*
 ac-comphist.dat
 url/
+eln-cache/
+emojis/
+straight/
