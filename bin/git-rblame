@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 while line="$(git blame "$@" $commit 2>/dev/null )"; do
   commit="${line:0:8}^"
