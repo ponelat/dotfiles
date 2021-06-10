@@ -27,7 +27,7 @@ in {
   boot.loader.efi.canTouchEfiVariables = true;
 
   boot.blacklistedKernelModules = [
-   "rtl8xxxu"
+    "rtl8xxxu"
   ];
   boot.kernelModules = [ "rtl8192eu" ];
   boot.extraModulePackages = [ config.boot.kernelPackages.rtl8192eu ];
@@ -65,7 +65,7 @@ in {
   console.useXkbConfig = true;
 
   # Enable the GNOME 3 Desktop Environment.
-  
+
 
   # Configure keymap in X11
   # services.xserver.layout = "us";
@@ -92,23 +92,27 @@ in {
   # $ nix search wget
   nixpkgs.config.allowUnfree = true;
   # nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-	  # "google-chrome"
+	# "google-chrome"
   # ];
 
   # Docker
   virtualisation.docker.enable = true;
 
   environment.systemPackages = with pkgs; [
-    curl wget vim git fasd jq sqlite unzip ripgrep
+    curl wget vim git fasd jq sqlite unzip ripgrep xsel
+
+    openvpn
 
     binutils gcc libgccjit
+    unstable.emacsGcc
 
     noto-fonts
 
-    firefox google-chrome
+    unstable.gnomeExtensions.material-shell
 
-    unstable.dropbox-cli
-    unstable.emacsGcc
+    nodejs-14_x yarn
+
+    firefox google-chrome inkscape slack dropbox-cli zoom-us
   ];
 
   # Dropbox
@@ -116,8 +120,10 @@ in {
     allowedTCPPorts = [ 17500 ];
     allowedUDPPorts = [ 17500 ];
   };
-  systemd.services.dropbox = {
+  systemd.user.services.dropbox = {
     description = "Dropbox";
+    after = [ "xembedsniproxy.service" ];
+    wants = [ "xembedsniproxy.service" ];
     wantedBy = [ "graphical-session.target" ];
     environment = {
       QT_PLUGIN_PATH = "/run/current-system/sw/" + pkgs.qt5.qtbase.qtPluginPrefix;
@@ -134,58 +140,58 @@ in {
     };
   };
 
-  # i3 Window Manager
-  environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw 
-  services.xserver = {
-    # Enable the X11 windowing system.
-    enable = true;
-    desktopManager = {
-      xterm.enable = false;
-      gnome3.enable = true;
-    };
-    displayManager = {
-        defaultSession = "none+i3";
-        gdm.enable = true;
-    };
-
-    windowManager.i3 = {
-      enable = true;
-      package = pkgs.i3-gaps;
-      extraPackages = with pkgs; [
-        dmenu #application launcher most people use
-        i3status # gives you the default i3 status bar
-        i3lock #default i3 screen locker
-        i3blocks #if you are planning on using i3blocks over i3status
-     ];
-    };
+# Needed for i3
+# environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
+services.xserver = {
+  # Enable the X11 windowing system.
+  enable = true;
+  desktopManager = {
+    xterm.enable = false;
+    gnome3.enable = true;
+  };
+  displayManager = {
+    # defaultSession = "none+i3";
+    gdm.enable = true;
   };
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
+  # i3 Window Manager
+  # windowManager.i3 = {
   #   enable = true;
-  #   enableSSHSupport = true;
+  #   package = pkgs.i3-gaps;
+  #   extraPackages = with pkgs; [
+  #     dmenu #application launcher most people use
+  #     i3status # gives you the default i3 status bar
+  #     i3lock #default i3 screen locker
+  #     i3blocks #if you are planning on using i3blocks over i3status
+  #  ];
   # };
- 
-  # List services that you want to enable:
+};
 
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+# Some programs need SUID wrappers, can be configured further or are
+# started in user sessions.
+# programs.mtr.enable = true;
+# programs.gnupg.agent = {
+#   enable = true;
+#   enableSSHSupport = true;
+# };
 
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
+# List services that you want to enable:
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "20.09"; # Did you read the comment?
+# Enable the OpenSSH daemon.
+# services.openssh.enable = true;
+
+# Open ports in the firewall.
+# networking.firewall.allowedTCPPorts = [ ... ];
+# networking.firewall.allowedUDPPorts = [ ... ];
+# Or disable the firewall altogether.
+# networking.firewall.enable = false;
+
+# This value determines the NixOS release from which the default
+# settings for stateful data, like file locations and database versions
+# on your system were taken. It‘s perfectly fine and recommended to leave
+# this value at the release version of the first install of this system.
+# Before changing this value read the documentation for this option
+# (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+system.stateVersion = "20.09"; # Did you read the comment?
 
 }
-
