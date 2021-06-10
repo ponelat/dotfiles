@@ -2112,6 +2112,10 @@ eg: /one/two => two
   (interactive)
   (kill-new (git-link--branch)))
 
+(defun ponelat/ponelat-copy-pwd-path-file ()
+  "It kills the current pwd"
+  (interactive)
+  (kill-new (pwd)))
 
 ;;; Ledger
 (use-package ledger-mode
