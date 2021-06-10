@@ -1,6 +1,7 @@
 auto-save-list/
 elpa/
 eshell/
+.cache/
 projectile-bookmarks.eld
 session.1010ee8a92c384aec1468738034867600000017720041
 session.10eee86e518aa8b7bd146881886046686600000017100039
@@ -11,3 +12,12 @@ url/
 eln-cache/
 emojis/
 straight/
+.lsp-session-v1
+custom.el
+forge-database.sqlite
+launcher.el
+org-roam.db
+projects
+recentf
+tramp
+transient/
