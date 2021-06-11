@@ -477,7 +477,7 @@ becomes
 
 (defun browse-url-x-www-browser (url &optional new-window)
   "Open URL in x-www-browser, possibly in NEW-WINDOW."
-  (shell-command (concat "x-www-browser" " " "\"" url "\"")))
+  (shell-command (concat "google-chrome-stable" " " "\"" url "\"")))
 
 (defun browse-url-firefox (url &optional new-window)
   "Open URL in firefox, possibly in NEW-WINDOW."
@@ -2703,6 +2703,7 @@ Version 2017-12-27"
            ("py" . "python")
            ("py3" . ,(if (string-equal system-type "windows-nt") "c:/Python32/python.exe" "python3"))
            ("rb" . "ruby")
+           ("nix" . "nix eval -f")
            ("go" . "go run")
            ("js" . "node") ; node.js
             ("ts" . "ts-node") ; TypeScript
@@ -3734,6 +3735,42 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    :states '(visual normal)
    :keymaps 'override
    "r" #'evil-replace-with-register))
+
+(progn
+  (use-package marginalia
+    :ensure t
+    :config
+    (marginalia-mode))
+
+  (use-package embark
+    :ensure t
+
+    :bind
+    (("C-S-a" . embark-act)       ;; pick some comfortable binding
+      ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+    :init
+
+    ;; Optionally replace the key help with a completing-read interface
+    (setq prefix-help-command #'embark-prefix-help-command)
+
+    :config
+
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+      '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+         nil
+         (window-parameters (mode-line-format . none)))))
+
+  ;; Consult users will also want the embark-consult package.
+  (use-package embark-consult
+    :ensure t
+    :after (embark consult)
+    :demand t ; only necessary if you have the hook below
+    ;; if you want to have consult previews as you move around an
+    ;; auto-updating embark collect buffer
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode)))
 
 (use-package nix-mode
   :general
