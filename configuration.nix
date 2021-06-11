@@ -98,6 +98,12 @@ in {
   # Docker
   virtualisation.docker.enable = true;
 
+  # Enable nix eval --expr
+  nix.package = pkgs.nixUnstable;
+  nix.extraOptions = ''
+      experimental-features = nix-command
+   '';
+
   environment.systemPackages = with pkgs; [
     curl wget vim git fasd jq sqlite unzip ripgrep xsel
 
