@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Filter for private apis
 jq 'map(select(.props[\"x-private\"] == \"true\"))'

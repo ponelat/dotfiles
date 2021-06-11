@@ -5,6 +5,26 @@
 ;;; Code:
 
 ;;; Custom variables stored here...
+
+(defmacro comment (&rest body)
+  "Comment out sexp (BODY)."
+  nil)
+
+;; NixOS + NativeComp stuff
+(setq is-nixos (executable-find "nixos-rebuild"))
+					; This may not be needed after the unstable version of emacsGcc.
+; Keeping it for posterity
+; (comment when is-nixos
+  ; (defun nix-path (pkg) (shell-command-to-string (format "nix eval --raw nixos.%s.outPath" pkg)))
+  ; ;; Deferred compiling requires the path to the build tools and apparently nixos doesn't give it to us quite yet.
+  ; (setq comp-deferred-compilation t)
+  ; (setq comp-async-env-modifier-form
+;; 	; '((setenv "LIBRARY_PATH"
+;; 		  ; (concat
+;; 		   ; (nix-path "gcc") "/lib:"
+;; 		   ; (nix-path "glibc") "/lib:"
+;; 		   ; (nix-path "libgccjit") "/lib/gcc/x86_64-unknown-linux-gnu/9.3.0")))))
+
 (setq emacs-dir "~/.emacs.d")
 (setq custom-file (concat emacs-dir "/custom.el"))
 (add-to-list 'load-path "~/.emacs.d/custom")
@@ -35,10 +55,13 @@
 ;; Load org quickly! Before it could be loaded by some nafarious package, breaking it from straight.el
 (straight-use-package 'org)
 
+(use-package bug-hunter
+  :straight '(bug-hunter :host github :repo "Malabarba/elisp-bug-hunter"))
+
 ;;; Scratch buffer, Emacs
 (setq initial-scratch-message "#+TITLE: Emacs\n\n")
 ;; This breaks shit, not sure why??
-;;(setq initial-major-mode 'org-mode )
+(setq initial-major-mode 'org-mode )
 
 (setq lexical-binding t)
 (windmove-default-keybindings)
@@ -48,10 +71,6 @@
 
 (defun imenu-fn ()
   (call-interactively #'counsel-imenu))
-
-(defmacro comment (&rest body)
-  "Comment out sexp (BODY)."
-  nil)
 
 ;; Disable
 (defun ponelat/toggle-trace-request ()
@@ -458,7 +477,7 @@ becomes
 
 (defun browse-url-x-www-browser (url &optional new-window)
   "Open URL in x-www-browser, possibly in NEW-WINDOW."
-  (shell-command (concat "x-www-browser" " " "\"" url "\"")))
+  (shell-command (concat "google-chrome-stable" " " "\"" url "\"")))
 
 (defun browse-url-firefox (url &optional new-window)
   "Open URL in firefox, possibly in NEW-WINDOW."
@@ -678,6 +697,11 @@ Version 2017-01-11"
 ;   :config
 ;   (add-hook 'rjsx-mode 'auto-indent-mode))
 
+;;; Math, calc
+
+(use-package literate-calc-mode)
+
+
 ;;; Writeroom, writing, book
 (defun ponelat/write ()
   "Set up writing mode."
@@ -704,10 +728,12 @@ Version 2017-01-11"
     (add-hook 'writeroom-mode-hook #'ponelat/inhibit-git-gutter+-mode))
   )
 
-;;; SSH, Sudo, root, sudowrite, dired, tramp
+;;; System, Linux, SSH, Sudo, root, sudowrite, dired, tramp
 (progn
   (require 'tramp)
-  (eval-after-load 'tramp '(setenv "SHELL" "/bin/bash")))
+  (eval-after-load 'tramp '(setenv "SHELL" "/usr/bin/env bash")))
+
+(use-package journalctl-mode)
 
 (use-package docker-tramp)
 
@@ -1000,10 +1026,9 @@ Version 2018-12-23"
   (defalias #'forward-evil-word #'forward-evil-symbol))
 
 (use-package evil-replace-with-register
-
   :config
   (progn
-    (setq evil-replace-with-register-key "gr")
+    (setq evil-replace-with-register-key "r")
     (evil-replace-with-register-install)))
 
 (use-package evil-commentary
@@ -2047,13 +2072,35 @@ eg: /one/two => two
     (magit-define-popup-switch 'magit-log-popup ?f "first parent" "--first-parent")
     (setq magit-list-refs-sortby "-creatordate")))
 
+(use-package git-timemachine)
+
+(use-package git-gutter+
+  :init (global-git-gutter+-mode)
+  :config (progn
+            (define-key git-gutter+-mode-map (kbd "C-x n") 'git-gutter+-next-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x p") 'git-gutter+-previous-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x v =") 'git-gutter+-show-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x r") 'git-gutter+-revert-hunks)
+            (define-key git-gutter+-mode-map (kbd "C-x t") 'git-gutter+-stage-hunks)
+            (define-key git-gutter+-mode-map (kbd "C-x c") 'git-gutter+-commit)
+            (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
+            (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
+            (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer)
+            (custom-set-variables
+              '(git-gutter+-window-width 1)
+              '(git-gutter+-added-sign "+")
+              '(git-gutter+-deleted-sign "-")
+              '(git-gutter+-modified-sign "=")
+              '(git-gutter:visual-line t)
+              '(git-gutter+-modified  "yellow")))
+  :diminish (git-gutter+-mode . "+="))
 ;;; GhostText, browser, live
 (use-package atomic-chrome
   )
 ;;; Copy as format (for pasting into GitHub/Jira/Confluence)
 (use-package copy-as-format)
 ;;; Jira
-(use-package org-jira
+(comment use-package org-jira
   :init
   (setq jiralib-url "https://smartbear.atlassian.net")
   :config
@@ -2067,19 +2114,7 @@ eg: /one/two => two
          :filename "swaggerhub-cc-mine"))))
 
 
-(defun ponelat/get-jira-ccs ()
-  "It gets all CCs that are interesting to me."
-  (interactive)
-  (org-jira-get-issues-from-filter "project = CC AND component = SwaggerHub AND resolution = Unresolved"))
-
-(defun ponelat/get-jira-spikes ()
-  "It gets all Spikes that are interesting to me."
-  (interactive)
-  (org-jira-get-issues-from-filter "project = SONP AND resolution = Unresolved"))
-
-
-
-(use-package jira-markup-mode
+(comment use-package jira-markup-mode
   :config
   (add-to-list 'auto-mode-alist '("\\.confluence$" . jira-markup-mode))
   (add-to-list 'auto-mode-alist '("\\.jira" . jira-markup-mode))
@@ -2112,11 +2147,14 @@ eg: /one/two => two
   (interactive)
   (kill-new (git-link--branch)))
 
+<<<<<<< HEAD
 (defun ponelat/ponelat-copy-pwd-path-file ()
   "It kills the current pwd"
   (interactive)
   (kill-new (pwd)))
 
+=======
+>>>>>>> nixos
 ;;; Ledger
 (use-package ledger-mode
   :config
@@ -2126,27 +2164,6 @@ eg: /one/two => two
   )
 
 
-(use-package git-gutter+
-
-  :init (global-git-gutter+-mode)
-  :config (progn
-            (define-key git-gutter+-mode-map (kbd "C-x n") 'git-gutter+-next-hunk)
-            (define-key git-gutter+-mode-map (kbd "C-x p") 'git-gutter+-previous-hunk)
-            (define-key git-gutter+-mode-map (kbd "C-x v =") 'git-gutter+-show-hunk)
-            (define-key git-gutter+-mode-map (kbd "C-x r") 'git-gutter+-revert-hunks)
-            (define-key git-gutter+-mode-map (kbd "C-x t") 'git-gutter+-stage-hunks)
-            (define-key git-gutter+-mode-map (kbd "C-x c") 'git-gutter+-commit)
-            (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
-            (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
-            (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer)
-            (custom-set-variables
-              '(git-gutter+-window-width 1)
-              '(git-gutter+-added-sign "+")
-              '(git-gutter+-deleted-sign "-")
-              '(git-gutter+-modified-sign "=")
-              '(git-gutter:visual-line t)
-              '(git-gutter+-modified  "yellow")))
-  :diminish (git-gutter+-mode . "+="))
 
 ;; "^\\(=====[ 	]+\\)\\([^\t\n].*?\\)\\(\\([ \t]+=====\\)?[ \t]*\\(?:\n\\|\\'\\)\\)"
 (defun ponelat/grab-imenu-of (filename)
@@ -2395,15 +2412,15 @@ eg: /one/two => two
   :custom (org-roam-directory ponelat/org-roam-dir))
 
 
-(use-package deft
-  :after org
-  :bind
-  ("C-c n d" . deft)
-  :custom
-  (deft-recursive nil)
-  (deft-use-filter-string-for-filename t)
-  (deft-default-extension "org")
-  (deft-directory ponelat/org-roam-dir))
+;; (use-package deft
+;;   :after org
+;;   :bind
+;;   ("C-c n d" . deft)
+;;   :custom
+;;   (deft-recursive nil)
+;;   (deft-use-filter-string-for-filename t)
+;;   (deft-default-extension "org")
+;;   (deft-directory ponelat/org-roam-dir))
 
 ;;; Time world clock
 (defun insert-timestamp ()
@@ -2601,7 +2618,7 @@ is positive, move after, and if negative, move before."
 (use-package ox-jira)
 (use-package ox-slack)
 
-(require 'ox-pointy)
+(comment require 'ox-pointy)
 
 ;;; Open with external tools
 
@@ -2772,6 +2789,7 @@ Version 2017-12-27"
            ("py" . "python")
            ("py3" . ,(if (string-equal system-type "windows-nt") "c:/Python32/python.exe" "python3"))
            ("rb" . "ruby")
+           ("nix" . "nix eval -f")
            ("go" . "go run")
            ("js" . "node") ; node.js
             ("ts" . "ts-node") ; TypeScript
@@ -2834,6 +2852,9 @@ Version 2017-12-27"
 ;; Themes have a lot of power, and some of it cannot be reversed here
 ;;; Theme hooks
 
+; Allow all themes to run arbitrary code without a prompt
+(setq custom-safe-themes t)
+
 ;;; Modeline theme
 ;; (use-package xmlgen)
 ;; (use-package ocodo-svg-modelines)
@@ -2857,8 +2878,8 @@ Version 2017-12-27"
   ;; Enable custom neotree theme (all-the-icons must be installed!)
   (doom-themes-neotree-config)
   ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-  (doom-themes-treemacs-config)
+  (comment setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+  (comment doom-themes-treemacs-config)
 
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
@@ -2896,6 +2917,7 @@ Version 2017-12-27"
       (set-face-attribute 'org-hide nil :foreground bg-color :background bg-color)
       (set-face-attribute 'org-code nil :foreground (face-attribute 'org-formula :foreground))
       (set-face-attribute 'fringe nil :foreground bg-color :background bg-color))))
+
 (defun ponelat/add-frame-padding (&optional PREFIX)
   "Add a padding to frame.  Will give options when used with PREFIX.  "
   (interactive "P")
@@ -3028,8 +3050,8 @@ Version 2017-12-27"
     )
   )
 
-(use-package gruvbox-theme
-  )
+;; (use-package gruvbox-theme
+;;   )
 
 ;; (use-package soothe-theme
 ;;   :defer t
@@ -3053,7 +3075,6 @@ Version 2017-12-27"
 ;;   )
 
 (use-package org-bullets
-
   :config
   (setq
     org-bullets-bullet-list '("●" "○")
@@ -3137,7 +3158,7 @@ Version 2017-12-27"
   (interactive)
   (unless ponelat:theme-window-loaded
     (progn
-      (ponelat/setup-mode-line)
+      ;; (ponelat/setup-mode-line)
       (load-theme-only ponelat:theme)
       (setq org-beautify-theme-use-box-hack nil)
       (load-theme 'org-beautify 1)
@@ -3174,7 +3195,7 @@ Version 2017-12-27"
 
 
 ;;; Font,face
-(defvar ponelat/default-font-family "SF Mono"
+(defvar ponelat/default-font-family "Noto Mono"
   "The font family I like. Options...
  - Noto Mono
  - SF Mono
@@ -3219,7 +3240,6 @@ Interactively you can choose the FONT-NAME"
 
 ;;; Diff, vimdiff
 (use-package vdiff)
-
 
 ;; Kill all other buffers
 (defun ponelat/kill-other-buffers ()
@@ -3294,13 +3314,6 @@ Interactively you can choose the FONT-NAME"
       (delete-region (car bounds) (cdr bounds))
       (insert (apply fn (list text))))))
 
-(defun replace-bounds (str bounds)
-  "Replace BOUNDS with STR."
-  (let ((beg (car bounds))
-         (end (cdr bounds)))
-    (goto-char beg)
-    (delete-region (car bounds) (cdr bounds))
-    (insert str)))
 
 ;;; Visual regexp, search replace
 (use-package visual-regexp)
@@ -3365,7 +3378,9 @@ Interactively you can choose the FONT-NAME"
       (lambda (acc arg-node)
         (let* ((key (xml-get-attribute arg-node 'name))
                 (file-from (xml-get-attribute-or-nil arg-node 'file-from))
-                (file-values (if file-from (ponelat/read-directory-glob file-from (projectile-project-root))))
+                (file-values (if file-from
+                               (let ((default-directory (projectile-project-root)))
+                                 (file-expand-wildcards file-from))))
                 (child-values
                   (mapcar
                     (lambda (node)
@@ -3515,19 +3530,6 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   (general-evil-setup)
   (general-auto-unbind-keys t))
 
-(progn
-;; Type a symbol then hit C-j to wrap it in parens.
-  (defun ponelat/emmet-for-lisp ()
-    "Wraps the previous symbol with parens."
-    (interactive)
-    (ponelat/replace-thing-at-point-or-mark (lambda (str) (format "(%s )" str)) 'symbol)
-    (backward-char))
-  (general-define-key
-    :states '(visual normal insert)
-    :keymaps 'emacs-lisp-mode-map
-    "C-j" 'ponelat/emmet-for-lisp))
-
-
 ;;; General, keys
 (progn
   (defconst ponelat/global-leader-key "SPC")
@@ -3571,11 +3573,13 @@ In the root of your project get a file named .emacs-commands.xml with the follow
       "od" `(,(lambda () (interactive) (find-file "~/Downloads")) :wk "Downloads")
       "oi" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/i3/config" ponelat/projects-dir))) :wk "i3 config")
       "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
+      "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
+      "on" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/configuration.nix" ponelat/projects-dir))) :wk "NixOS")
       ;; "op" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/profile" ponelat/projects-dir))) :wk ".profile")
       "os" `(,(lambda () (interactive) (find-file "~/.ssh/config")) :wk "ssh config")
       "ok" `(,(lambda () (interactive) (find-file "~/.kube/config")) :wk "kube config")
 
-;;; Magit
+;;; Magit Keys
      "gg" #'magit-status
 
 ;;; Org/Roam/Agenda/Trello
@@ -3794,12 +3798,74 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    "C-S-k" #'evil-window-up
     "C-S-j" #'evil-window-down)
 
+  (progn
+    (require 'dired)
+    (general-define-key
+     :states 'normal
+     :keymaps 'dired-mode-map
+     "s" #'xah-dired-sort)))
+
 (progn
-  (require 'dired)
+;; Type a symbol then hit C-j to wrap it in parens.
+  (defun ponelat/emmet-for-lisp ()
+    "Wraps the previous symbol with parens."
+    (interactive)
+    (ponelat/replace-thing-at-point-or-mark (lambda (str) (format "(%s )" str)) 'symbol)
+    (backward-char))
+
   (general-define-key
-    :states 'normal
-    :keymaps 'dired-mode-map
-    "s" #'xah-dired-sort)))
+    :states '(visual normal insert)
+    :keymaps 'emacs-lisp-mode-map
+    "C-j" 'ponelat/emmet-for-lisp)
+  (general-define-key
+   :states '(visual normal)
+   :keymaps 'override
+   "r" #'evil-replace-with-register))
+
+(progn
+  (use-package marginalia
+    :ensure t
+    :config
+    (marginalia-mode))
+
+  (use-package embark
+    :ensure t
+
+    :bind
+    (("C-S-a" . embark-act)       ;; pick some comfortable binding
+      ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+    :init
+
+    ;; Optionally replace the key help with a completing-read interface
+    (setq prefix-help-command #'embark-prefix-help-command)
+
+    :config
+
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+      '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+         nil
+         (window-parameters (mode-line-format . none)))))
+
+  ;; Consult users will also want the embark-consult package.
+  (use-package embark-consult
+    :ensure t
+    :after (embark consult)
+    :demand t ; only necessary if you have the hook below
+    ;; if you want to have consult previews as you move around an
+    ;; auto-updating embark collect buffer
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode)))
+
+(use-package nix-mode
+  :general
+  (:keymaps 'nix-mode-map
+   "C-c C-c" (lambda () (interactive) (async-shell-command "sudo nixos-rebuild switch" "*NixOS Rebuild*")))
+  :mode ("\\.nix\\'"))
+
+(use-package app-launcher
+  :straight '(app-launcher :host github :repo "SebastienWae/app-launcher"))
 
 ;;; Custom.el file
 (load custom-file 'noerror)

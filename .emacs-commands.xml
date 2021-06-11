@@ -1,0 +1,15 @@
+<emacs>
+  <command title="Build NixOS" dir="." >
+
+    <cmd>
+      sudo nixos-rebuild $TYPE
+    </cmd>
+
+    <arg name="TYPE" default="switch" >
+      <value> switch </value>
+      <value> boot </value>
+    </arg>
+
+  </command>
+
+</emacs>

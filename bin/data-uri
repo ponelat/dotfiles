@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Output stdin as a data-uri with base64
 
 # Eg: data:image/png;base64,abcabc...d
