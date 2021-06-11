@@ -116,7 +116,7 @@ in {
 
     unstable.gnomeExtensions.material-shell
 
-    nodejs-14_x yarn
+    nodejs-14_x unstable.yarn
 
     firefox google-chrome inkscape slack dropbox-cli zoom-us
   ];
