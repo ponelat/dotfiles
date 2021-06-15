@@ -61,7 +61,7 @@
 ;;; Scratch buffer, Emacs
 (setq initial-scratch-message "#+TITLE: Emacs\n\n")
 ;; This breaks shit, not sure why??
-(setq initial-major-mode 'org-mode )
+;; (setq initial-major-mode 'org-mode )
 
 (setq lexical-binding t)
 (windmove-default-keybindings)
@@ -3057,8 +3057,8 @@ Version 2017-12-27"
 ;;       'soothe
 ;;       (lambda (a) (ponelat/theme-soothe-extras)))))
 
-;; (use-package solarized-theme
-;;   :defer t)
+(use-package solarized-theme
+  :defer t)
 
 ;; (with-eval-after-load 'zerodark-theme ())
 ;; This can only run in window mode...
