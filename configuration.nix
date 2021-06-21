@@ -116,6 +116,7 @@ in {
 
     unstable.gnomeExtensions.material-shell
 
+    python3 gnumake
     nodejs-14_x unstable.yarn
 
     firefox google-chrome inkscape slack dropbox-cli zoom-us

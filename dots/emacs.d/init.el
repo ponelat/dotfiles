@@ -1239,6 +1239,21 @@ Version 2018-12-23"
 ;;; Yaml
 (use-package yaml-mode)
 
+(defun yaml-delete-backward-word-electric (arg)
+  "Delete backward one word or back-dent the current line.
+If invoked following only whitespace on a line, will back-dent to the
+immediately previous multiple of `yaml-indent-offset' spaces."
+  (interactive "*p")
+  (if (or (/= (current-indentation) (current-column)) (bolp))
+      (evil-delete-backward-word)
+    (let ((ci (current-column)))
+      (beginning-of-line)
+      (delete-horizontal-space)
+      (indent-to (* (/ (- ci (* arg yaml-indent-offset))
+		       yaml-indent-offset)
+		    yaml-indent-offset)))))
+
+
 (use-package yaml-imenu
   :config
   (yaml-imenu-enable))
@@ -1543,6 +1558,9 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package jest
   :after '((js2-mode))
   :hook (js2-mode . 'jest-minor-mode))
+
+(use-package jest-test-mode)
+
 
 (use-package nodejs-repl
   )
@@ -2147,14 +2165,11 @@ eg: /one/two => two
   (interactive)
   (kill-new (git-link--branch)))
 
-<<<<<<< HEAD
 (defun ponelat/ponelat-copy-pwd-path-file ()
   "It kills the current pwd"
   (interactive)
   (kill-new (pwd)))
 
-=======
->>>>>>> nixos
 ;;; Ledger
 (use-package ledger-mode
   :config
@@ -3746,6 +3761,14 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     :keymaps 'emacs-lisp-mode-map
     "C-." 'paredit-forward-slurp-sexp
     "C-," 'paredit-forward-barf-sexp)
+
+
+;;; Yaml/OpenAPI
+  (general-define-key
+    :states '(normal insert)
+    :keymaps 'yaml-mode-map
+    "C-w" #'yaml-delete-backward-word-electric)
+
 
 ;;; Avy keys
   (general-define-key
