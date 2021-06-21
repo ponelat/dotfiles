@@ -61,7 +61,7 @@
 ;;; Scratch buffer, Emacs
 (setq initial-scratch-message "#+TITLE: Emacs\n\n")
 ;; This breaks shit, not sure why??
-(setq initial-major-mode 'org-mode )
+;; (setq initial-major-mode 'org-mode )
 
 (setq lexical-binding t)
 (windmove-default-keybindings)
