@@ -477,7 +477,7 @@ becomes
 
 (defun browse-url-x-www-browser (url &optional new-window)
   "Open URL in x-www-browser, possibly in NEW-WINDOW."
-  (shell-command (concat "x-www-browser" " " "\"" url "\"")))
+  (shell-command (concat "google-chrome-stable" " " "\"" url "\"")))
 
 (defun browse-url-firefox (url &optional new-window)
   "Open URL in firefox, possibly in NEW-WINDOW."
@@ -1239,6 +1239,21 @@ Version 2018-12-23"
 ;;; Yaml
 (use-package yaml-mode)
 
+(defun yaml-delete-backward-word-electric (arg)
+  "Delete backward one word or back-dent the current line.
+If invoked following only whitespace on a line, will back-dent to the
+immediately previous multiple of `yaml-indent-offset' spaces."
+  (interactive "*p")
+  (if (or (/= (current-indentation) (current-column)) (bolp))
+      (evil-delete-backward-word)
+    (let ((ci (current-column)))
+      (beginning-of-line)
+      (delete-horizontal-space)
+      (indent-to (* (/ (- ci (* arg yaml-indent-offset))
+		       yaml-indent-offset)
+		    yaml-indent-offset)))))
+
+
 (use-package yaml-imenu
   :config
   (yaml-imenu-enable))
@@ -1543,6 +1558,9 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package jest
   :after '((js2-mode))
   :hook (js2-mode . 'jest-minor-mode))
+
+(use-package jest-test-mode)
+
 
 (use-package nodejs-repl
   )
@@ -2787,6 +2805,7 @@ Version 2017-12-27"
            ("py" . "python")
            ("py3" . ,(if (string-equal system-type "windows-nt") "c:/Python32/python.exe" "python3"))
            ("rb" . "ruby")
+           ("nix" . "nix eval -f")
            ("go" . "go run")
            ("js" . "node") ; node.js
             ("ts" . "ts-node") ; TypeScript
@@ -3751,6 +3770,14 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "C-." 'paredit-forward-slurp-sexp
     "C-," 'paredit-forward-barf-sexp)
 
+
+;;; Yaml/OpenAPI
+  (general-define-key
+    :states '(normal insert)
+    :keymaps 'yaml-mode-map
+    "C-w" #'yaml-delete-backward-word-electric)
+
+
 ;;; Avy keys
   (general-define-key
     :states 'normal
@@ -3825,6 +3852,42 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    :states '(visual normal)
    :keymaps 'override
    "r" #'evil-replace-with-register))
+
+(progn
+  (use-package marginalia
+    :ensure t
+    :config
+    (marginalia-mode))
+
+  (use-package embark
+    :ensure t
+
+    :bind
+    (("C-S-a" . embark-act)       ;; pick some comfortable binding
+      ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+    :init
+
+    ;; Optionally replace the key help with a completing-read interface
+    (setq prefix-help-command #'embark-prefix-help-command)
+
+    :config
+
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+      '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+         nil
+         (window-parameters (mode-line-format . none)))))
+
+  ;; Consult users will also want the embark-consult package.
+  (use-package embark-consult
+    :ensure t
+    :after (embark consult)
+    :demand t ; only necessary if you have the hook below
+    ;; if you want to have consult previews as you move around an
+    ;; auto-updating embark collect buffer
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode)))
 
 (use-package nix-mode
   :general
