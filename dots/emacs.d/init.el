@@ -2292,21 +2292,22 @@ eg: /one/two => two
     (global-set-key (kbd "C-c C-L") #'org-store-link)
     (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
 
-    (setq org-directory ponelat/org-dir)
-    (setq org-agenda-files (list ponelat/org-dir))
-    (setq org-default-notes-file "notes.org")
-    (setq org-confirm-elisp-link-function nil)
-    (setq org-src-fontify-natively t)
-    (setq org-insert-heading-respect-content t)
-    (setq org-agenda-start-day "1d")
-    (setq org-agenda-span 5)
-    (setq org-agenda-start-on-weekday nil)
-    (setq org-deadline-warning-days 1)
-    (setq org-confirm-babel-evaluate nil)
-    (setq org-export-with-toc nil)
-    (setq org-export-initial-scope 'subtree)
-    (setq org-goto-interface 'outline-path-completionp)
-    (setq org-outline-path-complete-in-steps nil)
+    (setq org-directory ponelat/org-dir
+      org-agenda-files (list ponelat/org-dir)
+      org-default-notes-file "notes.org"
+      org-confirm-elisp-link-function nil
+      org-src-fontify-natively t
+      org-insert-heading-respect-content t
+      org-agenda-start-day "1d"
+      org-agenda-span 5
+      org-agenda-start-on-weekday nil
+      org-deadline-warning-days 1
+      org-confirm-babel-evaluate nil
+      org-export-with-toc nil
+      org-export-initial-scope 'subtree
+      org-goto-interface 'outline-path-completionp
+      org-src-preserve-indentation t
+      org-outline-path-complete-in-steps nil)
 
 ;;; Babel
     (progn
