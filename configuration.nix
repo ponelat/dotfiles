@@ -10,7 +10,8 @@ let
       config.allowUnfree = true;
       overlays = [
         (import (builtins.fetchTarball {
-          url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;
+          # Updated the SHA on 2021-07-09
+          url = https://github.com/nix-community/emacs-overlay/archive/4344c0e2e759c8715bf6e21e96026976189f1a4a.tar.gz;
         }))
       ];
     };
@@ -57,6 +58,8 @@ in {
 
   fonts.fonts = with pkgs; [
     noto-fonts
+    open-sans
+    corefonts
   ];
 
 
@@ -90,13 +93,24 @@ in {
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  nixpkgs.config.allowUnfree = true;
-  # nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-	# "google-chrome"
-  # ];
+  # nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "google-chrome"
+    "slack"
+    "skypeforlinux"
+    "dropbox"
+    "dropbox-cli"
+    "corefonts"
+    "zoom-us"
+    "zoom"
+    # WTF firefox??
+    "firefox-bin"
+    "firefox-release-bin-unwrapped"
+  ];
 
-  # Docker
+  # Services
   virtualisation.docker.enable = true;
+  services.emacs.enable = true;
 
   # Enable nix eval --expr
   nix.package = pkgs.nixUnstable;
@@ -105,21 +119,23 @@ in {
    '';
 
   environment.systemPackages = with pkgs; [
-    curl wget vim git fasd jq sqlite unzip ripgrep xsel
+    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata
 
     openvpn
 
     binutils gcc libgccjit
-    unstable.emacsGcc
 
-    noto-fonts
+    noto-fonts open-sans corefonts
 
     unstable.gnomeExtensions.material-shell
+
+    # Audio
+    rnnoise-plugin
 
     python3 gnumake
     nodejs-14_x unstable.yarn
 
-    firefox google-chrome inkscape slack dropbox-cli zoom-us
+    firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux
   ];
 
   # Dropbox
