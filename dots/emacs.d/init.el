@@ -1488,7 +1488,7 @@ Will use `projectile-default-project-name' .rest as the file name."
   (add-to-list 'company-backends #'company-tabnine))
 
 
-;;; Debugging, LSP
+;;; Debugging, LSP, AST, Tree-Sitter
 (use-package dap-mode
   :init
   (progn
@@ -1498,6 +1498,11 @@ Will use `projectile-default-project-name' .rest as the file name."
   :config
   (dap-mode t)
   (dap-ui-mode t))
+
+(use-package tree-sitter)
+(use-package tree-sitter-langs)
+
+
 
 ;;; Java
 (progn
