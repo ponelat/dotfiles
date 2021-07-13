@@ -3192,10 +3192,9 @@ Version 2017-12-27"
   "Enable or load terminal theme."
   (if ponelat:theme-terminal-loaded
     (progn
-      (enable-theme 'solarized-light))
+      (enable-theme 'doom-dracula))
     (progn
-      (customize-set-variable 'solarized-termcolors 256)
-      (load-theme 'solarized-light t)
+      (load-theme 'doom-dracula t)
       (setq ponelat:theme-terminal-loaded t))))
 
 (defun ponelat/after-make-frame-functions-setup-theme (frame)
