@@ -84,9 +84,32 @@ in {
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
+  programs.fish = {
+    shellAliases = {
+      "j" = "fasd_cd -d";
+      "cs" = "git status || ls";
+    };
+   enable = true;
+   shellInit = ''
+fish_vi_key_bindings
+
+function fasd_cd -d "fasd builtin cd
+  if test (count $argv) -le 1
+    command fasd "$argv"
+  else
+    fasd -e 'printf %s' $argv | read -l ret
+    test -z "$ret"; and return
+    test -d "$ret"; and cd "$ret"; or printf "%s\n" $ret
+  end
+end
+'';
+  };
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
+
   users.users.josh = {
     isNormalUser = true;
+    shell = pkgs.fish;
     home = "/home/josh";
     extraGroups = [ "wheel" "docker" ]; # 'wheel' enables ‘sudo’ for the user.
   };
