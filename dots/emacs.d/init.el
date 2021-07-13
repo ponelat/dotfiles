@@ -293,6 +293,10 @@
 (global-set-key (kbd "M-z") #'ponelat/term)
 
 
+;;; Help, man, tldr
+(use-package tldr)
+
+
 ;;; shell commands, chmod
 (defun ponelat/chmodx ()
   "Make this file executable."
