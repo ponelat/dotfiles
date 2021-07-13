@@ -69,6 +69,8 @@ in {
 
   # Enable the GNOME 3 Desktop Environment.
 
+  # For Flutter/Android
+  # programs.adb.enable = true;
 
   # Configure keymap in X11
   # services.xserver.layout = "us";
@@ -93,7 +95,7 @@ in {
    shellInit = ''
 fish_vi_key_bindings
 
-function fasd_cd -d "fasd builtin cd
+function fasd_cd -d "fasd builtin cd"
   if test (count $argv) -le 1
     command fasd "$argv"
   else
@@ -142,7 +144,9 @@ end
    '';
 
   environment.systemPackages = with pkgs; [
-    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind
+    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind zip
+
+    gitAndTools.gh
 
     openvpn
 

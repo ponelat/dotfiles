@@ -3764,11 +3764,12 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   ;;   "c")
 
 ;;; Eshell keys
-  (general-define-key
-    :states '(normal insert)
-    :keymaps 'eshell-mode-map
-    "C-k" 'eshell-previous-matching-input-from-input
-    "C-j" 'eshell-next-matching-input-from-input)
+
+  ;; (general-define-key
+  ;;   :states '(normal insert)
+  ;;   :keymaps 'eshell-mode-map
+  ;;   "C-k" 'eshell-previous-matching-input-from-input
+  ;;   "C-j" 'eshell-next-matching-input-from-input)
 
 
 ;;; Lisp/Paredit keys
