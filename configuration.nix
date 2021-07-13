@@ -142,7 +142,7 @@ end
    '';
 
   environment.systemPackages = with pkgs; [
-    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata
+    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind
 
     openvpn
 
