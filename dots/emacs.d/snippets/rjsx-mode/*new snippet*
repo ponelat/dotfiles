@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: it
-# key: it
-# --
-it('should ${1:do something}', function($2) {
-  $3
-})

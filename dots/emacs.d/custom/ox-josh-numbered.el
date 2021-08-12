@@ -158,9 +158,9 @@ a communication channel."
      (plain-text . org-pointy-plain-text))
 
   :menu-entry
-  '(?s "Export to Slack/Pointy syntax"
+  '(?S "Export to Slack/Pointy syntax"
        ((?n "To temporary buffer (numbered)"
-            (lambda (a s v b) (org-pointy-export-as-pointy a s v)))))
+            (lambda (a s v b) (org-pointy-export-as-pointy-slack a s v)))))
   )
 
 (provide 'ox-pointy)

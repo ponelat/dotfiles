@@ -1,0 +1,18 @@
+# -*- mode: snippet -*-
+# name: eclass
+# key: eclass
+# --
+export default class $1 extends React.Component {
+
+  static propTypes = {
+  };
+
+  static defaultProps = {
+  };
+
+  render() {
+    return (
+      $2
+    )
+  }
+}

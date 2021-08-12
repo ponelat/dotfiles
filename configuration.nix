@@ -5,13 +5,13 @@
 { config, lib, pkgs, ... }:
 
 let
+
   unstable = import (fetchTarball
     "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
       config.allowUnfree = true;
       overlays = [
         (import (builtins.fetchTarball {
-          # Updated the SHA on 2021-07-09
-          url = https://github.com/nix-community/emacs-overlay/archive/4344c0e2e759c8715bf6e21e96026976189f1a4a.tar.gz;
+          url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;
         }))
       ];
     };
@@ -26,13 +26,14 @@ in {
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  networking.hostName = "office-desktop"; # Define your hostname.
 
+  # Custom wifi drivers. For the little TP-Link dongle
   boot.blacklistedKernelModules = [
     "rtl8xxxu"
   ];
   boot.kernelModules = [ "rtl8192eu" ];
   boot.extraModulePackages = [ config.boot.kernelPackages.rtl8192eu ];
-  networking.hostName = "office-desktop"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Set your time zone.
@@ -43,7 +44,8 @@ in {
   # replicates the default behaviour.
   networking.useDHCP = false;
   networking.interfaces.eno1.useDHCP = true;
-  networking.interfaces.wlp0s20u5.useDHCP = true;
+  # If you leave this on and don't have wifi plugged in, it'll take 1:30min to search for the device.
+  # networking.interfaces.wlp0s20u5.useDHCP = true;
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -62,12 +64,9 @@ in {
     corefonts
   ];
 
-
   # Map capslock => control key
   services.xserver.xkbOptions = "ctrl:nocaps";
   console.useXkbConfig = true;
-
-  # Enable the GNOME 3 Desktop Environment.
 
   # For Flutter/Android
   # programs.adb.enable = true;
@@ -113,16 +112,18 @@ end
     isNormalUser = true;
     shell = pkgs.fish;
     home = "/home/josh";
-    extraGroups = [ "wheel" "docker" ]; # 'wheel' enables ‘sudo’ for the user.
+    extraGroups = [ "wheel" "docker" "adbusers" ]; # 'wheel' enables ‘sudo’ for the user.
   };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   # nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "obsidian"
     "google-chrome"
     "slack"
     "skypeforlinux"
+    "teams"
     "dropbox"
     "dropbox-cli"
     "corefonts"
@@ -135,7 +136,11 @@ end
 
   # Services
   virtualisation.docker.enable = true;
-  services.emacs.enable = true;
+
+  services.emacs = {
+   enable = true;
+   package = unstable.emacsGcc;
+  };
 
   # Enable nix eval --expr
   nix.package = pkgs.nixUnstable;
@@ -144,7 +149,7 @@ end
    '';
 
   environment.systemPackages = with pkgs; [
-    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind zip
+    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind zip ispell
 
     gitAndTools.gh
 
@@ -154,7 +159,7 @@ end
 
     noto-fonts open-sans corefonts
 
-    unstable.gnomeExtensions.material-shell
+    gnomeExtensions.material-shell
 
     # Audio
     rnnoise-plugin
@@ -162,7 +167,7 @@ end
     python3 gnumake
     nodejs-14_x unstable.yarn
 
-    firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux
+    obs-studio firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux teams obsidian
   ];
 
   # Dropbox
@@ -197,24 +202,23 @@ services.xserver = {
   enable = true;
   desktopManager = {
     xterm.enable = false;
-    gnome3.enable = true;
+    gnome.enable = true; # Gnome 4 in 21.05
   };
   displayManager = {
     # defaultSession = "none+i3";
     gdm.enable = true;
+    gdm.wayland = true;
   };
 
   # i3 Window Manager
-  # windowManager.i3 = {
-  #   enable = true;
-  #   package = pkgs.i3-gaps;
-  #   extraPackages = with pkgs; [
-  #     dmenu #application launcher most people use
-  #     i3status # gives you the default i3 status bar
-  #     i3lock #default i3 screen locker
-  #     i3blocks #if you are planning on using i3blocks over i3status
-  #  ];
-  # };
+  windowManager.i3 = {
+    enable = true;
+    package = pkgs.i3-gaps;
+    extraPackages = with pkgs; [
+      dmenu #application launcher most people use
+      # i3status # gives you the default i3 status bar
+   ];
+  };
 };
 
 # Some programs need SUID wrappers, can be configured further or are

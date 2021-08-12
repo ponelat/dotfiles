@@ -3,3 +3,9 @@
 funcs/private
 funcs/work
 dots/emacs.d/private-functions.el
+/dots/emacs.d/tldr/
+/dots/emacs.d/request/
+/dots/emacs.d/projectile.cache
+/dots/emacs.d/bookmarks
+/dots/emacs.d/.lsp-eslint-choices
+/dots/emacs.d/.dap-breakpoints

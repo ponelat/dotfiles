@@ -161,7 +161,7 @@ a communication channel."
   '(?s "Export to Josh syntax"
        ((?s "buffer - slack"
           (lambda (a s v b) (org-josh-export-as-josh a s v)))
-         (?n "buffer - numbered"
+         (?N "buffer - numbered"
           (lambda (a s v b) (org-josh-export-as-josh a s v))))))
 
 (provide 'ox-josh)

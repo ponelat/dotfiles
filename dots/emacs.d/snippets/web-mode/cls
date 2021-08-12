@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: cls
+# key: cls
+# --
+console.log(\`$1: "\${$1}"\`)

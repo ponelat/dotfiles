@@ -11,7 +11,7 @@
   nil)
 
 ;; NixOS + NativeComp stuff
-(setq is-nixos (executable-find "nixos-rebuild"))
+;; (setq is-nixos (executable-find "nixos-rebuild"))
 					; This may not be needed after the unstable version of emacsGcc.
 ; Keeping it for posterity
 ; (comment when is-nixos
@@ -25,11 +25,13 @@
 ;; 		   ; (nix-path "glibc") "/lib:"
 ;; 		   ; (nix-path "libgccjit") "/lib/gcc/x86_64-unknown-linux-gnu/9.3.0")))))
 
+(setq lexical-binding t)
 (setq emacs-dir "~/.emacs.d")
 (setq custom-file (concat emacs-dir "/custom.el"))
 (add-to-list 'load-path "~/.emacs.d/custom")
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
+;;; Package, Straight, use-package
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -43,34 +45,35 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-;;;;;;;;;; Packages ...
-;; Install `use-package'
-(straight-use-package 'use-package)
-
-
-;; Tell straight.el to overwrite use-package, such it uses straight.el instead of package.el by default.
-;; ...to NOT use straight.el, add `:straigh nil` to `use-package'
-(setq straight-use-package-by-default t)
-
-;; Load org quickly! Before it could be loaded by some nafarious package, breaking it from straight.el
-(straight-use-package 'org)
+;;; Straight.el configure
+(progn
+  ;; Install `use-package'
+  (straight-use-package 'use-package)
+  ;; Tell straight.el to overwrite use-package, such it uses straight.el instead of package.el by default.
+  ;; ...to NOT use straight.el, add `:straigh nil` to `use-package'
+  (setq straight-use-package-by-default t)
+  ;; Load org quickly! Before it could be loaded by some nafarious package, breaking it from straight.el
+  (straight-use-package 'org))
 
 (use-package bug-hunter
   :straight '(bug-hunter :host github :repo "Malabarba/elisp-bug-hunter"))
+
+
+;;; So long, large files
+(global-so-long-mode 1) ; Disables major modes when files are minified/massive.
 
 ;;; Scratch buffer, Emacs
 (setq initial-scratch-message "#+TITLE: Emacs\n\n")
 ;; This breaks shit, not sure why??
 ;; (setq initial-major-mode 'org-mode )
 
-(setq lexical-binding t)
 (windmove-default-keybindings)
 (auto-image-file-mode 1)
 (electric-pair-mode t)
-;;; init.el helpers
-
-(defun imenu-fn ()
-  (call-interactively #'counsel-imenu))
+; Gotten from https://emacs-lsp.github.io/lsp-mode/page/performance/ to help with LSP performance
+;;; Garbage collection
+(setq gc-cons-threshold (* 100 1024 1024)
+ read-process-output-max (* 1024 1024))
 
 ;; Disable
 (defun ponelat/toggle-trace-request ()
@@ -92,7 +95,6 @@
   "Converts AL from ((one 1) (two 2)) => ((one . 1) (two . 2))."
   (mapcar (lambda (p) (cons (car p) (car (cdr p)))) al))
 
-
 (defun with-num-at-point (&optional fn)
   "Apply FN to number at point. Using json rules."
   (when (save-excursion (skip-chars-backward "[0-9.]") (looking-at json-mode-number-re))
@@ -112,16 +114,8 @@
           (buffer-substring start end)))
       :key #'string-to-number)))
 
-;; ;;; SSH mode
-;; (use-package ssh-mode
-;;   )
-
 ;;; Authentication, ssh, gpg
 (setq auth-source '("~/.authinfo.gpg" "~/.authinfo" "~/.netrc"))
-
-;;; Macrostep
-(use-package macrostep)
-
 
 ;;; Auth info, secrets, passwords
 (defun ponelat/get-secret (host)
@@ -196,15 +190,7 @@
   (interactive "P")
   (find-file-existing "~/projects/dotfiles/dots/emacs.d/init.el")
   (widen)
-  (imenu-fn)
-  (if p (init-narrow-to-section)))
-
-(defun init-imenu (p)
-  "Jump to section in init.el file.  Or straight to P."
-  (interactive "P")
-  (find-file-existing "~/.emacs.d/init.el")
-  (widen)
-  (imenu-fn)
+  (counsel-imenu)
   (if p (init-narrow-to-section)))
 
 (defun init-narrow-to-section ()
@@ -295,6 +281,32 @@
 
 ;;; Help, man, tldr
 (use-package tldr)
+
+;; Colors, CSS
+(defun xah-syntax-color-hex ()
+  "Syntax color text of the form 「#ff1100」 and 「#abc」 in current buffer.
+URL `http://ergoemacs.org/emacs/emacs_CSS_colors.html'
+Version 2017-03-12"
+  (interactive)
+  (font-lock-add-keywords
+   nil
+   '(("#[[:xdigit:]]\\{3\\}"
+      (0 (put-text-property
+          (match-beginning 0)
+          (match-end 0)
+          'face (list :background
+                      (let* (
+                             (ms (match-string-no-properties 0))
+                             (r (substring ms 1 2))
+                             (g (substring ms 2 3))
+                             (b (substring ms 3 4)))
+                        (concat "#" r r g g b b))))))
+     ("#[[:xdigit:]]\\{6\\}"
+      (0 (put-text-property
+          (match-beginning 0)
+          (match-end 0)
+          'face (list :background (match-string-no-properties 0)))))))
+  (font-lock-flush))
 
 
 ;;; shell commands, chmod
@@ -682,14 +694,7 @@ Version 2017-01-11"
     (global-set-key (kbd "C-h M-m") 'discover-my-mode))
   )
 
-(use-package ranger
-  :disabled t
-  )
-
-(comment use-package dot-mode
-
-  :config
-  (global-dot-mode))
+;; (use-package ranger)
 
 (use-package editorconfig
   :diminish editorconfig-mode
@@ -737,9 +742,9 @@ Version 2017-01-11"
   (require 'tramp)
   (eval-after-load 'tramp '(setenv "SHELL" "/usr/bin/env bash")))
 
-(use-package journalctl-mode)
+;; (use-package journalctl-mode)
 
-(use-package docker-tramp)
+;; (use-package docker-tramp)
 
 (setq dired-dwim-target t)
 
@@ -763,148 +768,47 @@ Version 2017-01-11"
   :bind (:map dired-mode-map
           (("C-c s" . dired-narrow))))
 
-(use-package dired-filter)
-(use-package dired-collapse)
-(use-package dired-rainbow
-  :config
-  (progn
-    (dired-rainbow-define-chmod directory "#6cb2eb" "d.*")
-    (dired-rainbow-define html "#eb5286" ("css" "less" "sass" "scss" "htm" "html" "jhtm" "mht" "eml" "mustache" "xhtml"))
-    (dired-rainbow-define xml "#f2d024" ("xml" "xsd" "xsl" "xslt" "wsdl" "bib" "json" "msg" "pgn" "rss" "yaml" "yml" "rdata"))
-    (dired-rainbow-define document "#9561e2" ("docm" "doc" "docx" "odb" "odt" "pdb" "pdf" "ps" "rtf" "djvu" "epub" "odp" "ppt" "pptx"))
-    (dired-rainbow-define markdown "#ffed4a" ("org" "etx" "info" "markdown" "md" "mkd" "nfo" "pod" "rst" "tex" "textfile" "txt"))
-    (dired-rainbow-define database "#6574cd" ("xlsx" "xls" "csv" "accdb" "db" "mdb" "sqlite" "nc"))
-    (dired-rainbow-define media "#de751f" ("mp3" "mp4" "MP3" "MP4" "avi" "mpeg" "mpg" "flv" "ogg" "mov" "mid" "midi" "wav" "aiff" "flac"))
-    (dired-rainbow-define image "#f66d9b" ("tiff" "tif" "cdr" "gif" "ico" "jpeg" "jpg" "png" "psd" "eps" "svg"))
-    (dired-rainbow-define log "#c17d11" ("log"))
-    (dired-rainbow-define shell "#f6993f" ("awk" "bash" "bat" "sed" "sh" "zsh" "vim"))
-    (dired-rainbow-define interpreted "#38c172" ("py" "ipynb" "rb" "pl" "t" "msql" "mysql" "pgsql" "sql" "r" "clj" "cljs" "scala" "js"))
-    (dired-rainbow-define compiled "#4dc0b5" ("asm" "cl" "lisp" "el" "c" "h" "c++" "h++" "hpp" "hxx" "m" "cc" "cs" "cp" "cpp" "go" "f" "for" "ftn" "f90" "f95" "f03" "f08" "s" "rs" "hi" "hs" "pyc" ".java"))
-    (dired-rainbow-define executable "#8cc4ff" ("exe" "msi"))
-    (dired-rainbow-define compressed "#51d88a" ("7z" "zip" "bz2" "tgz" "txz" "gz" "xz" "z" "Z" "jar" "war" "ear" "rar" "sar" "xpi" "apk" "xz" "tar"))
-    (dired-rainbow-define packaged "#faad63" ("deb" "rpm" "apk" "jad" "jar" "cab" "pak" "pk3" "vdf" "vpk" "bsp"))
-    (dired-rainbow-define encrypted "#ffed4a" ("gpg" "pgp" "asc" "bfe" "enc" "signature" "sig" "p12" "pem"))
-    (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
-    (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
-    (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
-    (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*")))
-
-(defun xah-dired-sort ()
-  "Sort dired dir listing in different ways.
-Prompt for a choice.
-URL `http://ergoemacs.org/emacs/dired_sort.html'
-Version 2018-12-23"
-  (interactive)
-  (let ($sort-by $arg)
-    (setq $sort-by (ido-completing-read "Sort by:" '( "date" "size" "name" )))
-    (cond
-     ((equal $sort-by "name") (setq $arg "-Al "))
-     ((equal $sort-by "date") (setq $arg "-Al -t"))
-     ((equal $sort-by "size") (setq $arg "-Al -S"))
-     ;; ((equal $sort-by "dir") (setq $arg "-Al --group-directories-first"))
-     (t (error "logic error 09535" )))
-    (dired-sort-other $arg )))
-
-
-;; (use-package vscode-icon
-;;   :commands (vscode-icon-for-file))
-
-(comment progn
-  (use-package treemacs
-    :config
-    (progn
-      ;; (setq treemacs-collapse-dirs             (if (executable-find "python3") 3 0)
-      ;;   treemacs-deferred-git-apply-delay      0.5
-      ;;   treemacs-display-in-side-window        t
-      ;;   treemacs-eldoc-display                 t
-      ;;   treemacs-file-event-delay              5000
-      ;;   treemacs-file-follow-delay             0.2
-      ;;   treemacs-follow-after-init             t
-      ;;   treemacs-git-command-pipe              ""
-      ;;   treemacs-goto-tag-strategy             'refetch-index
-      ;;   treemacs-indentation                   2
-      ;;   treemacs-indentation-string            " "
-      ;;   treemacs-is-never-other-window         nil
-      ;;   treemacs-max-git-entries               5000
-      ;;   treemacs-missing-project-action        'ask
-      ;;   treemacs-no-png-images                 nil
-      ;;   treemacs-no-delete-other-windows       t
-      ;;   treemacs-project-follow-cleanup        nil
-      ;;   ;; treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-      ;;   treemacs-recenter-distance             0.1
-      ;;   treemacs-recenter-after-file-follow    nil
-      ;;   treemacs-recenter-after-tag-follow     nil
-      ;;   treemacs-recenter-after-project-jump   'always
-      ;;   treemacs-recenter-after-project-expand 'on-distance
-      ;;   treemacs-show-cursor                   nil
-      ;;   treemacs-show-hidden-files             t
-      ;;   treemacs-silent-filewatch              nil
-      ;;   treemacs-silent-refresh                nil
-      ;;   treemacs-sorting                       'alphabetic-desc
-      ;;   treemacs-space-between-root-nodes      t
-      ;;   treemacs-tag-follow-cleanup            t
-      ;;   treemacs-tag-follow-delay              1.5
-      ;;   treemacs-width                         35)
-
-      ;; The default width and height of the icons is 22 pixels. If you are
-      ;; using a Hi-DPI display, uncomment this to double the icon size.
-      ;;(treemacs-resize-icons 44)
-
-      ;; (treemacs-follow-mode t)
-      ;; (treemacs-filewatch-mode t)
-      ;; (treemacs-fringe-indicator-mode t)
-      (comment pcase (cons (not (null (executable-find "git")))
-               (not (null (executable-find "python3"))))
-        (`(t . t)
-          (treemacs-git-mode 'deferred))
-        (`(t . _)
-          (treemacs-git-mode 'simple))))
-    :bind
-    (:map global-map
-     '(("M-0"       . treemacs-select-window)
-      ("C-x t t"   . treemacs)
-      ("C-x t B"   . treemacs-bookmark)
-      ("C-x t C-t" . treemacs-find-file)
-      ("C-x t M-t" . treemacs-find-tag))))
-
-  (use-package treemacs-projectile
-    :after treemacs projectile)
-
-  ;; (use-package treemacs-icons-dired
-  ;;   :after treemacs dired
-  ;;   :config (treemacs-icons-dired-mode))
-
-  (use-package treemacs-magit
-    :after treemacs magit))
-
-;; (use-package dired-sidebar
-;;   :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
-;;   :commands (dired-sidebar-toggle-sidebar)
-;;   :init
-;;   (add-hook 'dired-sidebar-mode-hook
-;;             (lambda ()
-;;               (unless (file-remote-p default-directory)
-;;                 (auto-revert-mode))))
+;; (use-package dired-filter)
+;; (use-package dired-collapse)
+;; (use-package dired-rainbow
 ;;   :config
-;;   (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
-;;   (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
+;;   (progn
+;;     (dired-rainbow-define-chmod directory "#6cb2eb" "d.*")
+;;     (dired-rainbow-define html "#eb5286" ("css" "less" "sass" "scss" "htm" "html" "jhtm" "mht" "eml" "mustache" "xhtml"))
+;;     (dired-rainbow-define xml "#f2d024" ("xml" "xsd" "xsl" "xslt" "wsdl" "bib" "json" "msg" "pgn" "rss" "yaml" "yml" "rdata"))
+;;     (dired-rainbow-define document "#9561e2" ("docm" "doc" "docx" "odb" "odt" "pdb" "pdf" "ps" "rtf" "djvu" "epub" "odp" "ppt" "pptx"))
+;;     (dired-rainbow-define markdown "#ffed4a" ("org" "etx" "info" "markdown" "md" "mkd" "nfo" "pod" "rst" "tex" "textfile" "txt"))
+;;     (dired-rainbow-define database "#6574cd" ("xlsx" "xls" "csv" "accdb" "db" "mdb" "sqlite" "nc"))
+;;     (dired-rainbow-define media "#de751f" ("mp3" "mp4" "MP3" "MP4" "avi" "mpeg" "mpg" "flv" "ogg" "mov" "mid" "midi" "wav" "aiff" "flac"))
+;;     (dired-rainbow-define image "#f66d9b" ("tiff" "tif" "cdr" "gif" "ico" "jpeg" "jpg" "png" "psd" "eps" "svg"))
+;;     (dired-rainbow-define log "#c17d11" ("log"))
+;;     (dired-rainbow-define shell "#f6993f" ("awk" "bash" "bat" "sed" "sh" "zsh" "vim"))
+;;     (dired-rainbow-define interpreted "#38c172" ("py" "ipynb" "rb" "pl" "t" "msql" "mysql" "pgsql" "sql" "r" "clj" "cljs" "scala" "js"))
+;;     (dired-rainbow-define compiled "#4dc0b5" ("asm" "cl" "lisp" "el" "c" "h" "c++" "h++" "hpp" "hxx" "m" "cc" "cs" "cp" "cpp" "go" "f" "for" "ftn" "f90" "f95" "f03" "f08" "s" "rs" "hi" "hs" "pyc" ".java"))
+;;     (dired-rainbow-define executable "#8cc4ff" ("exe" "msi"))
+;;     (dired-rainbow-define compressed "#51d88a" ("7z" "zip" "bz2" "tgz" "txz" "gz" "xz" "z" "Z" "jar" "war" "ear" "rar" "sar" "xpi" "apk" "xz" "tar"))
+;;     (dired-rainbow-define packaged "#faad63" ("deb" "rpm" "apk" "jad" "jar" "cab" "pak" "pk3" "vdf" "vpk" "bsp"))
+;;     (dired-rainbow-define encrypted "#ffed4a" ("gpg" "pgp" "asc" "bfe" "enc" "signature" "sig" "p12" "pem"))
+;;     (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
+;;     (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
+;;     (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
+;;     (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*")))
 
-;;   (setq dired-sidebar-subtree-line-prefix "__")
-;;   (setq dired-sidebar-theme 'vscode)
-;;   (setq dired-sidebar-use-term-integration t)
-;;   (setq dired-sidebar-use-custom-font t))
-
-
-;;; Markdown
-(use-package markdown-mode
-  :config
-  (setq auto-mode-alist (cons '("\\.mdx$" . markdown-mode) auto-mode-alist)))
-
- (defun ponelat/expand-lines ()
-    (interactive)
-    (let ((hippie-expand-try-functions-list
-           '(try-expand-line-all-buffers)))
-      (call-interactively 'hippie-expand)))
+;; (defun xah-dired-sort ()
+;;   "Sort dired dir listing in different ways.
+;; Prompt for a choice.
+;; URL `http://ergoemacs.org/emacs/dired_sort.html'
+;; Version 2018-12-23"
+;;   (interactive)
+;;   (let ($sort-by $arg)
+;;     (setq $sort-by (ido-completing-read "Sort by:" '( "date" "size" "name" )))
+;;     (cond
+;;      ((equal $sort-by "name") (setq $arg "-Al "))
+;;      ((equal $sort-by "date") (setq $arg "-Al -t"))
+;;      ((equal $sort-by "size") (setq $arg "-Al -S"))
+;;      ;; ((equal $sort-by "dir") (setq $arg "-Al --group-directories-first"))
+;;      (t (error "logic error 09535" )))
+;;     (dired-sort-other $arg )))
 
 
 ;;; Evil, vim
@@ -1013,17 +917,26 @@ Version 2018-12-23"
 (define-key evil-inner-text-objects-map "f" 'rsb/textobj-inner-c-defun)
 (define-key evil-outer-text-objects-map "f" 'rsb/textobj-outer-c-defun)
 
+;;; Markdown
+(use-package markdown-mode
+  :config
+  (setq auto-mode-alist (cons '("\\.mdx$" . markdown-mode) auto-mode-alist)))
+
+ (defun ponelat/expand-lines ()
+    (interactive)
+    (let ((hippie-expand-try-functions-list
+           '(try-expand-line-all-buffers)))
+      (call-interactively 'hippie-expand)))
+
 ;;; FOlding
 (use-package origami
   :config
   (global-origami-mode t) )
 
-
 (use-package ace-link
   :config
   (progn
-    (ace-link-setup-default))
-  )
+    (ace-link-setup-default)))
 
 ;; Make sure words are treated correctly in evil mode
 (with-eval-after-load 'evil
@@ -1387,25 +1300,30 @@ Will use `projectile-default-project-name' .rest as the file name."
   (add-to-list 'company-backends 'company-restclient))
 
 ;;; Typescript
-(defun ponelat/setup-tide-mode ()
-  "Setup the typescript IDE mode ( tide )."
-  (interactive)
-  (tide-setup)
-  (eldoc-mode +1)
-  (setq-local flycheck-check-syntax-automatically nil)
-  (tide-hl-identifier-mode +1))
+(use-package typescript-mode)
 
-(defun ponelat/setup-tide-if-tsx ()
-;; This guards against ediff not working. TODO maybe fix?
-  (if buffer-file-name
-    (when (string-equal "tsx" (file-name-extension buffer-file-name))
-      (ponelat/setup-tide-mode))))
 
-(use-package tide
-  :config
-  (add-hook 'typescript-mode-hook #'ponelat/setup-tide-mode)
-  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . rjsx-mode))
-  (add-hook 'rjsx-mode-hook #'ponelat/setup-tide-if-tsx))
+;; (defun ponelat/setup-tide-mode ()
+;;   "Setup the typescript IDE mode ( tide )."
+;;   (interactive)
+;;   (tide-setup)
+;;   (eldoc-mode +1)
+;;   (setq-local flycheck-check-syntax-automatically nil)
+;;   (tide-hl-identifier-mode +1))
+
+;; (defun ponelat/setup-tide-if-tsx ()
+;; ;; This guards against ediff not working. TODO maybe fix?
+;;   (if buffer-file-name
+;;     (when (string-equal "tsx" (file-name-extension buffer-file-name))
+;;       (ponelat/setup-tide-mode))))
+
+(use-package tide)
+
+;; (use-package tide
+;;   :config
+;;   (add-hook 'typescript-mode-hook #'ponelat/setup-tide-mode)
+;;   (add-to-list 'auto-mode-alist '("\\.tsx\\'" . rjsx-mode))
+;;   (add-hook 'rjsx-mode-hook #'ponelat/setup-tide-if-tsx))
 
 ;; aligns annotation to the right hand side
 (setq company-tooltip-align-annotations t)
@@ -1472,6 +1390,12 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package lsp-mode
   :hook '((json-mode . lsp)
           (lsp-mode . lsp-enable-which-key-integration))
+  :bind ("C-x C-l" . lsp-command-map)
+  :config
+  (setq lsp-idle-delay 2.000
+    lsp-eslint-enable nil
+    lsp-eslint-package-manager "yarn"
+    lsp-eslint-run "onSave")
   :commands lsp)
 
 ;; Optional Flutter packages
@@ -1506,8 +1430,6 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package tree-sitter)
 (use-package tree-sitter-langs)
 
-
-
 ;;; Java
 (progn
   (require 'cc-mode)
@@ -1516,7 +1438,6 @@ Will use `projectile-default-project-name' .rest as the file name."
     :config (add-hook 'java-mode-hook 'lsp)))
 
 (use-package gradle-mode)
-
 (use-package groovy-mode)
 
 ;;; SHUB - automation
@@ -1667,10 +1588,7 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
     (async-shell-command (format "cd %s && npm run %s" project-dir choice) (format "*npm* - %s - %s" choice project-name))))
 
 
-;; (ponelat/ag "actions/user" "/home/josh/projects/swaggerhub-frontend/")
-
-(use-package web-beautify
-  )
+(use-package web-beautify)
 
 (use-package rjsx-mode
   :config
@@ -2062,7 +1980,8 @@ eg: /one/two => two
   :config
   (progn
     (setq
-        projectile-completion-system 'ivy
+      projectile-completion-system 'ivy
+      projectile-git-command "git ls-files -zco --exclude-standard"
         ;; projectile-sort-order 'recently-active
         ;; projectile-dynamic-mode-line t
       ;; projectile-indexing-method 'hybrid
@@ -2421,31 +2340,19 @@ eg: /one/two => two
   (org-journal-dir ponelat/org-roam-dir)
   (org-journal-date-format "%A, %d %B %Y"))
 
-(use-package ox-reveal
-  :config
-  (setq org-reveal-root "file:///home/josh/revealjs"))
+;; (use-package ox-reveal
+;;   :config
+;;   (setq org-reveal-root "file:///home/josh/revealjs"))
 
 ;;; Org Trello
 ;; (use-package org-trello)
 
 (use-package org-download)
 
-
 ;;; Org Roam
 (use-package org-roam
   :hook '((after-init . org-roam-mode))
   :custom (org-roam-directory ponelat/org-roam-dir))
-
-
-;; (use-package deft
-;;   :after org
-;;   :bind
-;;   ("C-c n d" . deft)
-;;   :custom
-;;   (deft-recursive nil)
-;;   (deft-use-filter-string-for-filename t)
-;;   (deft-default-extension "org")
-;;   (deft-directory ponelat/org-roam-dir))
 
 ;;; Time world clock
 (defun insert-timestamp ()
@@ -2466,7 +2373,6 @@ eg: /one/two => two
 
 ;;; Agenda, reminders
 (progn
-
   (defun ponelat/org-agenda-to-appt ()
     "Rebuild all appt reminders"
     (interactive)
@@ -3255,6 +3161,52 @@ Interactively you can choose the FONT-NAME"
 ;;; General Emacs stuff
 (setq warning-minimum-level :error)
 
+;;; Line endings, Windows, Linux
+(defun xah-change-file-line-ending-style (@files @style)
+  "Change current file or dired marked file's newline convention.
+
+When called non-interactively, *style is one of 'unix 'dos 'mac or any of accepted emacs coding system. See `list-coding-systems'.
+
+URL `http://ergoemacs.org/emacs/elisp_convert_line_ending.html'
+Version 2016-10-16"
+  (interactive
+   (list
+    (if (eq major-mode 'dired-mode )
+        (dired-get-marked-files)
+      (list (buffer-file-name)))
+    (ido-completing-read "Line ending:" '("Linux/MacOSX/Unix" "MacOS9" "Windows") "PREDICATE" "REQUIRE-MATCH")))
+  (let* (
+         ($codingSystem
+          (cond
+           ((equal @style "Linux/MacOSX/Unix") 'unix)
+           ((equal @style "MacOS9") 'mac)
+           ((equal @style "Windows") 'dos)
+           (t (error "code logic error 65327. Expect one of it." )))))
+    (mapc
+     (lambda (x) (xah-convert-file-coding-system x $codingSystem))
+     @files)))
+
+(defun xah-convert-file-coding-system (@fpath @coding-system)
+  "Convert file's encoding.
+ *fpath is full path to file.
+ *coding-system is one of 'unix 'dos 'mac or any of accepted emacs coding system. See `list-coding-systems'.
+
+If the file is already opened, it will be saved after this command.
+
+URL `http://ergoemacs.org/emacs/elisp_convert_line_ending.html'
+Version 2015-07-24"
+  (let ($buffer
+        ($bufferOpened-p (get-file-buffer @fpath)))
+    (if $bufferOpened-p
+        (with-current-buffer $bufferOpened-p
+          (set-buffer-file-coding-system @coding-system)
+          (save-buffer))
+      (progn
+        (setq $buffer (find-file @fpath))
+        (set-buffer-file-coding-system @coding-system)
+        (save-buffer)
+        (kill-buffer $buffer)))))
+
 ;;; Eval, inline, Emacs lisp
 (use-package eros
   :bind (("C-c C-c" . #'eval-defun))
@@ -3353,11 +3305,11 @@ Interactively you can choose the FONT-NAME"
 ;;; Keys, emojis
 
 ;; Can you see this face: 😬
-(use-package emojify
-  :config
-  (emojify-set-emoji-styles '(unicode))
-  (global-emojify-mode)
-  (global-set-key (kbd "C-x 8 e") 'emojify-insert-emoji))
+;; (use-package emojify
+;;   :config
+;;   (emojify-set-emoji-styles '(unicode))
+;;   (global-emojify-mode)
+;;   (global-set-key (kbd "C-x 8 e") 'emojify-insert-emoji))
 
 (progn
   ;;; Maybe useful
@@ -3630,7 +3582,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      ";" #'delete-other-windows
      "i" #'imenu
      "d" #'dired-jump
-     "e" #'eshell
+     "e" #'projectile-run-eshell
 
 ;;; Quit keys
      "q" #'quit-window)
@@ -3646,6 +3598,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "i"  '(:wk "narrow")
      "ii" #'org-narrow-to-subtree
      "io" #'widen
+
+    "l" #'lsp-command?
 
      "x"  '(:wk "extra")
      "xx" #'xah/run-this-file
