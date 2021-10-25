@@ -25,6 +25,7 @@
 ;; 		   ; (nix-path "glibc") "/lib:"
 ;; 		   ; (nix-path "libgccjit") "/lib/gcc/x86_64-unknown-linux-gnu/9.3.0")))))
 
+
 (setq lexical-binding t)
 (setq emacs-dir "~/.emacs.d")
 (setq custom-file (concat emacs-dir "/custom.el"))
@@ -58,7 +59,6 @@
 (use-package bug-hunter
   :straight '(bug-hunter :host github :repo "Malabarba/elisp-bug-hunter"))
 
-
 ;;; So long, large files
 (global-so-long-mode 1) ; Disables major modes when files are minified/massive.
 
@@ -77,7 +77,7 @@
 
 ;; Disable
 (defun ponelat/toggle-trace-request ()
-  "It does something"
+  "Toggles on/off tracing of HTTP requests."
   (interactive)
   (if (eq request-log-level -1)
     (progn
@@ -151,10 +151,6 @@
 
 ;;; Revert buffer/file reload
 (global-set-key  (kbd "C-x RET RET") (lambda () (interactive) (revert-buffer t t nil)))
-(comment
-  (global-set-key  (kbd "M-j") #'move-line-down)
-  (global-set-key  (kbd "M-k") #'move-line-up)
-  )
 
 (defun ponelat/copy-file-from-downloads ()
   "It copies a file from ~/Downloads."
@@ -213,7 +209,6 @@
   (setq mouse-wheel-scroll-amount '(1)) ;; mouse scroll moves 1 line at a time, instead of 5 lines
   (setq mouse-wheel-progressive-speed nil)) ;; on a long mouse scroll keep scrolling by 1 line
 ;; Not using the `smooth-scrolling' package as its a little slow
-
 
 ;;; Eshell
 (progn
@@ -606,6 +601,7 @@ Version 2017-01-11"
   ("0" ponelat/size-reset "reset")
   ("t" ponelat/cycle-default-font "toggle"))
 
+
 (defun ponelat/visual-fill-column-width-decrease ()
   "It decreases the `visual-fill-column-width' variable by 10."
   (interactive)
@@ -715,9 +711,9 @@ Version 2017-01-11"
 (defun ponelat/write ()
   "Set up writing mode."
   (interactive)
-  (writeroom-mode t)
-  (git-gutter+-mode -1)
+  ;; (writeroom-mode t)
   (setq visual-fill-column-width 160)
+  (git-gutter+-mode -1)
   (visual-line-mode t)
   (flyspell-mode)
   (ponelat/add-frame-padding))
@@ -2040,6 +2036,12 @@ eg: /one/two => two
               '(git-gutter:visual-line t)
               '(git-gutter+-modified  "yellow")))
   :diminish (git-gutter+-mode . "+="))
+
+;;; Whitespace, text, ascii
+
+;; For Manning's style guide, around code snippet text lengths
+(setq whitespace-line-column 55)
+
 ;;; GhostText, browser, live
 (use-package atomic-chrome
   )
@@ -3505,6 +3507,40 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   ;;   "sh" #'ponelat/sentence-macro-push)
 
 
+(defun ponelat/toggle-whitespace ()
+  "Toggles whitespace mode with long(76), short(55) and off."
+  (interactive)
+  (defvar-local whitespace-manning-toggle nil)
+  (cond
+    ((eq whitespace-manning-toggle nil)
+      (progn
+        (setq whitespace-line-column 76)
+        (whitespace-mode +1)
+        (setq whitespace-manning-toggle :long)))
+
+    ((eq whitespace-manning-toggle :long)
+      (progn
+        (setq whitespace-line-column 55)
+        (whitespace-mode +1)
+        (setq whitespace-manning-toggle :short)))
+
+    ((eq whitespace-manning-toggle :short)
+      (progn
+        (setq whitespace-line-column 80)
+        (whitespace-mode 0)
+        (setq whitespace-manning-toggle nil)))
+
+    (t
+      (progn
+        (let ((state whitespace-manning-toggle))
+          (setq whitespace-manning-toggle nil)
+          (message (format "Unknown state %s" state))
+          )
+        ))
+    )
+  (message (format "Whitespace: %s" whitespace-manning-toggle)))
+
+
 ;;; General, Leader, Key mapping
 
 
@@ -3614,6 +3650,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
      "xds" #'ponelat/split-lines-in-region
      "xes" #'ponelat/collapse-lines-in-region
+
+    "xs" #'ponelat/toggle-whitespace
 
     "d" '(:wk "debug/diff")
     "dd" 'dap-hydra/body
@@ -3857,6 +3895,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   (:keymaps 'nix-mode-map
    "C-c C-c" (lambda () (interactive) (async-shell-command "sudo nixos-rebuild switch" "*NixOS Rebuild*")))
   :mode ("\\.nix\\'"))
+
 
 (use-package app-launcher
   :straight '(app-launcher :host github :repo "SebastienWae/app-launcher"))
