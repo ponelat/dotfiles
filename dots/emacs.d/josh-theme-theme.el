@@ -56,6 +56,8 @@
   '(markup-title-2-face ((t (:inherit markup-gen-titles :height 1.6))))
   '(markup-title-3-face ((t (:inherit markup-gen-titles :height 1.6 :weight normal))))
   '(markup-title-4-face ((t (:inherit markup-gen-titles :height 1.0 ))))
+  '(markup-list-face ((t (:foreground "#123000" :background "#000123"))))
+
   '(markup-verbatim-face ((t (:foreground "#cdbade" ))))
   '(markup-typewriter-face ((t (:background "#523849" ))))
   '(markup-code-face ((t (:foreground "#cdbade" ))))

@@ -33,7 +33,9 @@ in {
     "rtl8xxxu"
   ];
   boot.kernelModules = [ "rtl8192eu" ];
-  boot.extraModulePackages = [ config.boot.kernelPackages.rtl8192eu ];
+  boot.extraModulePackages = [
+    config.boot.kernelPackages.rtl8192eu
+  ];
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Set your time zone.
@@ -159,15 +161,17 @@ end
 
     noto-fonts open-sans corefonts
 
-    gnomeExtensions.material-shell
+    exfat exfatprogs nfs-utils ntfs3g # I think we only need ntfs3g to access USB drives with > 4gb files.
 
     # Audio
     rnnoise-plugin
 
-    python3 gnumake
+    python3 gnumake pandoc
+    #pdflatex
     nodejs-14_x unstable.yarn
 
-    obs-studio firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux teams obsidian
+    obs-studio firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux teams obsidian postman
+    deluge
   ];
 
   # Dropbox

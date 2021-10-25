@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name:source
+# key:.s
+# --
+[[$2]]
+.$1
+[source,yaml]
+----
+$0
+----

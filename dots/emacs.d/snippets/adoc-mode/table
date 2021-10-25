@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name:table 
+# key:.t
+# --
+.$1
+[cols=",,",options="header",]
+|==============================
+| Field | Type | Description
+| username | string | The username of the user.
+|==============================
