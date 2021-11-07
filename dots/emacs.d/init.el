@@ -63,7 +63,7 @@
 (global-so-long-mode 1) ; Disables major modes when files are minified/massive.
 
 ;;; Scratch buffer, Emacs
-(setq initial-scratch-message "#+TITLE: Emacs\n\n")
+(setq initial-scratch-message "\n\n")
 ;; This breaks shit, not sure why??
 ;; (setq initial-major-mode 'org-mode )
 
@@ -186,7 +186,7 @@
   (interactive "P")
   (find-file-existing "~/projects/dotfiles/dots/emacs.d/init.el")
   (widen)
-  (counsel-imenu)
+  (consult-imenu)
   (if p (init-narrow-to-section)))
 
 (defun init-narrow-to-section ()
@@ -827,8 +827,6 @@ Version 2017-01-11"
     (define-key evil-normal-state-map "\M-." nil)
     (define-key evil-normal-state-map "go" 'org-open-at-point-global)))
 
-(use-package treemacs-evil
-  :after treemacs evil)
 
 (use-package evil-numbers
   :config (progn (global-set-key (kbd "C-c +") 'evil-numbers/inc-at-pt)
@@ -1895,101 +1893,201 @@ eg: /one/two => two
   :config
   (global-fasd-mode 1))
 
-;;; Ivy, counsel, swiper
-(setq enable-recursive-minibuffers t)
 
-(use-package ivy
-  :diminish (ivy-mode . "")
-  :config
-  (progn
-  ;; add ‘recentf-mode’ and bookmarks to ‘ivy-switch-buffer’.
-  (setq ivy-use-virtual-buffers t)
-  ;; number of result lines to display
-  (setq ivy-height 30)
-  ;; does not count candidates
-  (setq ivy-count-format "(%d/%d) ")
-  ;; no regexp by default
-  (setq ivy-initial-inputs-alist nil)
-  ;; configure regexp engine.
-  (setq ivy-re-builders-alist
-    ;; allow input not in order
-    '((t   . ivy--regex-ignore-order)))
-  (ivy-mode 1))
-
+;;; Vertico
 (progn
-  (define-key ivy-minibuffer-map [(control ?w)] 'backward-kill-word)
-  (define-key ivy-minibuffer-map [(control ?e)] 'end-of-line)
-  (define-key ivy-minibuffer-map [(control ?a)] 'beginning-of-line)
-  (define-key ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
-  (define-key ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
+  (use-package emacs
+    :init
+    ;; Add prompt indicator to `completing-read-multiple'.
+    (defun crm-indicator (args)
+      (cons (concat "[CRM] " (car args)) (cdr args)))
+    (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
-  (define-key ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
-  (define-key ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+    ;; Grow and shrink minibuffer
+    (setq resize-mini-windows t)
 
-  (evil-define-key 'insert ivy-minibuffer-map [(control ?k)] 'ivy-previous-line)
-  (evil-define-key 'insert ivy-minibuffer-map [(control ?j)] 'ivy-next-line)
-  (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+    ;; Do not allow the cursor in the minibuffer prompt
+    (setq minibuffer-prompt-properties
+      '(read-only t cursor-intangible t face minibuffer-prompt))
+    (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
 
-  (evil-define-key 'insert ivy-minibuffer-map [(control ?v)] 'ivy-scroll-up-command)
-  (evil-define-key 'insert ivy-minibuffer-map [(meta ?u)] 'ivy-scroll-down-command)
+    ;; Enable recursive minibuffers
+    (setq enable-recursive-minibuffers t))
 
-  ;; (evil-define-key 'insert ivy-minibuffer-map [(control ?')] 'ivy-avy)
+  ;; Persist history over Emacs restarts. Vertico sorts by history position.
+  (use-package savehist :init (savehist-mode))
+  (use-package recentf :init (recentf-mode))
 
-  (evil-define-key 'insert ivy-minibuffer-map [(control ?e)] #'end-of-line)
-  (evil-define-key 'insert ivy-minibuffer-map [(control ?')] #'ivy-avy)
-  (evil-define-key 'insert ivy-minibuffer-map [(control ?a)] #'beginning-of-line)))
+  (use-package orderless
+    :ensure t
+    :custom (completion-styles '(orderless)))
 
+
+  ;; Enable vertico
+  (use-package vertico
+    :init
+    (vertico-mode)
+    :bind
+    (:map vertico-map
+      ("C-j" . #'vertico-next)
+      ("C-k" . #'vertico-previous)))
+
+  ;; Example configuration for Consult
+  (use-package consult
+    ;; Replace bindings. Lazily loaded due by `use-package'.
+    :bind (;; C-c bindings (mode-specific-map)
+            ("C-*" . ponelat/swiper-region-or-symbol)
+            ("C-&" . (lambda () (interactive) (rg (thing-at-point-or-mark 'symbol) "*.*" (projectile-project-root))))
+            ("C-c h" . consult-history)
+            ("C-c m" . consult-mode-command)
+            ("C-c b" . consult-bookmark)
+            ("C-c k" . consult-kmacro)
+            ;; C-x bindings (ctl-x-map)
+            ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+            ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+            ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+            ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+            ;; Custom M-# bindings for fast register access
+            ("M-#" . consult-register-load)
+            ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+            ("C-M-#" . consult-register)
+            ;; Other custom bindings
+            ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+            ("<help> a" . consult-apropos)            ;; orig. apropos-command
+            ;; M-g bindings (goto-map)
+            ("M-g e" . consult-compile-error)
+            ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+            ("M-g g" . consult-goto-line)             ;; orig. goto-line
+            ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+            ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+            ("M-g m" . consult-mark)
+            ("M-g k" . consult-global-mark)
+            ("M-g i" . consult-imenu)
+            ("M-g I" . consult-imenu-multi)
+            ;; M-s bindings (search-map)
+            ("M-s f" . consult-find)
+            ("M-s F" . consult-locate)
+            ("M-s g" . consult-grep)
+            ("M-s G" . consult-git-grep)
+            ("M-s r" . consult-ripgrep)
+            ("C-s" . consult-line)
+            ("M-s L" . consult-line-multi)
+            ("M-s m" . consult-multi-occur)
+            ("M-s k" . consult-keep-lines)
+            ("M-s u" . consult-focus-lines)
+            ;; Isearch integration
+            ("M-s e" . consult-isearch)
+            :map isearch-mode-map
+            ("M-e" . consult-isearch)                 ;; orig. isearch-edit-string
+            ("M-s e" . consult-isearch)               ;; orig. isearch-edit-string
+            ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+            ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
+
+
+    ;; Enable automatic preview at point in the *Completions* buffer.
+    ;; This is relevant when you use the default completion UI,
+    ;; and not necessary for Vertico, Selectrum, etc.
+    ;; :hook (completion-list-mode . consult-preview-at-point-mode)
+
+    ;; The :init configuration is always executed (Not lazy)
+    :init
+
+    ;; Optionally configure the register formatting. This improves the register
+    ;; preview for `consult-register', `consult-register-load',
+    ;; `consult-register-store' and the Emacs built-ins.
+    (setq register-preview-delay 0
+      register-preview-function #'consult-register-format)
+
+    (setq consult-line-start-from-top t)
+
+    ;; Optionally tweak the register preview window.
+    ;; This adds thin lines, sorting and hides the mode line of the window.
+    (advice-add #'register-preview :override #'consult-register-window)
+
+    ;; Optionally replace `completing-read-multiple' with an enhanced version.
+    (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+
+    ;; Use Consult to select xref locations with preview
+    (setq xref-show-xrefs-function #'consult-xref
+      xref-show-definitions-function #'consult-xref)
+
+    ;; Configure other variables and modes in the :config section,
+    ;; after lazily loading the package.
+    :config
+
+    ;; Optionally configure preview. The default value
+    ;; is 'any, such that any key triggers the preview.
+    ;; (setq consult-preview-key 'any)
+    ;; (setq consult-preview-key (kbd "M-."))
+    ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
+    ;; For some commands and buffer sources it is useful to configure the
+    ;; :preview-key on a per-command basis using the `consult-customize' macro.
+    (consult-customize
+      consult-theme
+      :preview-key '(:debounce 0.2 any)
+      consult-ripgrep consult-git-grep consult-grep
+      consult-bookmark consult-recent-file consult-xref
+      consult--source-file consult--source-project-file consult--source-bookmark
+      :preview-key (kbd "M-."))
+
+    ;; Optionally configure the narrowing key.
+    ;; Both < and C-+ work reasonably well.
+    (setq consult-narrow-key "<") ;; (kbd "C-+")
+
+    ;; Optionally make narrowing help available in the minibuffer.
+    ;; You may want to use `embark-prefix-help-command' or which-key instead.
+    ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+    ;; Optionally configure a function which returns the project root directory.
+    ;; There are multiple reasonable alternatives to chose from.
+  ;;;; 1. project.el (project-roots)
+    (setq consult-project-root-function
+      (lambda ()
+        (when-let (project (project-current))
+          (car (project-roots project)))))
+  ;;;; 2. projectile.el (projectile-project-root)
+    ;; (autoload 'projectile-project-root "projectile")
+    ;; (setq consult-project-root-function #'projectile-project-root)
+  ;;;; 3. vc.el (vc-root-dir)
+    ;; (setq consult-project-root-function #'vc-root-dir)
+  ;;;; 4. locate-dominating-file
+    ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
+    )
+
+  ;; (use-package consult-dir
+  ;;   :straight '(consult-dir :host github :repo "karthink/consult-dir"))
+  ;;   :bind (("C-x C-d" . consult-dir)
+  ;;           :map vertico-map
+  ;;           ("C-x C-d" . consult-dir)
+  ;;           ("C-x C-j" . consult-dir-jump-file)))
+
+  )
+
+;;; Counsel/swiper
 
 (defun ponelat/swiper-region-or-symbol ()
   (interactive)
   (if (region-active-p)
-        (let (($beg (region-beginning))
-               ($end (region-end)))
-        (deactivate-mark)
-        (swiper-isearch (buffer-substring-no-properties $beg $end)))
-    (swiper-thing-at-point)))
-
-;;; Counsel/swiper
-(use-package counsel
-  :ensure t
-  :bind ((("C-s" . swiper)
-           ("M-i" . counsel-imenu)
-           ("C-*" . ponelat/swiper-region-or-symbol)
-           ("C-&" . (lambda () (interactive) (rg (thing-at-point-or-mark 'symbol) "*.*" (projectile-project-root)))))
-          :map swiper-map
-          (("C-w" . 'backward-kill-word)
-            ("C-j" . 'next-line)
-            ("C-k" . 'previous-line)))
-  :config
-  (counsel-mode t)
-  (setq ivy-initial-inputs-alist nil))
-
-(progn
-  (use-package prescient)
-  (use-package ivy-prescient
-    :config
-    (ivy-prescient-mode 1)))
+        (let* (($beg (region-beginning))
+                ($end (region-end))
+                ($str (buffer-substring-no-properties $beg $end)))
+          (deactivate-mark)
+          (consult-line $str))
+    (consult-line (thing-at-point-or-mark 'symbol))))
 
 ;;; Projects
 (use-package projectile
   :diminish projectile
   :config
   (progn
-    (setq
-      projectile-completion-system 'ivy
-      projectile-git-command "git ls-files -zco --exclude-standard"
-        ;; projectile-sort-order 'recently-active
-        ;; projectile-dynamic-mode-line t
-      ;; projectile-indexing-method 'hybrid
-        ;; projectile-mode-line-function '(lambda () (format " [%s]" (projectile-project-name)))
-      )
+    (setq projectile-git-command "git ls-files -zco --exclude-standard")
     (define-key projectile-command-map (kbd "n") #'ponelat/projectile-project-run)
     (global-set-key (kbd "C-j") nil)
     (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
     (projectile-mode 1)))
 
 ;;; Fuzzy, ido
-(use-package counsel-projectile
+(comment use-package counsel-projectile
   :ensure t
   :config
   (counsel-projectile-mode 1))
@@ -2041,6 +2139,7 @@ eg: /one/two => two
 
 ;; For Manning's style guide, around code snippet text lengths
 (setq whitespace-line-column 55)
+(setq indent-tabs-mode nil)
 
 ;;; GhostText, browser, live
 (use-package atomic-chrome
@@ -2351,10 +2450,28 @@ eg: /one/two => two
 
 (use-package org-download)
 
+
+;; (progn
+;;   (use-package md-roam
+;;     :straight '(md-roam :host github :repo "nobiot/md-roam"))
+;;   (require 'md-roam)
+;;   (setq md-roam-file-extension-single "md")
+;;   (setq md-roam-use-org-file-links nil)
+;;   (setq md-roam-use-markdown-file-links t)  ; default is nil
+
+  ;; (setq org-roam-title-sources '((mdtitle title mdheadline headline) (mdalias alias))))
+  ;you need this as of commit `5f24103`.
+
 ;;; Org Roam
 (use-package org-roam
   :hook '((after-init . org-roam-mode))
-  :custom (org-roam-directory ponelat/org-roam-dir))
+  :custom (org-roam-directory ponelat/org-roam-dir)
+  :config
+  (comment
+    (setq org-roam-file-extensions '("org" "md"))
+    (setq org-roam-title-sources '((mdtitle title mdheadline headline) (mdalias alias)))))
+
+
 
 ;;; Time world clock
 (defun insert-timestamp ()
@@ -3399,9 +3516,9 @@ Version 2015-07-24"
 
       (progn
         (when stdout-buffer
-          (kill-buffer-ask stdout-buffer))
+          (kill-buffer stdout-buffer))
         (async-shell-command
-          (format "cd %s && %s" dir cmd-compiled)
+          (format "nix-shell --run \"cd %s && %s\"" dir cmd-compiled)
           stdout-buffer-name
           stderr-buffer-name)
         (switch-to-buffer-other-frame stdout-buffer-name))))
@@ -3573,9 +3690,9 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "w" #'evil-window-map
      "s" #'save-buffer
      "l" #'avy-goto-line
-     "j" #'counsel-M-x
-     "b" #'ivy-switch-buffer
-     "a" #'counsel-rg
+     "b" #'consult-buffer
+     "a" #'consult-ripgrep
+     "j" #'execute-extended-command
 
      ;; "s" #'avy-goto-char-2
      "fe" #'flycheck-list-errors
@@ -3616,7 +3733,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "co" #'ponelat/emacs-commands-open
 
      ";" #'delete-other-windows
-     "i" #'imenu
+     "i" #'consult-imenu
      "d" #'dired-jump
      "e" #'projectile-run-eshell
 

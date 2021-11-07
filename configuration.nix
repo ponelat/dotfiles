@@ -151,7 +151,7 @@ end
    '';
 
   environment.systemPackages = with pkgs; [
-    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind zip ispell
+    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind zip ispell tldr
 
     gitAndTools.gh
 
@@ -166,11 +166,11 @@ end
     # Audio
     rnnoise-plugin
 
-    python3 gnumake pandoc
+    python3 gnumake pandoc ledger
     #pdflatex
     nodejs-14_x unstable.yarn
 
-    obs-studio firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux teams obsidian postman
+    firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux teams obsidian
     deluge
   ];
 
