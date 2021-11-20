@@ -81,30 +81,71 @@ in {
   # services.printing.enable = true;
 
   # Enable sound.
-  # sound.enable = true;
-  # hardware.pulseaudio.enable = true;
+
+  # Going with pipewire
+  sound.enable = false;
+  hardware.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire  = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    media-session.config.bluez-monitor.rules = [
+      {
+        # Matches all cards
+        matches = [ { "device.name" = "~bluez_card.*"; } ];
+        actions = {
+          "update-props" = {
+            # "bluez5.reconnect-profiles" = [ "hsp_hs" "hs_ag" "hfp_hf" ];
+            "bluez5.headset-roles" = ["hsp_hs" "hsp_ag" "hfp_hf"];
+            # mSBC is not expected to work on all headset + adapter combinations.
+            "bluez5.msbc-support" = true;
+            # SBC-XQ is not expected to work on all headset + adapter combinations.
+            "bluez5.sbc-xq-support" = true;
+          };
+        };
+      }
+      {
+        matches = [
+          # Matches all sources
+          { "node.name" = "~bluez_input.*"; }
+          # Matches all outputs
+          { "node.name" = "~bluez_output.*"; }
+        ];
+        actions = {
+          "node.pause-on-idle" = false;
+        };
+      }
+    ];
+  };
+
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
   programs.fish = {
+    # Needs direnv installed
     shellAliases = {
       "j" = "fasd_cd -d";
       "cs" = "git status || ls";
+      "em" = "emacsclient -c -a ''";
     };
    enable = true;
    shellInit = ''
-fish_vi_key_bindings
+     fish_vi_key_bindings
 
-function fasd_cd -d "fasd builtin cd"
-  if test (count $argv) -le 1
-    command fasd "$argv"
-  else
-    fasd -e 'printf %s' $argv | read -l ret
-    test -z "$ret"; and return
-    test -d "$ret"; and cd "$ret"; or printf "%s\n" $ret
-  end
-end
+     function fasd_cd -d "fasd builtin cd"
+       if test (count $argv) -le 1
+         command fasd "$argv"
+       else
+         fasd -e 'printf %s' $argv | read -l ret
+         test -z "$ret"; and return
+         test -d "$ret"; and cd "$ret"; or printf "%s\n" $ret
+       end
+     end
+
+    direnv hook fish | source
 '';
   };
 
@@ -139,6 +180,10 @@ end
   # Services
   virtualisation.docker.enable = true;
 
+  # Lorri is a nix-shell replacement built on direnv.
+  services.lorri.enable = true;
+
+  # Emacs (probably need to add in the packages here at some point)
   services.emacs = {
    enable = true;
    package = unstable.emacsGcc;
@@ -151,9 +196,8 @@ end
    '';
 
   environment.systemPackages = with pkgs; [
-    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind zip ispell tldr
-
-    gitAndTools.gh
+    # Dev stuff
+    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind zip ispell tldr gitAndTools.gh direnv fzf bat
 
     openvpn
 

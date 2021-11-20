@@ -1336,8 +1336,7 @@ Will use `projectile-default-project-name' .rest as the file name."
     plantuml-java-args '("-Djava.awt.headless=true" "-jar")))
 
 ;;; CSV
-(use-package csv-mode
-  :disabled t)
+(use-package csv-mode)
 
 ;;; Ruby, rspec
 (use-package ruby-mode)
@@ -2068,11 +2067,11 @@ eg: /one/two => two
 (defun ponelat/swiper-region-or-symbol ()
   (interactive)
   (if (region-active-p)
-        (let* (($beg (region-beginning))
-                ($end (region-end))
-                ($str (buffer-substring-no-properties $beg $end)))
-          (deactivate-mark)
-          (consult-line $str))
+    (let* (($beg (region-beginning))
+            ($end (region-end))
+            ($str (regexp-quote (buffer-substring-no-properties $beg $end))))
+      (deactivate-mark)
+      (consult-line $str))
     (consult-line (thing-at-point-or-mark 'symbol))))
 
 ;;; Projects
@@ -2200,14 +2199,26 @@ eg: /one/two => two
   (kill-new (pwd)))
 
 ;;; Ledger
-(use-package ledger-mode
-  :config
-  (progn
-    (add-to-list 'auto-mode-alist '("\\.ledger\\'" . ledger-mode))
-    (setq ledger-report-use-native-highlighting t))
+(progn
+  (use-package ledger-mode
+    :config
+    (progn
+      (add-to-list 'auto-mode-alist '("\\.ledger\\'" . ledger-mode))
+      (setq ledger-report-use-native-highlighting t))
+    )
+
+  (defun ponelat/insert-ledger-account-into-string ()
+    "Completes and inserts an account from ledger file"
+    (interactive)
+    (ponelat/replace-within-string-or-visual
+      (completing-read "Account: " (read-lines "/home/josh/projects/accounts/accounts.txt"))))
+
+  (defun ponelat/insert-ledger-batch-rule ()
+    "Grabs a rule from batch-rules.edn to add to rules.edn file."
+    (interactive)
+    (insert
+      (completing-read "Rule: " (read-lines "/home/josh/projects/accounts/batch-rules.edn"))))
   )
-
-
 
 ;; "^\\(=====[ 	]+\\)\\([^\t\n].*?\\)\\(\\([ \t]+=====\\)?[ \t]*\\(?:\n\\|\\'\\)\\)"
 (defun ponelat/grab-imenu-of (filename)
@@ -3333,6 +3344,9 @@ Version 2015-07-24"
   (progn (eros-mode 1))
   )
 
+(use-package direnv)
+
+
 ;;; Diff, vimdiff
 (use-package vdiff)
 
@@ -3409,6 +3423,17 @@ Version 2015-07-24"
       (delete-region (car bounds) (cdr bounds))
       (insert (apply fn (list text))))))
 
+
+(defun ponelat/replace-within-string-or-visual (new-str)
+  "Replace contents within string at point or mark with NEW-STR."
+  (let* ((bounds (if (use-region-p)
+                     (cons (region-beginning) (region-end))
+                   (thing-at-point-bounds-of-string-at-point))))
+    (when bounds
+      (delete-region (+ 1 (car bounds)) (- (cdr bounds) 1))
+      (insert new-str))))
+
+
 (defun replace-bounds (str bounds)
   "Replace BOUNDS with STR."
   (let ((beg (car bounds))
@@ -3439,6 +3464,13 @@ Version 2015-07-24"
       (insert-file-contents filePath)
       (buffer-string)))
 
+  ;; From http://xahlee.info/emacs/emacs/elisp_read_file_content.html
+  (defun read-lines (filePath)
+    "Return a list of lines of a file at filePath."
+    (with-temp-buffer
+      (insert-file-contents filePath)
+      (split-string (buffer-string) "\n" t)))
+
   (defun ponelat/read-file-into-cmd-lines (filePath)
     "Read FILEPATH into a seq of non-empty lines while respecting escaped newlines."
     (seq-filter (lambda (s) (not (string-empty-p s)))
@@ -3467,14 +3499,14 @@ Version 2015-07-24"
   ;;; Emacs-Commands.xml, execute project files
   (require 'seq)
 
-  (defun ec/string-template (hash str)
+  (defun emacs-commands/string-template (hash str)
     "Replace all instances of the HASH keys with their values in STR."
     (seq-reduce
       (lambda (acc key)
         (replace-regexp-in-string key (gethash key hash) acc t t))
       (hash-table-keys hash) str))
 
-  (defun ec/hash-get-arg-values (args-nodes)
+  (defun emacs-commands/hash-get-arg-values (args-nodes)
     "Extracts arguments out of the XML node ARGS-NODES. Optionally adds PREFIX to the key names."
     (seq-reduce
       (lambda (acc arg-node)
@@ -3499,17 +3531,20 @@ Version 2015-07-24"
       (make-hash-table :test 'equal)))
 
 
-  (defun ec/execute-command (command base-dir)
+  (defun emacs-commands/execute-command (command base-dir)
     "It does something"
     (let* (
             (cmd-node (car (xml-get-children command 'cmd)))
             (cmd-string (string-trim (car (xml-node-children cmd-node))))
-            (args (ec/hash-get-arg-values command))
+            (args (emacs-commands/hash-get-arg-values command))
             (title (xml-get-attribute command 'title))
-            (reldir (xml-get-attribute command 'dir))
-            (dir (concat (file-name-as-directory base-dir) reldir))
-            (cmd-compiled (ec/string-template args cmd-string))
-            (stdout-buffer-name (format "*Emacs Commands %s*" title))
+            ($dir (xml-get-attribute command 'dir))
+            (dir
+              (if (string-match "^/" $dir)  ; Absolute path
+                $dir
+                (concat (file-name-as-directory base-dir) $dir)))
+            (cmd-compiled (emacs-commands/string-template args cmd-string))
+            (stdout-buffer-name (format "*Emacs Commands %s*" title dir))
             (stderr-buffer-name (format "*Emacs Command %s - Error*" title))
             (stdout-buffer (get-buffer stdout-buffer-name))
             (stderr-buffer (get-buffer stderr-buffer-name)))
@@ -3518,13 +3553,13 @@ Version 2015-07-24"
         (when stdout-buffer
           (kill-buffer stdout-buffer))
         (async-shell-command
-          (format "nix-shell --run \"cd %s && %s\"" dir cmd-compiled)
+          (format "cd %s && %s" dir cmd-compiled)
           stdout-buffer-name
           stderr-buffer-name)
         (switch-to-buffer-other-frame stdout-buffer-name))))
 
 
-  (defun ec/pick-command (root-xml)
+  (defun emacs-commands/pick-command (root-xml)
     "Pick the command node based on `completing-read' on the command[title]."
     (let* ((root-xml (car root-xml))
             (commands (xml-get-children root-xml 'command))
@@ -3577,8 +3612,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
             (base-dir (projectile-project-root))
             (xml-path (concat (file-name-as-directory base-dir) emacs-command-name))
             (xml-root (xml-parse-file xml-path))
-            (command (ec/pick-command xml-root)))
-      (ec/execute-command command base-dir)))
+            (command (emacs-commands/pick-command xml-root)))
+      (emacs-commands/execute-command command base-dir)))
 
    (defun ponelat/emacs-commands-open ()
      "It opens the .emacs-commands.xml relative for this project(ile)."
@@ -3753,6 +3788,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "io" #'widen
 
     "l" #'lsp-command?
+    "aa" #'ponelat/insert-ledger-account-into-string
+    "ar" #'ponelat/insert-ledger-batch-rule
 
      "x"  '(:wk "extra")
      "xx" #'xah/run-this-file
@@ -3884,7 +3921,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 ;;; Lisp/Paredit keys
   (general-define-key
     :states '(normal insert)
-    :keymaps 'emacs-lisp-mode-map
+    :keymaps '(emacs-lisp-mode-map clojure-mode-map)
     "C-." 'paredit-forward-slurp-sexp
     "C-," 'paredit-forward-barf-sexp)
 
