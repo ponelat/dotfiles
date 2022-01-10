@@ -63,12 +63,13 @@
 (global-so-long-mode 1) ; Disables major modes when files are minified/massive.
 
 ;;; Scratch buffer, Emacs
-(setq initial-scratch-message "\n\n")
+(setq initial-scratch-message "\n")
 ;; This breaks shit, not sure why??
 ;; (setq initial-major-mode 'org-mode )
 
 (windmove-default-keybindings)
 (auto-image-file-mode 1)
+
 (electric-pair-mode t)
 ; Gotten from https://emacs-lsp.github.io/lsp-mode/page/performance/ to help with LSP performance
 ;;; Garbage collection
@@ -88,7 +89,6 @@
       (custom-set-variables '(request-log-level -1)
         '(request-message-level -1))
       (message "Tracing Requests disabled"))))
-
 
 ;;; Utilities
 (defun pairs-to-cons (al)
@@ -573,24 +573,31 @@ Version 2017-01-11"
   "Increase text/image size."
   (interactive)
   (call-interactively
-    (if (equal major-mode 'image-mode)
-      'image-increase-size
-      'text-scale-increase)))
+    (cond
+      ((equal major-mode 'image-mode) #'image-increase-size)
+      ((equal major-mode 'pdf-view-mode) #'pdf-view-enlarge)
+      (t #'text-scale-increase))))
 
 (defun ponelat/size-decrease ()
   "Decrease text/image size."
   (interactive)
   (call-interactively
-    (if (equal major-mode 'image-mode)
-        'image-decrease-size
-      'text-scale-decrease)))
+    (cond
+      ((equal major-mode 'image-mode) #'image-decrease-size)
+      ((equal major-mode 'pdf-view-mode) #'pdf-view-shrink)
+      (t #'text-scale-decrease))))
 
 (defun ponelat/size-reset ()
   "Reset text/image size."
   (interactive)
+  (if (bound-and-true-p visual-fill-column-mode)
+    (setq visual-fill-column-center-text t
+      visual-fill-column-width 160))
   (if (equal major-mode 'image-mode)
     (image-transform-reset)
-    (text-scale-decrease 0)))
+    (text-scale-decrease 0))
+  (if (equal major-mode 'pdf-view-mode)
+    (pdf-view-scale-reset)))
 
 (defhydra hydra-zoom (global-map "C-x =")
   "zoom"
@@ -605,14 +612,12 @@ Version 2017-01-11"
 (defun ponelat/visual-fill-column-width-decrease ()
   "It decreases the `visual-fill-column-width' variable by 10."
   (interactive)
-  (if visual-fill-column-width
-    (setq visual-fill-column-width (- visual-fill-column-width 10))))
+  (setq visual-fill-column-width (-max (list 0 (- (or visual-fill-column-width 0) 10)))))
 
 (defun ponelat/visual-fill-column-width-increase ()
   "It increases the `visual-fill-column-width' variable by 10."
   (interactive)
-  (if visual-fill-column-width
-    (setq visual-fill-column-width (+ visual-fill-column-width 10))))
+  (setq visual-fill-column-width (+ (or visual-fill-column-width 0) 10)))
 
 
 (progn
@@ -3512,15 +3517,21 @@ Version 2015-07-24"
       (lambda (acc arg-node)
         (let* ((key (xml-get-attribute arg-node 'name))
                 (file-from (xml-get-attribute-or-nil arg-node 'file-from))
-                (file-values (if file-from
+                (file-from-values (if file-from
                                (let ((default-directory (projectile-project-root)))
                                  (file-expand-wildcards file-from))))
+
+                (file-contents (xml-get-attribute-or-nil arg-node 'file-contents))
+                (file-contents-values (if file-contents
+                               (let ((default-directory (projectile-project-root)))
+                                 (read-lines file-contents))))
+
                 (child-values
                   (mapcar
                     (lambda (node)
                       (string-trim (car (xml-node-children node))))
                     (xml-get-children arg-node 'value)))
-                (values (append child-values file-values ))
+                (values (append child-values file-from-values file-contents-values))
                 (default-value (xml-get-attribute-or-nil arg-node 'default))
                 (value
                   (completing-read (format "%s: " key) values nil nil default-value)))
@@ -4053,6 +4064,9 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
 (use-package app-launcher
   :straight '(app-launcher :host github :repo "SebastienWae/app-launcher"))
+
+;; Image mode
+(evil-define-key '(normal visual) image-mode-map "," nil)
 
 ;;; Custom.el file
 (load custom-file 'noerror)
