@@ -592,7 +592,7 @@ Version 2017-01-11"
   (interactive)
   (if (bound-and-true-p visual-fill-column-mode)
     (setq visual-fill-column-center-text t
-      visual-fill-column-width 160))
+      visual-fill-column-width 120))
   (if (equal major-mode 'image-mode)
     (image-transform-reset)
     (text-scale-decrease 0))
@@ -717,7 +717,9 @@ Version 2017-01-11"
   "Set up writing mode."
   (interactive)
   ;; (writeroom-mode t)
-  (setq visual-fill-column-width 160)
+  (visual-fill-column-mode t)
+  (setq visual-fill-column-width 120
+    visual-fill-column-center-text t)
   (git-gutter+-mode -1)
   (visual-line-mode t)
   (flyspell-mode)

@@ -10,9 +10,13 @@ let
     "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
       config.allowUnfree = true;
       overlays = [
+
+        # Need to test the "fix" below. As the upstream builder takes around an hour to build, if we run an update in that period it'll cause a cache miss and we'll build it ourselves!
+        # `sudo nix-channel --update` needed as well.
         (import (builtins.fetchTarball {
-          url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;
+          url = "https://github.com/nix-community/emacs-overlay/archive/master@{2%20hours%20ago}.tar.gz";
         }))
+
       ];
     };
 
@@ -24,18 +28,28 @@ in {
     ];
 
   # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  boot = {
+    loader = {
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+      grub = {
+        configurationLimit = 3;
+        default = "saved";
+      };
+    };
+    blacklistedKernelModules = [
+      "rtl8xxxu"
+    ];
+    kernelModules = [ "rtl8192eu" ];
+    extraModulePackages = [
+      config.boot.kernelPackages.rtl8192eu
+    ];
+
+  };
+
   networking.hostName = "office-desktop"; # Define your hostname.
 
   # Custom wifi drivers. For the little TP-Link dongle
-  boot.blacklistedKernelModules = [
-    "rtl8xxxu"
-  ];
-  boot.kernelModules = [ "rtl8192eu" ];
-  boot.extraModulePackages = [
-    config.boot.kernelPackages.rtl8192eu
-  ];
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Set your time zone.
@@ -155,6 +169,7 @@ in {
     isNormalUser = true;
     shell = pkgs.fish;
     home = "/home/josh";
+
     extraGroups = [ "wheel" "docker" "adbusers" ]; # 'wheel' enables ‘sudo’ for the user.
   };
 
@@ -205,7 +220,8 @@ in {
 
     noto-fonts open-sans corefonts
 
-    exfat exfatprogs nfs-utils ntfs3g # I think we only need ntfs3g to access USB drives with > 4gb files.
+    # exfat exfatprogs nfs-utils
+    ntfs3g # I think we only need ntfs3g to access USB drives with > 4gb files.
 
     # Audio
     rnnoise-plugin
@@ -214,7 +230,9 @@ in {
     #pdflatex
     nodejs-14_x unstable.yarn
 
-    firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux teams obsidian
+
+    firefox google-chrome inkscape qgis slack dropbox-cli zoom-us skypeforlinux teams obsidian
+    blender
     deluge
   ];
 
@@ -254,8 +272,15 @@ services.xserver = {
   };
   displayManager = {
     # defaultSession = "none+i3";
-    gdm.enable = true;
-    gdm.wayland = true;
+    # Autologin seems to break GDM??
+    # autoLogin = {
+    #   enable = true;
+    #   user = "josh";
+    # };
+    gdm = {
+      enable = true;
+      wayland = true;
+    };
   };
 
   # i3 Window Manager
