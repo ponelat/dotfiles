@@ -3758,7 +3758,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
       "oi" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/i3/config" ponelat/projects-dir))) :wk "i3 config")
       "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
       "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
-      "on" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/configuration.nix" ponelat/projects-dir))) :wk "NixOS")
+      "on" `(,(lambda () (interactive) (find-file "/etc/nixos/configuration.nix" )) :wk "NixOS")
       ;; "op" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/profile" ponelat/projects-dir))) :wk ".profile")
       "os" `(,(lambda () (interactive) (find-file "~/.ssh/config")) :wk "ssh config")
       "ok" `(,(lambda () (interactive) (find-file "~/.kube/config")) :wk "kube config")
@@ -4069,6 +4069,21 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
 ;; Image mode
 (evil-define-key '(normal visual) image-mode-map "," nil)
+
+(use-package journalctl-mode)
+
+(defun reboot ()
+  "Reboot the machine, after checking if any files need to be saved. "
+  (interactive)
+  (save-some-buffers)
+  (or (not (memq t (mapcar (lambda (buf)
+			     (and (buffer-file-name buf)
+				  (buffer-modified-p buf)))
+			   (buffer-list))))
+      (yes-or-no-p "Modified buffers exist; exit anyway? "))
+  (shell-command "reboot"))
+
+
 
 ;;; Custom.el file
 (load custom-file 'noerror)
