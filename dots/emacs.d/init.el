@@ -63,7 +63,7 @@
 (global-so-long-mode 1) ; Disables major modes when files are minified/massive.
 
 ;;; Scratch buffer, Emacs
-(setq initial-scratch-message "\n")
+(setq initial-scratch-message "Emacs\n")
 ;; This breaks shit, not sure why??
 ;; (setq initial-major-mode 'org-mode )
 
@@ -839,7 +839,7 @@ Version 2017-01-11"
   :config (progn (global-set-key (kbd "C-c +") 'evil-numbers/inc-at-pt)
             (global-set-key (kbd "C-c -") 'evil-numbers/dec-at-pt)))
 
-(use-package evil-multiedit
+(comment use-package evil-multiedit
   :config (progn
             ;; Highlights all matches of the selection in the buffer.
             (define-key evil-visual-state-map "R" 'evil-multiedit-match-all)
@@ -1018,7 +1018,10 @@ Version 2017-01-11"
     (setq emmet-expand-jsx-className? t)
     (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'web-mode 'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'typescript-tsx-mode 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'rjsx-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'rjsx-minor-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'typescript-mode 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
     (add-hook 'markdown-mode  'emmet-mode) ;;
     (evil-define-key 'visual emmet-mode-keymap (kbd "C-l") #'emmet-wrap-with-markup))
@@ -1060,11 +1063,6 @@ Version 2017-01-11"
     '(add-to-list 'rng-schema-locating-files "~/.emacs.d/schema/schemas.xml")))
 
 (add-hook 'find-file-hook 'xml-find-file-hook t)
-(use-package web-mode
-  :init
-  (setq auto-mode-alist (cons '("\\.svelte$" . web-mode) auto-mode-alist))
-  )
-
 ;;; Ag, RipGrep
 ;; use the_silver_searcher when available
 (use-package ag :if (executable-find "ag"))
@@ -1301,8 +1299,39 @@ Will use `projectile-default-project-name' .rest as the file name."
   (add-to-list 'company-backends 'company-restclient))
 
 ;;; Typescript
-(use-package typescript-mode)
+;; (use-package typescript-mode
+;;   :config (setq typescript-indent-level 2))
 
+(use-package typescript-mode
+  :ensure t
+  :init
+  ;; (define-derived-mode typescript-tsx-mode typescript-mode "tsx")
+  :config
+  (setq typescript-indent-level 2)
+  (add-hook 'typescript-mode #'subword-mode))
+
+(use-package web-mode
+  :hook ((web-mode . lsp)
+         (typescript-tsx-mode . lsp))
+  :mode (("\\.html\\'" . web-mode)
+         ("\\.html\\.eex\\'" . web-mode)
+         ("\\.html\\.tera\\'" . web-mode)
+         ("\\.svelte\\'" . web-mode)
+         ("\\.tsx\\'" . typescript-tsx-mode))
+  :init
+  (define-derived-mode typescript-tsx-mode typescript-mode "TypeScript-tsx")
+  :config
+  (setq web-mode-markup-indent-offset 2
+        web-mode-css-indent-offset 2
+        web-mode-code-indent-offset 2))
+
+;; (use-package prettier
+;;   :hook ((typescript-tsx-mode . prettier-mode)
+;;          (typescript-mode . prettier-mode)
+;;          (js-mode . prettier-mode)
+;;          (json-mode . prettier-mode)
+;;          (css-mode . prettier-mode)
+;;          (scss-mode . prettier-mode)))
 
 ;; (defun ponelat/setup-tide-mode ()
 ;;   "Setup the typescript IDE mode ( tide )."
@@ -1318,7 +1347,7 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;     (when (string-equal "tsx" (file-name-extension buffer-file-name))
 ;;       (ponelat/setup-tide-mode))))
 
-(use-package tide)
+;; (use-package tide)
 
 ;; (use-package tide
 ;;   :config
@@ -1427,8 +1456,18 @@ Will use `projectile-default-project-name' .rest as the file name."
   (dap-mode t)
   (dap-ui-mode t))
 
-(use-package tree-sitter)
-(use-package tree-sitter-langs)
+
+;; (use-package tree-sitter
+;;   :ensure t
+;;   :hook ((typescript-mode . tree-sitter-hl-mode)
+;; 	 (typescript-tsx-mode . tree-sitter-hl-mode)))
+
+;; (use-package tree-sitter-langs
+;;   :ensure t
+;;   :after tree-sitter
+;;   :config
+;;   (tree-sitter-require 'tsx)
+;;   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx)))
 
 ;;; Java
 (progn
@@ -3587,7 +3626,7 @@ Version 2015-07-24"
   <command title=\"Some title\" dir=\".\" >
 
     <cmd>
-      cowsay Hello $NAME
+      nix-shell -p cowsay --run \"cowsay Hello $NAME\"
     </cmd>
 
     <arg name=\"NAME\" default=\"Josh\" >
