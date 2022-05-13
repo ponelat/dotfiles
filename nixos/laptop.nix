@@ -6,23 +6,49 @@
 
 let
 
-  stableWithOverlays = import <nixos> {
-    overlays = [
-      # Need to test the "fix" below. As the upstream builder takes around an hour to build, if we run an update in that period it'll cause a cache miss and we'll build it ourselves!
-      # `sudo nix-channel --update` needed as well.
-      (import (builtins.fetchTarball {
-        url = "https://github.com/nix-community/emacs-overlay/archive/master@{2%20hours%20ago}.tar.gz";
-      }))
-
-    ];
-
-  };
-
-
-  unstable = import (fetchTarball
-    "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
-      config.allowUnfree = true;
+pinned = import (fetchTarball
+    "https://github.com/NixOS/nixpkgs/archive/6c4b9f1a2fd761e2d384ef86cff0d208ca27fdca.tar.gz") {
+      overlays = [
+        (import (builtins.fetchTarball {
+          url =
+            "https://github.com/nix-community/emacs-overlay/archive/ccf704241a96879f117b49490de1ba617defac25.tar.gz";
+        }))
+      ];
     };
+
+  # stableWithOverlays = import <nixos> {
+  #   overlays = [
+  #     # Need to test the "fix" below. As the upstream builder takes around an hour to build, if we run an update in that period it'll cause a cache miss and we'll build it ourselves!
+  #     # `sudo nix-channel --update` needed as well.
+  #     (import (builtins.fetchTarball {
+  #       url = "https://github.com/nix-community/emacs-overlay/archive/master@{2%20hours%20ago}.tar.gz";
+  #     }))
+
+
+  #   ];
+
+  # };
+
+
+  # unstable = import (fetchTarball
+  #   "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
+  #     overlays = [
+  #       (self: super:
+  #         {
+  #           zoomUsFixed = unstable.zoom-us.overrideAttrs (old: {
+  #             postFixup = old.postFixup + ''
+  #             wrapProgram $out/bin/zoom-us --unset XDG_SESSION_TYPE
+      
+  #           '';});
+  #           zoom = unstable.zoom-us.overrideAttrs (old: {
+  #             postFixup = old.postFixup + ''
+  #             wrapProgram $out/bin/zoom --unset XDG_SESSION_TYPE
+  #           '';});
+  #         }
+  #       )
+  #     ];
+  #     config.allowUnfree = true;
+  #   };
 
 in {
   imports =
@@ -30,6 +56,8 @@ in {
       /etc/nixos/hardware-configuration.nix
       /etc/nixos/cachix.nix
     ];
+
+
 
   networking.hostName = "laptop-x1eg2"; # Define your hostname.
 
@@ -39,6 +67,7 @@ in {
 
   # Set your time zone.
   time.timeZone = "Africa/Johannesburg";
+  # time.timeZone = "Europe/Dublin";
 
 
   boot = {
@@ -86,15 +115,27 @@ in {
   #   keyMap = "us";
   # };
 
-  fonts.fonts = with pkgs; [
-    noto-fonts
-    open-sans
-    corefonts
+  fonts.fonts = [
+    pkgs.noto-fonts
+    pkgs.open-sans
+    pkgs.corefonts
+    pkgs.font-awesome
   ];
-
+  
   # Map capslock => control key
-  services.xserver.xkbOptions = "ctrl:nocaps";
-  console.useXkbConfig = true;
+  # services.xserver.xkbOptions = "ctrl:nocaps";
+  # console.useXkbConfig = true;
+  services.interception-tools = {
+    enable = true;
+    udevmonConfig = ''
+    - JOB: "${pkgs.interception-tools}/bin/intercept -g $DEVNODE | ${pkgs.interception-tools-plugins.caps2esc}/bin/caps2esc | ${pkgs.interception-tools}/bin/uinput -d $DEVNODE"
+      DEVICE:
+        NAME: "AT Translated Set 2 keyboard"
+        EVENTS:
+          EV_KEY: [KEY_CAPSLOCK]
+    '';
+    
+  };
 
   # For Flutter/Android
   # programs.adb.enable = true;
@@ -111,7 +152,9 @@ in {
   # Going with pipewire
   sound.enable = false;
   hardware.pulseaudio.enable = false;
+  hardware.bluetooth.enable = true;
   security.rtkit.enable = true;
+  services.blueman.enable = true;
   services.pipewire  = {
     enable = true;
     alsa.enable = true;
@@ -124,7 +167,7 @@ in {
         actions = {
           "update-props" = {
             # "bluez5.reconnect-profiles" = [ "hsp_hs" "hs_ag" "hfp_hf" ];
-            "bluez5.headset-roles" = ["hsp_hs" "hsp_ag" "hfp_hf"];
+            "bluez5.headset-roles" = ["sbc-xq" "hsp_hs" "hsp_ag" "hfp_hf"];
             # mSBC is not expected to work on all headset + adapter combinations.
             "bluez5.msbc-support" = true;
             # SBC-XQ is not expected to work on all headset + adapter combinations.
@@ -147,8 +190,6 @@ in {
   };
 
 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
 
   programs.fish = {
     # Needs direnv installed
@@ -187,21 +228,41 @@ in {
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   # nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "obsidian"
-    "google-chrome"
-    "slack"
-    "skypeforlinux"
-    "teams"
-    "dropbox"
-    "dropbox-cli"
-    "corefonts"
-    "zoom-us"
-    "zoom"
-    # WTF firefox??
-    "firefox-bin"
-    "firefox-release-bin-unwrapped"
-  ];
+  nixpkgs = {
+    # overlays = [];
+    overlays = [
+      (self: super:
+        {
+          zoomUsFixed = pkgs.zoom-us.overrideAttrs (old: {
+            postFixup = old.postFixup + ''
+              wrapProgram $out/bin/zoom-us --unset XDG_SESSION_TYPE
+              wrapProgram $out/bin/zoom --unset XDG_SESSION_TYPE
+            '';});
+          # zoom = pkgs.zoom-us.overrideAttrs (old: {
+          #   postFixup = old.postFixup + ''
+          #     wrapProgram $out/bin/zoom --unset XDG_SESSION_TYPE
+          #   '';});
+        }
+      )
+    ];
+
+    config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+      "obsidian"
+      "google-chrome"
+      "slack"
+      "skypeforlinux"
+      "teams"
+      "dropbox"
+      "dropbox-cli"
+      "corefonts"
+      "zoom"
+      "zoom-us"
+      "zoomUsFixed"
+      # WTF firefox??
+      "firefox-bin"
+      "firefox-release-bin-unwrapped"
+    ];
+  };
 
   # Services
   virtualisation.docker.enable = true;
@@ -211,11 +272,18 @@ in {
 
   # Emacs (probably need to add in the packages here at some point)
   services.emacs = {
-   enable = true;
-   package = stableWithOverlays.emacsPgtkGcc;
-   defaultEditor = true;
+    enable = true;
+    package = pinned.emacsPgtkGcc;
+    defaultEditor = true;
   };
-  systemd.user.services.emacs.serviceConfig.TimeoutStartSec = "20min";
+
+  # programs.emacs = {
+  #   enable = true;
+  #   package = pinned.emacsPgtkGcc;
+  # };
+
+
+  # systemd.user.services.emacs.serviceConfig.TimeoutStartSec = "20min";
 
   # Enable nix eval --expr
   nix.package = pkgs.nixUnstable;
@@ -223,56 +291,113 @@ in {
       experimental-features = nix-command
    '';
 
-  environment.systemPackages = with pkgs; [
+  environment.systemPackages = [
     # Dev stuff
-    curl wget vim git fasd jq sqlite unzip ripgrep xsel fd visidata bind zip ispell tldr gitAndTools.gh direnv fzf bat
+    pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat
 
-    openvpn
+    pkgs.leiningen # For emacs
 
-    binutils gcc libgccjit
+    pkgs.openvpn
 
-    noto-fonts open-sans corefonts
+    pkgs.binutils pkgs.gcc pkgs.libgccjit
 
-    exfat exfatprogs nfs-utils ntfs3g # I think we only need ntfs3g to access USB drives with > 4gb files.
+    pkgs.noto-fonts pkgs.open-sans pkgs.corefonts
+
+    pkgs.exfat pkgs.exfatprogs pkgs.nfs-utils pkgs.ntfs3g # I think we only need ntfs3g to access USB drives with > 4gb files.
 
     # Audio
-    rnnoise-plugin
+    pkgs.rnnoise-plugin
 
-    python3 gnumake pandoc ledger
+    pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger
     #pdflatex
-    nodejs-14_x unstable.yarn
+    pkgs.nodejs-14_x 
 
-    unstable.gnomeExtensions.pop-shell
-    firefox google-chrome inkscape slack dropbox-cli zoom-us skypeforlinux teams obsidian
-    deluge
+    pkgs.pulseaudio
+
+    pkgs.firefox pkgs.google-chrome pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux pkgs.teams pkgs.obsidian
+    pkgs.deluge
+    pkgs.obs-studio
+    pkgs.vlc
+
+    # Unstable 
+    # unstable.gnomeExtensions.pop-shell
+    pkgs.zoomUsFixed
+    # pkgs.zoom
   ];
 
   
 # Needed for i3
 # environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
 services.xserver = {
-  # Enable the X11 windowing system.
+#   # Enable the X11 windowing system.
+
+  # Enable touchpad support (enabled default in most desktopManager).
+  # libinput.enable = true;
+
   enable = true;
   desktopManager = {
     xterm.enable = false;
     gnome.enable = true; # Gnome 4 in 21.05
   };
   displayManager = {
-    # defaultSession = "none+i3";
+    defaultSession = "sway";
     gdm.enable = true;
+    # sddm.enable = true;
     gdm.wayland = true;
   };
 
-  # i3 Window Manager
-  windowManager.i3 = {
-    enable = true;
-    package = pkgs.i3-gaps;
-    extraPackages = with pkgs; [
-      dmenu #application launcher most people use
-      # i3status # gives you the default i3 status bar
-   ];
-  };
+#   # i3 Window Manager
+#   # windowManager.i3 = {
+#   #   enable = false;
+#   #   package = pkgs.i3-gaps;
+#   #   extraPackages = [
+#   #     pkgs.dmenu #application launcher most people use
+#   #     # i3status # gives you the default i3 status bar
+#   #  ];
+#   # };
+
 };
+
+# pathsToLink is needed by polkit_gnome
+environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
+# programs.gnome.enable = true;
+programs.sway = {
+  enable = true;
+  wrapperFeatures.gtk = true; # so that gtk works properly
+  extraPackages = [
+
+    pkgs.swaylock
+    pkgs.swayidle
+
+    # Bar
+    pkgs.waybar
+
+    # SSH
+    pkgs.polkit_gnome
+    pkgs.openssh 
+
+    pkgs.wl-clipboard
+    pkgs.mako # notification daemon
+    pkgs.alacritty # Alacritty is the default terminal in the config
+    pkgs.dmenu # Dmenu is the default in the config but i recommend wofi since its wayland native
+
+    # Sound / Audio
+    pkgs.pavucontrol
+    pkgs.pamixer
+    pkgs.brightnessctl
+
+    # Screenshots
+    pkgs.slurp
+    pkgs.grim
+
+    # GTK Themeing
+    pkgs.gtk-engine-murrine
+    pkgs.gtk_engines
+    pkgs.gsettings-desktop-schemas
+    pkgs.lxappearance
+  ];
+};
+
 
 # Some programs need SUID wrappers, can be configured further or are
 # started in user sessions.
@@ -286,6 +411,11 @@ services.xserver = {
 
 # Enable the OpenSSH daemon.
 # services.openssh.enable = true;
+
+programs.ssh = {
+  # askPassword = true;
+  startAgent = true;
+};
 
 # Open ports in the firewall.
 # networking.firewall.allowedTCPPorts = [ ... ];

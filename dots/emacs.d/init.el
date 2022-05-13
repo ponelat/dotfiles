@@ -1,4 +1,3 @@
-
 ;;; init.el --- Just my dot file.
 ;;; -*- lexical-binding: t -*-
 ;;; Commentary:
@@ -65,7 +64,7 @@
 ;;; Scratch buffer, Emacs
 (setq initial-scratch-message "Emacs\n")
 ;; This breaks shit, not sure why??
-;; (setq initial-major-mode 'org-mode )
+(setq initial-major-mode 'fundamental-mode )
 
 (windmove-default-keybindings)
 (auto-image-file-mode 1)
@@ -1010,7 +1009,7 @@ Version 2017-01-11"
   (add-hook 'ielm-mode-hook 'evil-paredit-mode)
   (add-hook 'lisp-interaction-mode-hook 'evil-paredit-mode))
 
-;;; html,xml, markup
+;;; html,xml, markup, css
 (use-package emmet-mode
   :diminish emmet-mode
   :config
@@ -1375,29 +1374,28 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package csv-mode)
 
 ;;; Ruby, rspec
-(use-package ruby-mode)
-
-(use-package rspec-mode)
+;; (use-package ruby-mode)
+;; (use-package rspec-mode)
 
 ;;; Rust, cargo
-(use-package rust-mode
-  :config
-  (progn
-    (define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
-    (setq company-tooltip-align-annotations t)
-    (setq rust-cargo-bin "~/.cargo/bin/cargo"))
-  )
 
-(use-package toml-mode
-  )
+;; (use-package rust-mode
+;;   :config
+;;   (progn
+;;     (define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
+;;     (setq company-tooltip-align-annotations t)
+;;     (setq rust-cargo-bin "~/.cargo/bin/cargo"))
+;;   )
 
-(use-package racer
-  :config
-  (progn
-    (add-hook 'rust-mode-hook #'racer-mode)
-    (add-hook 'racer-mode-hook #'eldoc-mode)
-    (setq racer-rust-src-path "~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src"))
-  )
+(use-package toml-mode)
+
+;; (use-package racer
+;;   :config
+;;   (progn
+;;     (add-hook 'rust-mode-hook #'racer-mode)
+;;     (add-hook 'racer-mode-hook #'eldoc-mode)
+;;     (setq racer-rust-src-path "~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src"))
+;;   )
 
 ;;; Docker, Dockerfile
 (use-package dockerfile-mode
@@ -1406,12 +1404,10 @@ Will use `projectile-default-project-name' .rest as the file name."
     (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
   )
 
-(use-package docker-compose-mode
-  )
+;; (use-package docker-compose-mode)
 
 ;; LDAP, LDIF, Active Directory
-(use-package ldap
-  )
+;; (use-package ldap)
 
 (use-package json-mode)
 
@@ -1439,10 +1435,10 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package company-lsp )
 (use-package lsp-ui )
 
-(use-package company-tabnine
-  :disabled
-  :config
-  (add-to-list 'company-backends #'company-tabnine))
+;; (use-package company-tabnine
+;;   :disabled
+;;   :config
+;;   (add-to-list 'company-backends #'company-tabnine))
 
 
 ;;; Debugging, LSP, AST, Tree-Sitter
@@ -1481,40 +1477,40 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 ;;; SHUB - automation
 ;; mvn verify -Dmaven.test.failure.ignore=true -Denv=dev -Dselenium=browser.chrome
-(defun shub/test-features (&rest extra)
 
-  (interactive)
-  "Run features, with EXTRA flags."
-  (let*
-    ((task "verify")
-      (directory (projectile-project-root))
-      (flags '("-Dmaven.test.failure.ignore=true"
-                "-Denv.url=http://localhost:3200"
-                "-Dagent=browser.chrome"
-                "-DdriverPath=/home/josh/bin/chromedriver"))
-      (cmd
-        (format "cd %s && %s %s %s %s"
-          directory
-          jdee-maven-program
-          task
-          (string-join flags " ")
-          (string-join extra " "))))
-    (compilation-start cmd)))
+;; (defun shub/test-features (&rest extra)
+;;   (interactive)
+;;   "Run features, with EXTRA flags."
+;;   (let*
+;;     ((task "verify")
+;;       (directory (projectile-project-root))
+;;       (flags '("-Dmaven.test.failure.ignore=true"
+;;                 "-Denv.url=http://localhost:3200"
+;;                 "-Dagent=browser.chrome"
+;;                 "-DdriverPath=/home/josh/bin/chromedriver"))
+;;       (cmd
+;;         (format "cd %s && %s %s %s %s"
+;;           directory
+;;           jdee-maven-program
+;;           task
+;;           (string-join flags " ")
+;;           (string-join extra " "))))
+;;     (compilation-start cmd)))
 
-(defun shub/test-current-feature (&rest extra)
-  "Run all feature tests."
-  (interactive)
-  (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name)))
+;; (defun shub/test-current-feature (&rest extra)
+;;   "Run all feature tests."
+;;   (interactive)
+;;   (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name)))
 
 
-(defun shub/test-current-feature-staging (&rest extra)
-  "Run all feature tests."
-  (interactive)
-  (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name) "-Denv=staging"))
+;; (defun shub/test-current-feature-staging (&rest extra)
+;;   "Run all feature tests."
+;;   (interactive)
+;;   (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name) "-Denv=staging"))
 
 ;;; Javascript, js-mode, js2-mode
-(use-package js2-mode
 
+(use-package js2-mode
   :diminish js2-mode
   :config
   (progn
@@ -1522,24 +1518,22 @@ Will use `projectile-default-project-name' .rest as the file name."
     (setq js2-mode-show-strict-warnings nil)
     (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
 
-(use-package indium)
+;; (use-package indium)
 
-(use-package jest
-  :after '((js2-mode))
-  :hook (js2-mode . 'jest-minor-mode))
+;; (use-package jest
+;;   :after '((js2-mode))
+;;   :hook (js2-mode . 'jest-minor-mode))
 
 (use-package jest-test-mode)
 
+;; (use-package nodejs-repl)
 
-(use-package nodejs-repl
-  )
-
-(use-package company-tern
-  :defer 1
-  :config
-  (progn
-    (add-to-list 'company-backends 'company-tern))
-  )
+;; (use-package company-tern
+;;   :defer 1
+;;   :config
+;;   (progn
+;;     (add-to-list 'company-backends 'company-tern))
+;;   )
 
 (defun ponelat/shell-command-on-region-to-string (begin end command)
   "It wraps `shell-command-on-region' using BEGIN, END and COMMAND, so that it returnes a string."
@@ -1585,46 +1579,46 @@ Will use `projectile-default-project-name' .rest as the file name."
     (js2r-add-keybindings-with-prefix "C-c C-r")
     (add-hook 'js2-mode-hook #'js2-refactor-mode)))
 
-;;; Apps, spotify
-(defun ponelat/spotify (command)
-  "Runs the ~/bin/spot spotify client (DBus) with COMMAND as argument.
-See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1cd1116b80718d986f1c1e7966/sp"
-  (call-process-shell-command (format "~/bin/spot %s" command)))
+;; ;;; Apps, spotify
+;; (defun ponelat/spotify (command)
+;;   "Runs the ~/bin/spot spotify client (DBus) with COMMAND as argument.
+;; See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1cd1116b80718d986f1c1e7966/sp"
+;;   (call-process-shell-command (format "~/bin/spot %s" command)))
 
-(defun ponelat/spotify-next ()
-  "Skips next spotify song."
-  (interactive)
-  (ponelat/spotify "next"))
-(defun ponelat/spotify-previous ()
-  "Visit previous spotify song."
-  (interactive)
-  (ponelat/spotify "prev"))
-(defun ponelat/spotify-play-toggle ()
-  "Play/pause spotify."
-  (interactive)
-  (ponelat/spotify "play"))
+;; (defun ponelat/spotify-next ()
+;;   "Skips next spotify song."
+;;   (interactive)
+;;   (ponelat/spotify "next"))
+;; (defun ponelat/spotify-previous ()
+;;   "Visit previous spotify song."
+;;   (interactive)
+;;   (ponelat/spotify "prev"))
+;; (defun ponelat/spotify-play-toggle ()
+;;   "Play/pause spotify."
+;;   (interactive)
+;;   (ponelat/spotify "play"))
 
-
-;;; ag projects
 (defun assoc-recursive (alist &rest keys)
   "Recursively search ALIST for KEYS."
   (while keys
     (setq alist (cdr (assoc (pop keys) alist))))
   alist)
 
-;; TODO finish this
-(comment defun ponelat/ag (filename folder)
-  "Search for uses of FILENAME, within FOLDER."
-  (ag-regexp (format "import .* from *['\"]%s(.js|.jsx)?['\"]" filename) folder))
+;;; ag projects
 
-(comment defun ponelat/get-babel-aliases (project-dir)
-(let* ((file-path (concat project-dir "package.json"))
-          (json-data (json-read-file file-path))
-          (scripts (assoc-recursive json-data 'babel ))
-          (script-keys (alist-keys scripts))
-          (choice (completing-read "Npm: " script-keys))
-          (project-name (ponelat/last-dir project-dir)))
-    (async-shell-command (format "cd %s && npm run %s" project-dir choice) (format "*npm* - %s - %s" choice project-name))))
+;; ;; TODO finish this
+;; (comment defun ponelat/ag (filename folder)
+;;   "Search for uses of FILENAME, within FOLDER."
+;;   (ag-regexp (format "import .* from *['\"]%s(.js|.jsx)?['\"]" filename) folder))
+
+;; (comment defun ponelat/get-babel-aliases (project-dir)
+;; (let* ((file-path (concat project-dir "package.json"))
+;;           (json-data (json-read-file file-path))
+;;           (scripts (assoc-recursive json-data 'babel ))
+;;           (script-keys (alist-keys scripts))
+;;           (choice (completing-read "Npm: " script-keys))
+;;           (project-name (ponelat/last-dir project-dir)))
+;;     (async-shell-command (format "cd %s && npm run %s" project-dir choice) (format "*npm* - %s - %s" choice project-name))))
 
 
 (use-package web-beautify)
@@ -1637,6 +1631,34 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
   (define-key rjsx-mode-map (kbd "C-c C-j") nil)
   (define-key rjsx-mode-map (kbd "C-c r") #'rjsx-rename-tag-at-point)
   )
+
+
+;;; Boostrap, template code
+
+
+(defconst ponelat/nix-shell-nodejs
+"{ pkgs ? import <nixpkgs> {} }:
+
+pkgs.mkShell {
+  buildInputs = with pkgs; [
+    nodejs-16_x
+    yarn
+
+    bashInteractive
+  ];
+
+  shellHook = ''
+    echo Execution environment for Nodejs projects
+  '';
+}")
+
+
+;; (let* (($buffer (read-file-name "Shell.nix: " (projectile-project-root) nil nil "shell.nix")))
+;;   (with-current-buffer (get-buffer-create $buffer)
+;;     (insert ponelat/nix-shell-nodejs)
+;;     )
+;;   )
+
 
 
 (defun create-react-app ()
@@ -1655,19 +1677,21 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
       (find-file-other-window (format "%s/src/%s" project-path (if typescript? "App.tsx" "App.js")))
       (async-shell-command "npm run dev"))))
 
-(defun creat-project ()
-  "Create a simple project folder with .git/."
-  (interactive)
-  (let* ((name (read-from-minibuffer "Project name: "))
-          (project-path (format "~/projects/%s" name)))
-    (shell-command (format "mkdir -p %s" project-path))
-    (shell-command (format "git init" project-path))
-    (shell-command (read-from-minibuffer "Your next command? "))))
+;; (defun creat-project ()
+;;   "Create a simple project folder with .git/."
+;;   (interactive)
+;;   (let* ((name (read-from-minibuffer "Project name: "))
+;;           (project-path (format "~/projects/%s" name)))
+;;     (shell-command (format "mkdir -p %s" project-path))
+;;     (shell-command (format "git init" project-path))
+;;     (shell-command (read-from-minibuffer "Your next command? "))))
 
-;;; Less/Css
+;;; Less/Css tailwindcss
+;; (use-package less-css-mode)
 
-(use-package less-css-mode
-  )
+;; (use-package lsp-tailwindcss
+;;   :straight '(lsp-tailwindcss :host github :repo "merrickluo/lsp-tailwindcss")
+;;   :config (setq lsp-tailwindcss-add-on-mode t))
 
 ;;; Flycheck, syntax, lint
 (use-package flycheck
@@ -1683,7 +1707,6 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
 
 ;; So that we can access `./node_modules/.bin/eslint` mostly
 (use-package add-node-modules-path
-
   :init
   (progn
     (eval-after-load 'js2-mode
@@ -1692,37 +1715,35 @@ See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1c
       '(add-hook 'js2-mode-hook #'add-node-modules-path)))
 
 ;;; Jq
-(use-package jq-mode
-  )
+(use-package jq-mode)
 
-;;; Go lang
- (use-package go-mode
-   :config
-   (setq gofmt-command "gofmt")
-   (add-hook 'before-save-hook 'gofmt-before-save)
-   (evil-define-key 'normal go-mode-map "gd" #'godef-jump)
-   )
+;; ;;; Go lang
+;;  (use-package go-mode
+;;    :config
+;;    (setq gofmt-command "gofmt")
+;;    (add-hook 'before-save-hook 'gofmt-before-save)
+;;    (evil-define-key 'normal go-mode-map "gd" #'godef-jump)
+;;    )
 
-(use-package company-go
-  :after company
-  :init
-  (add-to-list 'company-backends 'company-go))
+;; (use-package company-go
+;;   :after company
+;;   :init
+;;   (add-to-list 'company-backends 'company-go))
 
 
-(use-package go-eldoc
+;; (use-package go-eldoc
+;;   :init (add-hook 'go-mode-hook 'go-eldoc-setup))
 
-  :init (add-hook 'go-mode-hook 'go-eldoc-setup))
-
-(use-package go-guru
-
-  :init (add-hook 'go-mode-hook 'go-guru-hl-identifier-mode))
+;; (use-package go-guru
+;;   :init (add-hook 'go-mode-hook 'go-guru-hl-identifier-mode))
 
 ;;; Haskell, FP
-(use-package haskell-mode
-  :config
-  (progn
-    (add-hook 'haskell-mode-hook 'interactive-haskell-mode))
-  )
+;; (use-package haskell-mode
+;;   :config
+;;   (progn
+;;     (add-hook 'haskell-mode-hook 'interactive-haskell-mode))
+;;   )
+
 ;;; Clojure
 (use-package cider
 
@@ -1963,10 +1984,94 @@ eg: /one/two => two
   (use-package savehist :init (savehist-mode))
   (use-package recentf :init (recentf-mode))
 
-  (use-package orderless
-    :ensure t
-    :custom (completion-styles '(orderless)))
+;;; Consult ivy  helm  vertico completing read libs
 
+  ;; (use-package orderless
+  ;;   :ensure t
+  ;;   :custom (completion-styles '(orderless)))
+
+
+(use-package orderless
+  :demand t
+  :config
+  (defvar +orderless-dispatch-alist
+    '((?% . char-fold-to-regexp)
+      (?! . orderless-without-literal)
+      (?`. orderless-initialism)
+      (?= . orderless-literal)
+      (?~ . orderless-flex)))
+
+  ;; Recognizes the following patterns:
+  ;; * ~flex flex~
+  ;; * =literal literal=
+  ;; * %char-fold char-fold%
+  ;; * `initialism initialism`
+  ;; * !without-literal without-literal!
+  ;; * .ext (file extension)
+  ;; * regexp$ (regexp matching at end)
+  (defun +orderless-dispatch (pattern index _total)
+    (cond
+     ;; Ensure that $ works with Consult commands, which add disambiguation suffixes
+     ((string-suffix-p "$" pattern)
+      `(orderless-regexp . ,(concat (substring pattern 0 -1) "[\x200000-\x300000]*$")))
+     ;; File extensions
+     ((and
+       ;; Completing filename or eshell
+       (or minibuffer-completing-file-name
+           (derived-mode-p 'eshell-mode))
+       ;; File extension
+       (string-match-p "\\`\\.." pattern))
+      `(orderless-regexp . ,(concat "\\." (substring pattern 1) "[\x200000-\x300000]*$")))
+     ;; Ignore single !
+     ((string= "!" pattern) `(orderless-literal . ""))
+     ;; Prefix and suffix
+     ((if-let (x (assq (aref pattern 0) +orderless-dispatch-alist))
+          (cons (cdr x) (substring pattern 1))
+        (when-let (x (assq (aref pattern (1- (length pattern))) +orderless-dispatch-alist))
+          (cons (cdr x) (substring pattern 0 -1)))))))
+
+  ;; Define orderless style with initialism by default
+  (orderless-define-completion-style +orderless-with-initialism
+    (orderless-matching-styles '(orderless-initialism orderless-literal orderless-regexp)))
+
+  ;; You may want to combine the `orderless` style with `substring` and/or `basic`.
+  ;; There are many details to consider, but the following configurations all work well.
+  ;; Personally I (@minad) use option 3 currently. Also note that you may want to configure
+  ;; special styles for special completion categories, e.g., partial-completion for files.
+  ;;
+  ;; 1. (setq completion-styles '(orderless))
+  ;; This configuration results in a very coherent completion experience,
+  ;; since orderless is used always and exclusively. But it may not work
+  ;; in all scenarios. Prefix expansion with TAB is not possible.
+  ;;
+  ;; 2. (setq completion-styles '(substring orderless))
+  ;; By trying substring before orderless, TAB expansion is possible.
+  ;; The downside is that you can observe the switch from substring to orderless
+  ;; during completion, less coherent.
+  ;;
+  ;; 3. (setq completion-styles '(orderless basic))
+  ;; Certain dynamic completion tables (completion-table-dynamic)
+  ;; do not work properly with orderless. One can add basic as a fallback.
+  ;; Basic will only be used when orderless fails, which happens only for
+  ;; these special tables.
+  ;;
+  ;; 4. (setq completion-styles '(substring orderless basic))
+  ;; Combine substring, orderless and basic.
+  ;;
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        ;;; Enable partial-completion for files.
+        ;;; Either give orderless precedence or partial-completion.
+        ;;; Note that completion-category-overrides is not really an override,
+        ;;; but rather prepended to the default completion-styles.
+        ;; completion-category-overrides '((file (styles orderless partial-completion))) ;; orderless is tried first
+        completion-category-overrides '((file (styles partial-completion)) ;; partial-completion is tried first
+                                        ;; enable initialism by default for symbols
+                                        (command (styles +orderless-with-initialism))
+                                        (variable (styles +orderless-with-initialism))
+                                        (symbol (styles +orderless-with-initialism)))
+        orderless-component-separator #'orderless-escapable-split-on-space ;; allow escaping space with backslash!
+        orderless-style-dispatchers '(+orderless-dispatch))) 
 
   ;; Enable vertico
   (use-package vertico
@@ -2079,6 +2184,22 @@ eg: /one/two => two
     ;; Both < and C-+ work reasonably well.
     (setq consult-narrow-key "<") ;; (kbd "C-+")
 
+
+    (progn 
+      (defun define-minibuffer-key (key &rest defs)
+	"Define KEY conditionally in the minibuffer.
+DEFS is a plist associating completion categories to commands."
+	(define-key minibuffer-local-map key
+		    (list 'menu-item nil defs :filter
+			  (lambda (d)
+			    (plist-get d (completion-metadata-get
+					  (completion-metadata (minibuffer-contents)
+							       minibuffer-completion-table
+							       minibuffer-completion-predicate)
+					  'category))))))
+
+      (define-minibuffer-key "\C-d" 'file #'find-file)) 
+
     ;; Optionally make narrowing help available in the minibuffer.
     ;; You may want to use `embark-prefix-help-command' or which-key instead.
     ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
@@ -2108,8 +2229,7 @@ eg: /one/two => two
 
   )
 
-;;; Counsel/swiper
-
+;;; Swiper
 (defun ponelat/swiper-region-or-symbol ()
   (interactive)
   (if (region-active-p)
@@ -2129,7 +2249,7 @@ eg: /one/two => two
     (define-key projectile-command-map (kbd "n") #'ponelat/projectile-project-run)
     (global-set-key (kbd "C-j") nil)
     (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-    (projectile-mode 1)))
+    (projectile-mode 1))) 
 
 ;;; Fuzzy, ido
 (comment use-package counsel-projectile
@@ -2216,7 +2336,7 @@ eg: /one/two => two
 (use-package forge
  :after magit)
 
-(use-package gist)
+;; (use-package gist)
 
 (use-package git-link)
 
@@ -2332,171 +2452,170 @@ eg: /one/two => two
 ;; ┌ ┬ ┐ ├ ┼ ┤ └ ┴ ┘ ─ │
 
 ;;; org-mode pre
-(defun ponelat/org-mode-styles ()
-  "It styles org mode."
-  (interactive)
-  ;; Headline sizes
-  (progn
-    (let* ((variable-tuple
-             (cond ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
-               ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
-               ((x-list-fonts "Noto Sans")         '(:font "Noto Sans"))
-               ((x-list-fonts "Verdana")         '(:font "Verdana"))
-               ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
-               (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
-            (fixed-tuple
-              (cond ((x-list-fonts "Noto Mono") '(:font "Noto Mono"))
-                (nil (warn "Cannot find a Sans Serif Font.  Install Noto Sans"))))
-            (base-font-color     (face-foreground 'default nil 'default))
-            (headline           `(:inherit default :foreground ,base-font-color)))
-      (progn
-        (custom-theme-set-faces
-          'user
-          `(variable-pitch ((t ( ,@variable-tuple :height ,(face-attribute 'default :height) :weight light))))
-          `(fixed-pitch    ((t ( ,@fixed-tuple :slant normal :weight normal :height ,(face-attribute 'default :height) :width normal)))))
+;; (defun ponelat/org-mode-styles ()
+;;   "It styles org mode."
+;;   (interactive)
+;;   ;; Headline sizes
+;;   (progn
+;;     (let* ((variable-tuple
+;;              (cond ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
+;;                ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+;;                ((x-list-fonts "Noto Sans")         '(:font "Noto Sans"))
+;;                ((x-list-fonts "Verdana")         '(:font "Verdana"))
+;;                ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
+;;                (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+;;             (fixed-tuple
+;;               (cond ((x-list-fonts "Noto Mono") '(:font "Noto Mono"))
+;;                 (nil (warn "Cannot find a Sans Serif Font.  Install Noto Sans"))))
+;;             (base-font-color     (face-foreground 'default nil 'default))
+;;             (headline           `(:inherit default :foreground ,base-font-color)))
+;;       (progn
+;;         (custom-theme-set-faces
+;;           'user
+;;           `(variable-pitch ((t ( ,@variable-tuple :height ,(face-attribute 'default :height) :weight light))))
+;;           `(fixed-pitch    ((t ( ,@fixed-tuple :slant normal :weight normal :height ,(face-attribute 'default :height) :width normal)))))
 
-        (custom-theme-set-faces
-          'user
-          `(org-level-8 ((t (,@headline ,@variable-tuple :height 1.0))))
-          `(org-level-7 ((t (,@headline ,@variable-tuple :height 1.0))))
-          `(org-level-6 ((t (,@headline ,@variable-tuple :height 1.1))))
-          `(org-level-5 ((t (,@headline ,@variable-tuple :height 1.1))))
-          `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
-          `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.1))))
-          `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
-          `(org-level-1 ((t (,@headline :height 1.3))))
-          `(org-document-title ((t (,@headline ,@variable-tuple :height 3.0 :weight bold :underline nil))))
-          '(org-block                 ((t (:inherit fixed-pitch))))
-          '(org-table                 ((t (:inherit fixed-pitch))))
-          '(org-todo                  ((t (:inherit fixed-pitch))))
-          '(org-code                  ((t (:inherit fixed-pitch))))
-          '(org-indent                ((t (:inherit org-hide fixed-pitch))))
-          '(org-hide                  ((t (:inherit fixed-pitch))))
-          '(org-document-info-keyword ((t (:inhert (shadow) :height 0.8))))
-          '(org-document-info         ((t :height 1.0)))
-          '(org-link                  ((t (:inherit (fixed-pitch) :weight semi-bold))))
-          '(org-meta-line             ((t (:inherit (font-lock-comment-face fixed-pitch) :height 0.8))))
-          '(org-property-value        ((t (:inherit fixed-pitch))) t)
-          '(org-special-keyword       ((t (:inherit (font-lock-comment-face fixed-pitch) :height 0.8))))
-          '(org-tag                   ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
-          '(org-verbatim              ((t (:inherit (shadow fixed-pitch))))))))
-    (ponelat/face-extras)))
+;;         (custom-theme-set-faces
+;;           'user
+;;           `(org-level-8 ((t (,@headline ,@variable-tuple :height 1.0))))
+;;           `(org-level-7 ((t (,@headline ,@variable-tuple :height 1.0))))
+;;           `(org-level-6 ((t (,@headline ,@variable-tuple :height 1.1))))
+;;           `(org-level-5 ((t (,@headline ,@variable-tuple :height 1.1))))
+;;           `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+;;           `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.1))))
+;;           `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
+;;           `(org-level-1 ((t (,@headline :height 1.3))))
+;;           `(org-document-title ((t (,@headline ,@variable-tuple :height 3.0 :weight bold :underline nil))))
+;;           '(org-block                 ((t (:inherit fixed-pitch))))
+;;           '(org-table                 ((t (:inherit fixed-pitch))))
+;;           '(org-todo                  ((t (:inherit fixed-pitch))))
+;;           '(org-code                  ((t (:inherit fixed-pitch))))
+;;           '(org-indent                ((t (:inherit org-hide fixed-pitch))))
+;;           '(org-hide                  ((t (:inherit fixed-pitch))))
+;;           '(org-document-info-keyword ((t (:inhert (shadow) :height 0.8))))
+;;           '(org-document-info         ((t :height 1.0)))
+;;           '(org-link                  ((t (:inherit (fixed-pitch) :weight semi-bold))))
+;;           '(org-meta-line             ((t (:inherit (font-lock-comment-face fixed-pitch) :height 0.8))))
+;;           '(org-property-value        ((t (:inherit fixed-pitch))) t)
+;;           '(org-special-keyword       ((t (:inherit (font-lock-comment-face fixed-pitch) :height 0.8))))
+;;           '(org-tag                   ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+;;           '(org-verbatim              ((t (:inherit (shadow fixed-pitch))))))))
+;;     (ponelat/face-extras)))
 
-(use-package ob-restclient)
+;; (use-package ob-restclient)
 
 
 ;;; org-mode
-(use-package org
-  :hook ((org-mode . org-display-inline-images))
-  :config
-  (progn
-    (define-key org-mode-map (kbd "C-c ;") nil)
-    ;; (define-key org-mode-map (kbd "C-j") nil)
-    (define-key org-mode-map (kbd "C-c C-'") 'org-cycle-list-bullet)
-    (global-set-key (kbd "C-c C-L") #'org-store-link)
-    (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
+;; (use-package org
+;;   :hook ((org-mode . org-display-inline-images))
+;;   :config
+;;   (progn
+;;     (define-key org-mode-map (kbd "C-c ;") nil)
+;;     ;; (define-key org-mode-map (kbd "C-j") nil)
+;;     (define-key org-mode-map (kbd "C-c C-'") 'org-cycle-list-bullet)
+;;     (global-set-key (kbd "C-c C-L") #'org-store-link)
+;;     (add-hook 'org-open-link-functions #'ponelat/org-open-link-shub)
 
-    (setq org-directory ponelat/org-dir
-      org-agenda-files (list ponelat/org-dir)
-      org-default-notes-file "notes.org"
-      org-confirm-elisp-link-function nil
-      org-src-fontify-natively t
-      org-insert-heading-respect-content t
-      org-agenda-start-day "1d"
-      org-agenda-span 5
-      org-agenda-start-on-weekday nil
-      org-deadline-warning-days 1
-      org-confirm-babel-evaluate nil
-      org-export-with-toc nil
-      org-export-initial-scope 'subtree
-      org-goto-interface 'outline-path-completionp
-      org-src-preserve-indentation t
-      org-outline-path-complete-in-steps nil)
+;;     (setq org-directory ponelat/org-dir
+;;       org-agenda-files (list ponelat/org-dir)
+;;       org-default-notes-file "notes.org"
+;;       org-confirm-elisp-link-function nil
+;;       org-src-fontify-natively t
+;;       org-insert-heading-respect-content t
+;;       org-agenda-start-day "1d"
+;;       org-agenda-span 5
+;;       org-agenda-start-on-weekday nil
+;;       org-deadline-warning-days 1
+;;       org-confirm-babel-evaluate nil
+;;       org-export-with-toc nil
+;;       org-export-initial-scope 'subtree
+;;       org-goto-interface 'outline-path-completionp
+;;       org-src-preserve-indentation t
+;;       org-outline-path-complete-in-steps nil)
 
-;;; Babel
-    (progn
-      (setq org-babel-load-languages
-        (append
-          org-babel-load-languages
-          '((js . t)
-             (shell . t)
-             (restclient . t))))
-      (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
-      (add-to-list 'org-babel-tangle-lang-exts '("js" . "js")))
+;; ;;; Babel
+;;     (progn
+;;       (setq org-babel-load-languages
+;;         (append
+;;           org-babel-load-languages
+;;           '((js . t)
+;;              (shell . t)
+;;              (restclient . t))))
+;;       (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages)
+;;       (add-to-list 'org-babel-tangle-lang-exts '("js" . "js")))
 
-;;; Org link keymap
-    (comment progn
-      ;; TODO: Figure out how to make this work for all "TYPES"
-      (org-link-set-parameters
-        "file"
-        :keymap (let ((map (copy-keymap org-mouse-map)))
-                  (define-key map (kbd "TAB") 'org-toggle-link-display)
-                  map)))
+;; ;;; Org link keymap
+;;     (comment progn
+;;       ;; TODO: Figure out how to make this work for all "TYPES"
+;;       (org-link-set-parameters
+;;         "file"
+;;         :keymap (let ((map (copy-keymap org-mouse-map)))
+;;                   (define-key map (kbd "TAB") 'org-toggle-link-display)
+;;                   map)))
 
-;;; Styles
-    (setq
-      org-hide-emphasis-markers t
-      org-startup-indented t
-      org-hide-leading-stars t)
+;; ;;; Styles
+;;     (setq
+;;       org-hide-emphasis-markers t
+;;       org-startup-indented t
+;;       org-hide-leading-stars t)
 
-    (font-lock-add-keywords 'org-mode
-      '(("^ *\\([-]\\) "
-          (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "—"))))))
-    (add-hook 'org-mode-hook 'variable-pitch-mode)
-    (add-hook 'org-mode-hook 'visual-line-mode)
-    (add-hook 'org-mode-hook #'ponelat/org-mode-styles)
-    (add-hook 'org-mode-hook (lambda () (setq electric-pair-local-mode nil)))
+;;     (font-lock-add-keywords 'org-mode
+;;       '(("^ *\\([-]\\) "
+;;           (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "—"))))))
+;;     (add-hook 'org-mode-hook 'variable-pitch-mode)
+;;     (add-hook 'org-mode-hook 'visual-line-mode)
+;;     (add-hook 'org-mode-hook #'ponelat/org-mode-styles)
+;;     (add-hook 'org-mode-hook (lambda () (setq electric-pair-local-mode nil)))
 
-;;; Org refile
-    (setq org-refile-use-outline-path 'file)
-    (setq org-refile-allow-creating-parent-nodes 'confirm)
-    (setq org-outline-path-complete-in-steps nil)
-    (setq org-refile-targets
-      '((nil :maxlevel . 3)
-         (org-agenda-files :maxlevel . 3)))
+;; ;;; Org refile
+;;     (setq org-refile-use-outline-path 'file)
+;;     (setq org-refile-allow-creating-parent-nodes 'confirm)
+;;     (setq org-outline-path-complete-in-steps nil)
+;;     (setq org-refile-targets
+;;       '((nil :maxlevel . 3)
+;;          (org-agenda-files :maxlevel . 3)))
 
-;;; TODOs labels
-    (setq org-todo-keywords
-      '((sequence "NEXT(n)" "TODO(t)" "InProgress(p)" "|" "DONE(d!)")
-         (sequence "MEET(m)" "BLOCKED(b@)" "|" "CANCELLED(c@)")
-         (sequence "DISCUSS(i/@)" "|" "DONE(d!)")))
-;;; org templates
-    (setq org-capture-templates
-      '(("t" "Todo" entry (file (lambda () (concat org-directory "/notes.org")))
-          "* TODO %?\n  %i\n  %a")
-         ("b" "Blank Point" entry (file (lambda () (concat org-directory "/notes.org")))
-           "* %?")
-         ("d" "Today" entry (file+olp+datetree (lambda () (concat org-directory "/today.org")))
-           "* TODO %? \nAdded: %T")
-         ("s" "Shopping" entry (file (lambda () (concat org-directory "/shopping.org")))
-           "* %?")
-         ("j" "Jokes" entry (file (lambda () (concat org-directory "/jokes.org")))
-           "* %?")
-         ("n" "Notes" entry (file (lambda () (concat org-directory "/notes.org")))
-           "* %?\n  %i\n  %a")
-         ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
-           "* LOOSE %?\n  %i\n  %a")))))
+;; ;;; TODOs labels
+;;     (setq org-todo-keywords
+;;       '((sequence "NEXT(n)" "TODO(t)" "InProgress(p)" "|" "DONE(d!)")
+;;          (sequence "MEET(m)" "BLOCKED(b@)" "|" "CANCELLED(c@)")
+;;          (sequence "DISCUSS(i/@)" "|" "DONE(d!)")))
+;; ;;; org templates
+;;     (setq org-capture-templates
+;;       '(("t" "Todo" entry (file (lambda () (concat org-directory "/notes.org")))
+;;           "* TODO %?\n  %i\n  %a")
+;;          ("b" "Blank Point" entry (file (lambda () (concat org-directory "/notes.org")))
+;;            "* %?")
+;;          ("d" "Today" entry (file+olp+datetree (lambda () (concat org-directory "/today.org")))
+;;            "* TODO %? \nAdded: %T")
+;;          ("s" "Shopping" entry (file (lambda () (concat org-directory "/shopping.org")))
+;;            "* %?")
+;;          ("j" "Jokes" entry (file (lambda () (concat org-directory "/jokes.org")))
+;;            "* %?")
+;;          ("n" "Notes" entry (file (lambda () (concat org-directory "/notes.org")))
+;;            "* %?\n  %i\n  %a")
+;;          ("h" "Thought" entry (file (lambda () (concat org-directory "/thoughts.org")))
+;;            "* LOOSE %?\n  %i\n  %a")))))
 
 
 ;;; Org screenshots
 
-(use-package org-attach-screenshot
-  :config
-  (let ((screenshot-entry '((?p ?\C-p)
-            org-attach-screenshot
-            "Grab a screenshot and attach it to the task, using `org-attach-screenshot-command-line'.")))
-
-    (setq org-attach-commands
-      (cons screenshot-entry org-attach-commands))))
-
+;; (use-package org-attach-screenshot
+;;   :config
+;;   (let ((screenshot-entry '((?p ?\C-p)
+;;             org-attach-screenshot
+;;             "Grab a screenshot and attach it to the task, using `org-attach-screenshot-command-line'.")))
+;;     (setq org-attach-commands
+;;       (cons screenshot-entry org-attach-commands))))
 
 
-(use-package org-journal
-  :custom
-  (org-journal-date-prefix "#+TITLE: ")
-  (org-journal-file-format "%Y-%m-%d.org")
-  (org-journal-dir ponelat/org-roam-dir)
-  (org-journal-date-format "%A, %d %B %Y"))
+
+;; (use-package org-journal
+;;   :custom
+;;   (org-journal-date-prefix "#+TITLE: ")
+;;   (org-journal-file-format "%Y-%m-%d.org")
+;;   (org-journal-dir ponelat/org-roam-dir)
+;;   (org-journal-date-format "%A, %d %B %Y"))
 
 ;; (use-package ox-reveal
 ;;   :config
@@ -2505,8 +2624,7 @@ eg: /one/two => two
 ;;; Org Trello
 ;; (use-package org-trello)
 
-(use-package org-download)
-
+;; (use-package org-download)
 
 ;; (progn
 ;;   (use-package md-roam
@@ -2520,13 +2638,14 @@ eg: /one/two => two
   ;you need this as of commit `5f24103`.
 
 ;;; Org Roam
-(use-package org-roam
-  :hook '((after-init . org-roam-mode))
-  :custom (org-roam-directory ponelat/org-roam-dir)
-  :config
-  (comment
-    (setq org-roam-file-extensions '("org" "md"))
-    (setq org-roam-title-sources '((mdtitle title mdheadline headline) (mdalias alias)))))
+
+;; (use-package org-roam
+;;   :hook '((after-init . org-roam-mode))
+;;   :custom (org-roam-directory ponelat/org-roam-dir)
+;;   :config
+;;   (comment
+;;     (setq org-roam-file-extensions '("org" "md"))
+;;     (setq org-roam-title-sources '((mdtitle title mdheadline headline) (mdalias alias)))))
 
 
 
@@ -2686,7 +2805,7 @@ is positive, move after, and if negative, move before."
        ;; automatically annotate highlights
        (setq pdf-annot-activate-created-annotations t)
        ;; use normal isearch
-       (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))))
+       (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)))) 
  ;;; External Org mode, Office, Gmail
 
 (defun ponelat/get-office-data ()
@@ -3638,6 +3757,8 @@ Version 2015-07-24"
 
 </emacs>")
 
+
+
    (defun ponelat/emacs-commands ()
     "
 Runs emacs-commands from local project.
@@ -3793,8 +3914,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
       "oe" '(ponelat/emacs-lisp-imenu-init :wk "init.el")
       "oo" '(xah-open-in-external-app :wk "<external>")
       "or" '(ponelat/jump-to-restclient :wk "rest-scratch")
-      "od" `(,(lambda () (interactive) (find-file "~/Downloads")) :wk "Downloads")
-      "oi" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/i3/config" ponelat/projects-dir))) :wk "i3 config")
+      "od" `(,(lambda () (interactive) (find-file  (read-file-name "File: " "~/Downloads/"))) :wk "Downloads")
+      "oi" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/config/sway/config" ponelat/projects-dir))) :wk "i3 config")
       "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
       "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
       "on" `(,(lambda () (interactive) (find-file "/etc/nixos/configuration.nix" )) :wk "NixOS")

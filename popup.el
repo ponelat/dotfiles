@@ -61,7 +61,7 @@
 (defun cm/emacs-expander ()
   (interactive)
   (save-window-excursion
-    (counsel-M-x)
+    (call-interactively execute-extended-command)
     (cm/emacs-expander-frame-cleanup-if-not-empty)))
 
 (defun cm/emacs-expander-frame ()
@@ -116,7 +116,7 @@
   (interactive)
   (let* ( (seperator " -::- ")
           (list-of-urls (ponelat/chrome-history seperator))
-          (selected-history (ivy-read "Chrome: " list-of-urls))
+          (selected-history (completing-read "Chrome: " list-of-urls))
           (selected-url (car (cdr (split-string selected-history seperator)))))
     (ponelat/open selected-url)))
 

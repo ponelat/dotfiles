@@ -6,18 +6,22 @@
 
 let
 
+  stableWithOverlays = import <nixpkgs-stable> {
+    overlays = [
+      # Need to test the "fix" below. As the upstream builder takes around an hour to build, if we run an update in that period it'll cause a cache miss and we'll build it ourselves!
+      # `sudo nix-channel --update` needed as well.
+      (import (builtins.fetchTarball {
+        url = "https://github.com/nix-community/emacs-overlay/archive/master@{2%20hours%20ago}.tar.gz";
+      }))
+
+    ];
+
+  };
+
+
   unstable = import (fetchTarball
     "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
       config.allowUnfree = true;
-      overlays = [
-
-        # Need to test the "fix" below. As the upstream builder takes around an hour to build, if we run an update in that period it'll cause a cache miss and we'll build it ourselves!
-        # `sudo nix-channel --update` needed as well.
-        (import (builtins.fetchTarball {
-          url = "https://github.com/nix-community/emacs-overlay/archive/master@{2%20hours%20ago}.tar.gz";
-        }))
-
-      ];
     };
 
 in {
@@ -201,7 +205,7 @@ in {
   # Emacs (probably need to add in the packages here at some point)
   services.emacs = {
    enable = true;
-   package = unstable.emacsGcc;
+   package = stableWithOverlays.emacsPgtkGcc;
   };
 
   # Enable nix eval --expr
@@ -228,8 +232,7 @@ in {
 
     python3 gnumake pandoc ledger
     #pdflatex
-    nodejs-14_x unstable.yarn
-
+    nodejs-14_x 
 
     firefox google-chrome inkscape qgis slack dropbox-cli zoom-us skypeforlinux teams obsidian
     blender
