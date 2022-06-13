@@ -60,6 +60,10 @@ in {
 
 
   networking.hostName = "laptop-x1eg2"; # Define your hostname.
+  networking.extraHosts =
+    ''
+    127.0.0.1 kafka.local
+  '';
 
   # Custom wifi drivers. For the little TP-Link dongle
   
@@ -189,8 +193,6 @@ in {
     ];
   };
 
-
-
   programs.fish = {
     # Needs direnv installed
     shellAliases = {
@@ -293,7 +295,7 @@ in {
 
   environment.systemPackages = [
     # Dev stuff
-    pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat
+    pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
 
     pkgs.leiningen # For emacs
 
@@ -310,7 +312,8 @@ in {
 
     pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger
     #pdflatex
-    pkgs.nodejs-14_x 
+    pkgs.nodejs-16_x 
+    pkgs.jdk
 
     pkgs.pulseaudio
 
@@ -379,7 +382,8 @@ programs.sway = {
     pkgs.wl-clipboard
     pkgs.mako # notification daemon
     pkgs.alacritty # Alacritty is the default terminal in the config
-    pkgs.dmenu # Dmenu is the default in the config but i recommend wofi since its wayland native
+    # pkgs.dmenu # Dmenu is the default in the config but i recommend wofi since its wayland native
+    pkgs.wofi
 
     # Sound / Audio
     pkgs.pavucontrol

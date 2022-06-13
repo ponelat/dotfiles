@@ -90,6 +90,13 @@
       (message "Tracing Requests disabled"))))
 
 ;;; Utilities
+(defun ponelat/capitalize-first-char (&optional string)
+  "Capitalize only the first character of the input STRING."
+  (when (and string (> (length string) 0))
+    (let ((first-char (substring string nil 1))
+          (rest-str   (substring string 1)))
+      (concat (capitalize first-char) rest-str))))
+
 (defun pairs-to-cons (al)
   "Converts AL from ((one 1) (two 2)) => ((one . 1) (two . 2))."
   (mapcar (lambda (p) (cons (car p) (car (cdr p)))) al))
@@ -132,6 +139,7 @@
          (user (nth 0 auth))
          (password (nth 1 auth)))
     (ponelat/basic-auth user password)))
+
 
 (defun ponelat/basic-auth (username pass)
   "Return the basic auth for USERNAME and PASS."
@@ -862,21 +870,19 @@ Version 2017-01-11"
             (define-key evil-visual-state-map (kbd "C-M-D") 'evil-multiedit-restore)
 
             ;; RET will toggle the region under the cursor
-            (define-key evil-multiedit-state-map (kbd "RET") 'evil-multiedit-toggle-or-restrict-region)
+            ;; (define-key evil-multiedit-state-map (kbd "RET") 'evil-multiedit-toggle-or-restrict-region)
 
             ;; ...and in visual mode, RET will disable all fields outside the selected region
             (define-key evil-motion-state-map (kbd "RET") 'evil-multiedit-toggle-or-restrict-region)
 
             ;; For moving between edit regions
-            (define-key evil-multiedit-state-map (kbd "C-n") 'evil-multiedit-next)
-            (define-key evil-multiedit-state-map (kbd "C-p") 'evil-multiedit-prev)
-            (define-key evil-multiedit-insert-state-map (kbd "C-n") 'evil-multiedit-next)
-            (define-key evil-multiedit-insert-state-map (kbd "C-p") 'evil-multiedit-prev)
+            ;; (define-key evil-multiedit-state-map (kbd "C-n") 'evil-multiedit-next)
+            ;; (define-key evil-multiedit-state-map (kbd "C-p") 'evil-multiedit-prev)
+            ;; (define-key evil-multiedit-insert-state-map (kbd "C-n") 'evil-multiedit-next)
+            ;; (define-key evil-multiedit-insert-state-map (kbd "C-p") 'evil-multiedit-prev)
 
             ;; Ex command that allows you to invoke evil-multiedit with a regular expression, e.g.
-            (evil-ex-define-cmd "ie[dit]" 'evil-multiedit-ex-match
-
-              )))
+            ))
 
 (use-package evil-collection
   :after evil
@@ -1151,8 +1157,10 @@ Version 2017-01-11"
 ;;; Cuccumber, test, geherkin
 (use-package feature-mode)
 
+
 ;;; Yaml
 (use-package yaml-mode)
+
 
 (defun yaml-delete-backward-word-electric (arg)
   "Delete backward one word or back-dent the current line.
@@ -1316,6 +1324,7 @@ Will use `projectile-default-project-name' .rest as the file name."
          ("\\.html\\.eex\\'" . web-mode)
          ("\\.html\\.tera\\'" . web-mode)
          ("\\.svelte\\'" . web-mode)
+         ("\\.njk\\'" . web-mode)
          ("\\.tsx\\'" . typescript-tsx-mode))
   :init
   (define-derived-mode typescript-tsx-mode typescript-mode "TypeScript-tsx")
@@ -1411,12 +1420,17 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 (use-package json-mode)
 
+;;; Nginx,HAproxy,Caddy Server
+(use-package caddyfile-mode)
+
+
 ;;; LSP, language server protocol
 (use-package lsp-mode
   :hook '((json-mode . lsp)
           (lsp-mode . lsp-enable-which-key-integration))
   :bind ("C-x C-l" . lsp-command-map)
   :config
+  (add-to-list 'lsp-language-id-configuration '(".*\\.njk" . "html"))
   (setq lsp-idle-delay 2.000
     lsp-eslint-enable nil
     lsp-eslint-package-manager "yarn"
@@ -3729,7 +3743,6 @@ Version 2015-07-24"
           stderr-buffer-name)
         (switch-to-buffer-other-frame stdout-buffer-name))))
 
-
   (defun emacs-commands/pick-command (root-xml)
     "Pick the command node based on `completing-read' on the command[title]."
     (let* ((root-xml (car root-xml))
@@ -3757,6 +3770,16 @@ Version 2015-07-24"
 
 </emacs>")
 
+   (defun emacs-commands/insert-xml-arg ()
+     "It does something"
+     (interactive)
+
+     (insert "
+    <arg name=\"NAME\" default=\"Josh\" >
+      <value> Hezzie </value>
+      <value> Josh </value>
+    </arg>
+"))
 
 
    (defun ponelat/emacs-commands ()
