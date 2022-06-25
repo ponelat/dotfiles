@@ -111,7 +111,7 @@ input "2:7:SynPS/2_Synaptics_TouchPad" {
     bindsym $mod+p exec grim -g "$(slurp)" - | wl-copy
 
     # Start your launcher
-    bindsym $mod+d exec $menu
+    bindsym alt+space exec $menu
 
     # Manually disable the extra monitor
     bindsym $mod+Shift+o output HDMI-A-1 disable
