@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name:function ... return 
+# key:fr
+# --
+function ${1:SomeComponent}(${2:{}}) {
+	return (
+		$0
+	)
+}

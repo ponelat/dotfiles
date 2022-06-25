@@ -1,7 +1,8 @@
-;;; init.el --- Just my dot file.
-;;; -*- lexical-binding: t -*-
-;;; Commentary:
-;;; Code:
+
+;; init.el --- Just my dot file.
+;; -*- lexical-binding: t -*-
+;; Commentary:
+;; Code:
 
 ;;; Custom variables stored here...
 
@@ -25,11 +26,28 @@
 ;; 		   ; (nix-path "libgccjit") "/lib/gcc/x86_64-unknown-linux-gnu/9.3.0")))))
 
 
+;; Dir for eln-cache. Needed if the original one ends up in the /nix/store (which is readonly)
+(when (boundp 'native-comp-eln-load-path)
+  (setcar native-comp-eln-load-path
+          (expand-file-name (convert-standard-filename ".local/eln-cache/")
+                            user-emacs-directory)))
+
+;; Silence nativecomp warnings popping up
+;; (setq native-comp-async-report-warnings-errors nil)
+
+;; Settings
+;; (setq native-comp-speed 2
+;;       native-comp-deferred-compilation t
+      ;; package-native-compile t)
+
+
 (setq lexical-binding t)
 (setq emacs-dir "~/.emacs.d")
 (setq custom-file (concat emacs-dir "/custom.el"))
 (add-to-list 'load-path "~/.emacs.d/custom")
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
+;; (setq native-comp-eln-load-path '("/var/cache/emacs-eln"))
 
 ;;; Package, Straight, use-package
 (defvar bootstrap-version)
@@ -316,6 +334,14 @@ Version 2017-03-12"
   "Make this file executable."
   (interactive)
   (chmod (buffer-file-name) 509))
+
+;;; Nix queries file paths
+(defun nix-path (exeFile &rest joins)
+  "It returns the path to the /nix/store of EXEFILE and joins JOINS together into a string."
+  (interactive)
+  (let* ((target (string-trim (executable-find exeFile)))
+	 (path (string-trim (shell-command-to-string (format "nix-store -q %s" target)))))
+    (string-join (cons path joins))))
 
 (comment defun ponelat/methodpath-to-badge ()
   "It takes an input string and pastes a URL badge into buffer."
@@ -1023,10 +1049,8 @@ Version 2017-01-11"
     (setq emmet-expand-jsx-className? t)
     (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'web-mode 'emmet-mode) ;; Auto-start on any markup modes
-    (add-hook 'typescript-tsx-mode 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'rjsx-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'rjsx-minor-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-    (add-hook 'typescript-mode 'emmet-mode) ;; Auto-start on any markup modes
     (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
     (add-hook 'markdown-mode  'emmet-mode) ;;
     (evil-define-key 'visual emmet-mode-keymap (kbd "C-l") #'emmet-wrap-with-markup))
@@ -1310,24 +1334,28 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;   :config (setq typescript-indent-level 2))
 
 (use-package typescript-mode
-  :ensure t
-  :init
-  ;; (define-derived-mode typescript-tsx-mode typescript-mode "tsx")
+  :after tree-sitter
   :config
-  (setq typescript-indent-level 2)
-  (add-hook 'typescript-mode #'subword-mode))
+  ;; we choose this instead of tsx-mode so that eglot can automatically figure out language for server
+  ;; see https://github.com/joaotavora/eglot/issues/624 and https://github.com/joaotavora/eglot#handling-quirky-servers
+  (define-derived-mode typescriptreact-mode typescript-mode
+    "TypeScript TSX")
+
+  ;; use our derived mode for tsx files
+  (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescriptreact-mode))
+  ;; by default, typescript-mode is mapped to the treesitter typescript parser
+  ;; use our derived mode to map both .tsx AND .ts -> typescriptreact-mode -> treesitter tsx
+  (add-to-list 'tree-sitter-major-mode-language-alist '(typescriptreact-mode . tsx)))
+
 
 (use-package web-mode
-  :hook ((web-mode . lsp)
-         (typescript-tsx-mode . lsp))
   :mode (("\\.html\\'" . web-mode)
          ("\\.html\\.eex\\'" . web-mode)
          ("\\.html\\.tera\\'" . web-mode)
          ("\\.svelte\\'" . web-mode)
-         ("\\.njk\\'" . web-mode)
-         ("\\.tsx\\'" . typescript-tsx-mode))
-  :init
-  (define-derived-mode typescript-tsx-mode typescript-mode "TypeScript-tsx")
+         ("\\.njk\\'" . web-mode))
+  ;; :init
+  ;; (define-derived-mode typescript-tsx-mode typescript-mode "TypeScript-tsx")
   :config
   (setq web-mode-markup-indent-offset 2
         web-mode-css-indent-offset 2
@@ -1424,30 +1452,55 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package caddyfile-mode)
 
 
-;;; LSP, language server protocol
-(use-package lsp-mode
-  :hook '((json-mode . lsp)
-          (lsp-mode . lsp-enable-which-key-integration))
-  :bind ("C-x C-l" . lsp-command-map)
-  :config
-  (add-to-list 'lsp-language-id-configuration '(".*\\.njk" . "html"))
-  (setq lsp-idle-delay 2.000
-    lsp-eslint-enable nil
-    lsp-eslint-package-manager "yarn"
-    lsp-eslint-run "onSave")
-  :commands lsp)
+;;; LSP, language server protocol, eglot
+;; (use-package lsp-mode
+;;   :hook '((json-mode . lsp)
+;;           (lsp-mode . lsp-enable-which-key-integration))
+;;   :bind ("C-x C-l" . lsp-command-map)
+;;   :config
+;;   (add-to-list 'lsp-language-id-configuration '(".*\\.njk" . "html"))
+;;   (setq lsp-idle-delay 2.000
+;;     lsp-eslint-enable nil
+;;     lsp-eslint-package-manager "yarn"
+;;     lsp-eslint-run "onSave")
+;;   :commands lsp)
+
+(use-package eglot
+  :ensure t)
+
+(with-eval-after-load 'eglot
+  ;; Find the paths to the executables...
+  ;; Requires that typescript-language-server and typescript are both installed.
+  (let ((path-to-typescript-lib-dir
+	 (expand-file-name
+	  "../../lib" ;; Get to the lib directory.
+	  (file-truename ;; Handle symlinks
+	   (executable-find "tsserver")))) ;; Find tsserver. 
+	(path-to-typescript-language-server (executable-find "typescript-language-server"))
+	(path-to-jdtls (executable-find "jdt-language-server")))
+
+  ;; The actual change for eglot. You can replace the variables with hardcoded strings if it helps.
+  (add-to-list
+   'eglot-server-programs
+   `((js-mode typescript-mode) .
+     (,path-to-typescript-language-server
+      "--stdio"
+      "--tsserver-path"
+      ,path-to-typescript-lib-dir))
+   `(java-mode . (,path-to-jdtls))))) 
+
 
 ;; Optional Flutter packages
 ;; Flutter dart
-(use-package dart-mode)
-(use-package lsp-dart
-  :hook '((dart-mode . lsp))
-  :config  (setq lsp-dart-sdk-dir "~/snap/flutter/common/flutter/bin/cache/dart-sdk"))
+;; (use-package dart-mode)
+;; (use-package lsp-dart
+;;   :hook '((dart-mode . lsp))
+;;   :config  (setq lsp-dart-sdk-dir "~/snap/flutter/common/flutter/bin/cache/dart-sdk"))
 
 (comment use-package hover) ;; run app from desktop without emulator
 
-(use-package company-lsp )
-(use-package lsp-ui )
+;; (use-package company-lsp )
+;; (use-package lsp-ui )
 
 ;; (use-package company-tabnine
 ;;   :disabled
@@ -1456,16 +1509,28 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 
 ;;; Debugging, LSP, AST, Tree-Sitter
-(use-package dap-mode
-  :init
-  (progn
-    (require 'dap-node)
-    (dap-node-setup))
-  :ensure t :after lsp-mode
-  :config
-  (dap-mode t)
-  (dap-ui-mode t))
+;; (use-package dap-mode
+;;   :init
+;;   (progn
+;;     (require 'dap-node)
+;;     (dap-node-setup))
+;;   :ensure t :after lsp-mode
+;;   :config
+;;   (dap-mode t)
+;;   (dap-ui-mode t))
 
+(use-package tree-sitter
+  :ensure t
+  :config
+  ;; activate tree-sitter on any buffer containing code for which it has a parser available
+  (global-tree-sitter-mode)
+  ;; you can easily see the difference tree-sitter-hl-mode makes for python, ts or tsx
+  ;; by switching on and off
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+
+(use-package tree-sitter-langs
+  :ensure t
+  :after tree-sitter)
 
 ;; (use-package tree-sitter
 ;;   :ensure t
@@ -1480,11 +1545,11 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx)))
 
 ;;; Java
-(progn
-  (require 'cc-mode)
-  (use-package lsp-java
-    :after lsp
-    :config (add-hook 'java-mode-hook 'lsp)))
+;; (progn
+;;   (require 'cc-mode)
+;;   (use-package lsp-java
+;;     :after lsp
+;;     :config (add-hook 'java-mode-hook 'lsp)))
 
 (use-package gradle-mode)
 (use-package groovy-mode)
@@ -1666,14 +1731,40 @@ pkgs.mkShell {
   '';
 }")
 
+(defconst ponelat/nix-shell-java
+"{ pkgs ? import <nixpkgs> {} }:
 
-;; (let* (($buffer (read-file-name "Shell.nix: " (projectile-project-root) nil nil "shell.nix")))
-;;   (with-current-buffer (get-buffer-create $buffer)
-;;     (insert ponelat/nix-shell-nodejs)
-;;     )
-;;   )
+pkgs.mkShell {
+  buildInputs = with pkgs; [
+    jdk_headless
+    maven
+    gradle
+
+    bashInteractive
+  ];
+
+  shellHook = ''
+    echo Execution environment for Java projects
+  '';
+}")
 
 
+(defun ponelat/insert-shell-nix ()
+  "Creates a shell.nix in project root and inserts template"
+  (interactive)
+  (let* (($templates `(("Nodejs" . ,ponelat/nix-shell-nodejs) ("Java" . ,ponelat/nix-shell-java)))
+	 ($buffer (read-file-name "Shell.nix: " (projectile-project-root) nil nil "shell.nix"))
+	 ($template
+	  (cdr (assoc
+		(completing-read "Template: " $templates)
+		$templates))))
+    (progn
+      (find-file $buffer)
+      (insert $template))))
+
+;; (setq one `(("One" . ,ponelat/nix-shell-java)))
+;; (completing-read "One: " one)
+;; (cdr (assoc "One" one))
 
 (defun create-react-app ()
   "Create a react app, by unzipping a .tar.gz into ~/projects/NAME, firing up the server and opening src/App.js."
@@ -2800,26 +2891,22 @@ is positive, move after, and if negative, move before."
     (buffer-substring
      (match-beginning 0)
       (match-end 0)))))
-;;; PDFs / doc view
 
-(progn
-   (setq doc-view-continuous nil)
-   (evil-define-key 'normal doc-view-mode-map "j" (lambda () (interactive) (doc-view-scroll-down-or-previous-page 1)))
 
-   (use-package pdf-tools
-     :config
-     ;; initialise
-     (progn
-       ;; This forces the pdf-tools to use /usr/bin for pkg-config. As linuxbrew conflicts with that.
-       (let ((process-environment (cons (concat "PATH=/usr/bin/:" (getenv "PATH")) process-environment)))
-         (pdf-tools-install t t))
-       (evil-set-initial-state 'pdf-view-mode 'normal)
-       ;; open pdfs scaled to fit page
-       (setq-default pdf-view-display-size 'fit-page)
-       ;; automatically annotate highlights
-       (setq pdf-annot-activate-created-annotations t)
-       ;; use normal isearch
-       (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)))) 
+;;; PDFs / doc view (nix managed)
+(with-eval-after-load 'pdf-tools  ;; Nix manages installation of pdf-tools package
+    (setq doc-view-continuous nil)
+    (evil-define-key
+      'normal doc-view-mode-map "j"
+      (lambda () (interactive) (doc-view-scroll-down-or-previous-page 1)))
+    (evil-set-initial-state 'pdf-view-mode 'normal)
+    ;; open pdfs scaled to fit page
+    (setq-default pdf-view-display-size 'fit-page)
+    ;; automatically annotate highlights
+    (setq pdf-annot-activate-created-annotations t)
+    ;; use normal isearch
+    (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)) 
+
  ;;; External Org mode, Office, Gmail
 
 (defun ponelat/get-office-data ()
@@ -3105,12 +3192,13 @@ Version 2017-12-27"
 (use-package mood-line
   :config (mood-line-mode))
 
+(use-package all-the-icons)
+
 (use-package doom-themes
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -3442,7 +3530,8 @@ Version 2017-12-27"
 
 (defvar ponelat/fonts
   '( ("Small"  (:family ponelat/default-font-family :height 105  :weight normal))
-     ("Normal" (:family ponelat/default-font-family :height 140 :weight normal))))
+     ("Normal" (:family ponelat/default-font-family :height 140 :weight normal))
+     ("Large" (:family ponelat/default-font-family :height 180 :weight normal))))
 
 (defun ponelat/default-font (font-name)
 "Set the font.  FONT-NAME is the key found in ponelat/fonts.
@@ -3927,6 +4016,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
      ;; "s" #'avy-goto-char-2
      "fe" #'flycheck-list-errors
+     "fj" #'consult-flymake
      "ff" #'find-file
      "fw" #'write-file
      ;; "s" #'avy-goto-char-timer
@@ -3983,7 +4073,6 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "ii" #'org-narrow-to-subtree
      "io" #'widen
 
-    "l" #'lsp-command?
     "aa" #'ponelat/insert-ledger-account-into-string
     "ar" #'ponelat/insert-ledger-batch-rule
 
@@ -4265,6 +4354,19 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 			   (buffer-list))))
       (yes-or-no-p "Modified buffers exist; exit anyway? "))
   (shell-command "reboot"))
+
+;; ;; https://github.com/orzechowskid/tsi.el/
+;; ;; great tree-sitter-based indentation for typescript/tsx, css, json
+;; (use-package tsi
+;;   :after tree-sitter
+;;   :straight '(tsi :host github :repo "orzechowskid/tsi.el")
+;;   ;; define autoload definitions which when actually invoked will cause package to be loaded
+;;   :commands (tsi-typescript-mode tsi-json-mode tsi-css-mode)
+;;   :init
+;;   (add-hook 'typescript-mode-hook (lambda () (tsi-typescript-mode 1)))
+;;   (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
+;;   (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
+;;   (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1))))
 
 
 

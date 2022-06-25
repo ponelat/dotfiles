@@ -2,6 +2,10 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
+# For Home Manager, we have the following
+# See: https://nix-community.github.io/home-manager/index.html#sec-install-nixos-module
+
+
 { config, lib, pkgs, ... }:
 
 let
@@ -51,11 +55,14 @@ pinned = import (fetchTarball
   #   };
 
 in {
-  imports =
-    [ # Include the results of the hardware scan.
+  imports = [
+      # Include the results of the hardware scan.
       /etc/nixos/hardware-configuration.nix
       /etc/nixos/cachix.nix
-    ];
+
+      # Home Manager
+      <home-manager/nixos>  
+   ];
 
 
 
@@ -193,30 +200,6 @@ in {
     ];
   };
 
-  programs.fish = {
-    # Needs direnv installed
-    shellAliases = {
-      "j" = "fasd_cd -d";
-      "cs" = "git status || ls";
-      "em" = "emacsclient -c -a ''";
-    };
-   enable = true;
-   shellInit = ''
-     fish_vi_key_bindings
-
-     function fasd_cd -d "fasd builtin cd"
-       if test (count $argv) -le 1
-         command fasd "$argv"
-       else
-         fasd -e 'printf %s' $argv | read -l ret
-         test -z "$ret"; and return
-         test -d "$ret"; and cd "$ret"; or printf "%s\n" $ret
-       end
-     end
-
-    direnv hook fish | source
-'';
-  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
 
@@ -226,6 +209,108 @@ in {
     home = "/home/josh";
     extraGroups = [ "wheel" "docker" "adbusers" ]; # 'wheel' enables ‘sudo’ for the user.
   };
+
+  home-manager = {
+    useUserPackages = true;
+    useGlobalPkgs = true;
+  };
+
+  home-manager.users.josh = { pkgs, ... }: {
+
+    home.packages = with pkgs; [
+      rnix-lsp
+      node2nix
+    ];
+
+ # xdg.configFile."i3blocks/config".source = ./i3blocks.conf;
+ #
+ #  home.file.".gdbinit".text = ''
+ #      set auto-load safe-path /nix/store
+ #  '';
+
+    home.file = { 
+      # ".josh/test.2" = {
+      #   source = ./inkscape;
+      #   recursive = true;
+      # };
+    };
+
+    xdg.configFile = {
+
+      # "inkscape" = {
+      #   source = ./inkscape;
+      #   recursive = true;
+      # };
+
+      # "test/josh.txt" = {
+      #   text = ''
+      #       Hello!
+      #       This is cool.
+      #     '';
+      # };
+
+      "mako/config" = {
+        text = ''
+        default-timeout=5000
+        '';
+        
+      };
+
+    };
+
+        # epkgs.emacs28Packages.pdf-tools
+
+    # Emacs (probably need to add in the packages here at some point)
+    programs.emacs = {
+      enable = true;
+      package = pinned.emacsPgtkGcc;
+      extraPackages = epkgs: [
+        epkgs.pdf-tools
+      ];
+    };
+
+    services.emacs = {
+      enable = true;
+      package = pinned.emacsPgtkGcc;
+      defaultEditor = true;
+    };
+
+    # programs.emacs = {
+    #   enable = true;
+    #   package = pinned.emacsPgtkGcc;
+    # };
+
+
+    # systemd.user.services.emacs.serviceConfig.TimeoutStartSec = "20min";
+
+
+    programs.fish = {
+      # Needs direnv installed
+      shellAliases = {
+        "j" = "fasd_cd -d";
+        "cs" = "git status || ls";
+        "em" = "emacsclient -c -a ''";
+      };
+      enable = true;
+      shellInit = ''
+        fish_vi_key_bindings
+
+        function fasd_cd -d "fasd builtin cd"
+        if test (count $argv) -le 1
+            command fasd "$argv"
+        else
+            fasd -e 'printf %s' $argv | read -l ret
+            test -z "$ret"; and return
+            test -d "$ret"; and cd "$ret"; or printf "%s\n" $ret
+        end
+        end
+
+        direnv hook fish | source
+      '';
+
+    };
+  };
+    
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -272,21 +357,6 @@ in {
   # Lorri is a nix-shell replacement built on direnv.
   services.lorri.enable = true;
 
-  # Emacs (probably need to add in the packages here at some point)
-  services.emacs = {
-    enable = true;
-    package = pinned.emacsPgtkGcc;
-    defaultEditor = true;
-  };
-
-  # programs.emacs = {
-  #   enable = true;
-  #   package = pinned.emacsPgtkGcc;
-  # };
-
-
-  # systemd.user.services.emacs.serviceConfig.TimeoutStartSec = "20min";
-
   # Enable nix eval --expr
   nix.package = pkgs.nixUnstable;
   nix.extraOptions = ''
@@ -296,6 +366,8 @@ in {
   environment.systemPackages = [
     # Dev stuff
     pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
+
+    pkgs.psmisc # for 'fuser -k 3000/tcp'
 
     pkgs.leiningen # For emacs
 
@@ -313,7 +385,10 @@ in {
     pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger
     #pdflatex
     pkgs.nodejs-16_x 
+    pkgs.nodePackages.typescript-language-server
+    pkgs.nodePackages.typescript
     pkgs.jdk
+    pkgs.jdt-language-server
 
     pkgs.pulseaudio
 
@@ -364,6 +439,11 @@ services.xserver = {
 # pathsToLink is needed by polkit_gnome
 environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
 # programs.gnome.enable = true;
+xdg.portal = {
+  enable = true;
+  gtkUsePortal = true; 
+};
+
 programs.sway = {
   enable = true;
   wrapperFeatures.gtk = true; # so that gtk works properly
@@ -401,6 +481,8 @@ programs.sway = {
     pkgs.lxappearance
   ];
 };
+
+
 
 
 # Some programs need SUID wrappers, can be configured further or are

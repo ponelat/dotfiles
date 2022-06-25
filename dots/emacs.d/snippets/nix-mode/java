@@ -1,0 +1,19 @@
+# -*- mode: snippet -*-
+# name:java 
+# key:java 
+# --
+{
+  nixpkgs ? <nixpkgs>
+}:
+
+let pkgs = import nixpkgs { };
+in
+
+pkgs.mkShell {
+  buildInputs = with pkgs; [
+    jre maven
+  ];
+  shellHook = ''
+    echo "Java world!"
+  '';
+}
