@@ -1047,12 +1047,13 @@ Version 2017-01-11"
   :config
   (progn
     (setq emmet-expand-jsx-className? t)
-    (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-    (add-hook 'web-mode 'emmet-mode) ;; Auto-start on any markup modes
-    (add-hook 'rjsx-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-    (add-hook 'rjsx-minor-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
-    (add-hook 'css-mode-hook  'emmet-mode) ;; enable Emmet's css abbreviation.
-    (add-hook 'markdown-mode  'emmet-mode) ;;
+    (add-hook 'sgml-mode-hook #'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'web-mode-hook #'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'rjsx-mode-hook #'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'typescript-mode-hook #'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'rjsx-minor-mode-hook #'emmet-mode) ;; Auto-start on any markup modes
+    (add-hook 'css-mode-hook #'emmet-mode) ;; enable Emmet's css abbreviation.
+    (add-hook 'markdown-mode #'emmet-mode) ;;
     (evil-define-key 'visual emmet-mode-keymap (kbd "C-l") #'emmet-wrap-with-markup))
   )
 
@@ -1338,8 +1339,9 @@ Will use `projectile-default-project-name' .rest as the file name."
   :config
   ;; we choose this instead of tsx-mode so that eglot can automatically figure out language for server
   ;; see https://github.com/joaotavora/eglot/issues/624 and https://github.com/joaotavora/eglot#handling-quirky-servers
-  (define-derived-mode typescriptreact-mode typescript-mode
-    "TypeScript TSX")
+  (progn 
+    (define-derived-mode typescriptreact-mode typescript-mode
+      "TypeScript TSX"))
 
   ;; use our derived mode for tsx files
   (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescriptreact-mode))
@@ -1453,17 +1455,17 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 
 ;;; LSP, language server protocol, eglot
-;; (use-package lsp-mode
-;;   :hook '((json-mode . lsp)
-;;           (lsp-mode . lsp-enable-which-key-integration))
-;;   :bind ("C-x C-l" . lsp-command-map)
-;;   :config
-;;   (add-to-list 'lsp-language-id-configuration '(".*\\.njk" . "html"))
-;;   (setq lsp-idle-delay 2.000
-;;     lsp-eslint-enable nil
-;;     lsp-eslint-package-manager "yarn"
-;;     lsp-eslint-run "onSave")
-;;   :commands lsp)
+
+(use-package lsp-mode
+  :hook '((lsp-mode . lsp-enable-which-key-integration))
+  :bind ("C-x C-l" . lsp-command-map)
+  :config
+  ;; (add-to-list 'lsp-language-id-configuration '(".*\\.njk" . "html"))
+  (setq lsp-idle-delay 2.000
+    lsp-eslint-enable nil
+    lsp-eslint-package-manager "yarn"
+    lsp-eslint-run "onSave")
+  :commands lsp)
 
 (use-package eglot
   :ensure t)
@@ -1477,18 +1479,23 @@ Will use `projectile-default-project-name' .rest as the file name."
 	  (file-truename ;; Handle symlinks
 	   (executable-find "tsserver")))) ;; Find tsserver. 
 	(path-to-typescript-language-server (executable-find "typescript-language-server"))
-	(path-to-jdtls (executable-find "jdt-language-server")))
+	(path-to-jdtls (executable-find "jdt-language-server"))
+	(path-to-lemminx (executable-find "lemminx")))
 
   ;; The actual change for eglot. You can replace the variables with hardcoded strings if it helps.
-  (add-to-list
-   'eglot-server-programs
-   `((js-mode typescript-mode) .
-     (,path-to-typescript-language-server
-      "--stdio"
-      "--tsserver-path"
-      ,path-to-typescript-lib-dir))
-   `(java-mode . (,path-to-jdtls))))) 
-
+    (progn 
+      (add-to-list 'eglot-server-programs
+		   `((js-mode typescript-mode) .
+		     (,path-to-typescript-language-server
+		      "--stdio"
+		      "--tsserver-path"
+		      ,path-to-typescript-lib-dir)))
+      (add-to-list 'eglot-server-programs
+		   `((java-mode) .
+		     (,path-to-jdtls )))
+      (add-to-list 'eglot-server-programs
+		   `((nxml-mode) .
+		     (,path-to-lemminx))))))
 
 ;; Optional Flutter packages
 ;; Flutter dart
@@ -1545,11 +1552,12 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx)))
 
 ;;; Java
-;; (progn
-;;   (require 'cc-mode)
-;;   (use-package lsp-java
-;;     :after lsp
-;;     :config (add-hook 'java-mode-hook 'lsp)))
+(progn
+  (require 'cc-mode)
+  (use-package lsp-java
+    :after lsp
+    :config
+    (setq lsp-java-server-install-dir (nix-path "jdt-language-server") )))
 
 (use-package gradle-mode)
 (use-package groovy-mode)
@@ -1713,8 +1721,6 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 
 ;;; Boostrap, template code
-
-
 (defconst ponelat/nix-shell-nodejs
 "{ pkgs ? import <nixpkgs> {} }:
 
@@ -1730,6 +1736,7 @@ pkgs.mkShell {
     echo Execution environment for Nodejs projects
   '';
 }")
+
 
 (defconst ponelat/nix-shell-java
 "{ pkgs ? import <nixpkgs> {} }:
@@ -1747,6 +1754,38 @@ pkgs.mkShell {
     echo Execution environment for Java projects
   '';
 }")
+
+(defconst ponelat/postcss-config
+"module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+")
+
+(defconst ponelat/tailwindcss-deps '(tailwindcss postcss autoprefixer))
+
+(defconst ponelat/tailwindcss-index-css "
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+")
+
+(defconst ponelat/tailwind-config
+  "
+
+module.exports = {
+  content: [
+    \"./src/**/*.{js,jsx,ts,tsx}\",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+")
 
 
 (defun ponelat/insert-shell-nix ()
@@ -4016,6 +4055,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
      ;; "s" #'avy-goto-char-2
      "fe" #'flycheck-list-errors
+     "fm" #'flymake-show-buffer-diagnostics
      "fj" #'consult-flymake
      "ff" #'find-file
      "fw" #'write-file
@@ -4038,6 +4078,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
 ;;; Magit Keys
      "gg" #'magit-status
+     "gs" #'magit-stage
 
 ;;; Org/Roam/Agenda/Trello
      "ra" 'org-agenda
@@ -4133,6 +4174,10 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "bk" 'kill-this-buffer
     "bK" 'kill-buffer
 
+
+    ;;; Toggle things globally
+    "tv" 'visual-line-mode
+
       ;; Font size
     "=" '(hydra-zoom/body :wk "size")
 
@@ -4157,10 +4202,10 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "h" #'org-toggle-heading)
 
 
-   (ponelat/local-leader
-    :modes 'js2-mode
-    :state '(normal)
-     "t" #'jest-popup)
+   ;; (ponelat/local-leader
+   ;;  :modes 'js2-mode
+   ;;  :state '(normal)
+   ;;   "t" #'jest-popup)
 
 
   ;; (ponelat/local-leader
@@ -4357,16 +4402,17 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
 ;; ;; https://github.com/orzechowskid/tsi.el/
 ;; ;; great tree-sitter-based indentation for typescript/tsx, css, json
-;; (use-package tsi
-;;   :after tree-sitter
-;;   :straight '(tsi :host github :repo "orzechowskid/tsi.el")
-;;   ;; define autoload definitions which when actually invoked will cause package to be loaded
-;;   :commands (tsi-typescript-mode tsi-json-mode tsi-css-mode)
-;;   :init
-;;   (add-hook 'typescript-mode-hook (lambda () (tsi-typescript-mode 1)))
-;;   (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
-;;   (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
-;;   (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1))))
+
+(use-package tsi
+  :after tree-sitter
+  :straight '(tsi :host github :repo "orzechowskid/tsi.el")
+  ;; define autoload definitions which when actually invoked will cause package to be loaded
+  :commands (tsi-typescript-mode tsi-json-mode tsi-css-mode)
+  :init
+  (add-hook 'typescript-mode-hook (lambda () (tsi-typescript-mode 1)))
+  (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
+  (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
+  (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1))))
 
 
 

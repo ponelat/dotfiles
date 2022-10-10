@@ -33,26 +33,68 @@ pinned = import (fetchTarball
 
   # };
 
-
-  # unstable = import (fetchTarball
-  #   "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
-  #     overlays = [
-  #       (self: super:
-  #         {
-  #           zoomUsFixed = unstable.zoom-us.overrideAttrs (old: {
-  #             postFixup = old.postFixup + ''
-  #             wrapProgram $out/bin/zoom-us --unset XDG_SESSION_TYPE
+  unstable = import (fetchTarball
+    "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
+      overlays = [
+        (self: super:
+          {
+            zoomUsFixed = unstable.zoom-us.overrideAttrs (old: {
+              postFixup = old.postFixup + ''
+              wrapProgram $out/bin/zoom-us --unset XDG_SESSION_TYPE
       
-  #           '';});
-  #           zoom = unstable.zoom-us.overrideAttrs (old: {
-  #             postFixup = old.postFixup + ''
-  #             wrapProgram $out/bin/zoom --unset XDG_SESSION_TYPE
-  #           '';});
-  #         }
-  #       )
-  #     ];
-  #     config.allowUnfree = true;
-  #   };
+            '';});
+            zoom = unstable.zoom-us.overrideAttrs (old: {
+              postFixup = old.postFixup + ''
+              wrapProgram $out/bin/zoom --unset XDG_SESSION_TYPE
+            '';});
+          }
+        )
+      ];
+      config.allowUnfree = true;
+    };
+
+  # From: https://nixos.wiki/wiki/Sway
+  # bash script to let dbus know about important env variables and
+  # propogate them to relevent services run at the end of sway config
+  # see
+  # https://github.com/emersion/xdg-desktop-portal-wlr/wiki/"It-doesn't-work"-Troubleshooting-Checklist
+  # note: this is pretty much the same as  /etc/sway/config.d/nixos.conf but also restarts  
+  # some user services to make sure they have the correct environment variables
+
+  custom.dbus-sway-environment = pkgs.writeTextFile {
+    name = "dbus-sway-environment";
+    destination = "/bin/dbus-sway-environment";
+    executable = true;
+
+    text = ''
+  dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
+  systemctl --user stop pipewire pipewire-media-session xdg-desktop-portal xdg-desktop-portal-wlr
+  systemctl --user start pipewire pipewire-media-session xdg-desktop-portal xdg-desktop-portal-wlr
+      '';
+  };
+
+  # From: https://nixos.wiki/wiki/Sway
+  # currently, there is some friction between sway and gtk:
+  # https://github.com/swaywm/sway/wiki/GTK-3-settings-on-Wayland
+  # the suggested way to set gtk settings is with gsettings
+  # for gsettings to work, we need to tell it where the schemas are
+  # using the XDG_DATA_DIR environment variable
+  # run at the end of sway config
+  custom.configure-gtk = pkgs.writeTextFile {
+      name = "configure-gtk";
+      destination = "/bin/configure-gtk";
+      executable = true;
+      text = let
+        schema = pkgs.gsettings-desktop-schemas;
+        datadir = "${schema}/share/gsettings-schemas/${schema.name}";
+      in ''
+        export XDG_DATA_DIRS=${datadir}:$XDG_DATA_DIRS
+        gnome_schema=org.gnome.desktop.interface
+        gsettings set $gnome_schema gtk-theme 'Dracula'
+        '';
+  };
+
+
 
 in {
   imports = [
@@ -79,7 +121,7 @@ in {
   # Set your time zone.
   time.timeZone = "Africa/Johannesburg";
   # time.timeZone = "Europe/Dublin";
-
+  # time.timeZone = "America/Los_Angeles";
 
   boot = {
     loader = {
@@ -136,12 +178,13 @@ in {
   # Map capslock => control key
   # services.xserver.xkbOptions = "ctrl:nocaps";
   # console.useXkbConfig = true;
+      # NAME: "AT Translated Set 2 keyboard"
   services.interception-tools = {
     enable = true;
+    # The "-m 1" is for 'minimal' mode, see: https://gitlab.com/interception/linux/plugins/caps2esc
     udevmonConfig = ''
-    - JOB: "${pkgs.interception-tools}/bin/intercept -g $DEVNODE | ${pkgs.interception-tools-plugins.caps2esc}/bin/caps2esc | ${pkgs.interception-tools}/bin/uinput -d $DEVNODE"
+    - JOB: "${pkgs.interception-tools}/bin/intercept -g $DEVNODE | ${pkgs.interception-tools-plugins.caps2esc}/bin/caps2esc -m 1 | ${pkgs.interception-tools}/bin/uinput -d $DEVNODE"
       DEVICE:
-        NAME: "AT Translated Set 2 keyboard"
         EVENTS:
           EV_KEY: [KEY_CAPSLOCK]
     '';
@@ -200,9 +243,12 @@ in {
     ];
   };
 
+  # For NVIDIA
+  # hardware.opengl.enable = true;
+  # hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
+  # hardware.nvidia.modesetting.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-
   users.users.josh = {
     isNormalUser = true;
     shell = pkgs.fish;
@@ -256,9 +302,53 @@ in {
         
       };
 
+      "alacritty/alacritty.yml" = {
+        text =''
+        colors:
+            primary:
+                background: '0x1e2030'
+                foreground: '0x7f85a3'
+
+            cursor:
+                text:   '0x7f85a3'
+                cursor: '0x808080'
+
+            normal:
+                black:   '0x444a73'
+                red:     '0xff5370'
+                green:   '0x4fd6be'
+                yellow:  '0xffc777'
+                blue:    '0x3e68d7'
+                magenta: '0xfc7b7b'
+                cyan:    '0x86e1fc'
+                white:   '0xd0d0d0'
+
+            bright:
+                black:   '0x828bb8'
+                red:     '0xff98a4'
+                green:   '0xc3e88d'
+                yellow:  '0xffc777'
+                blue:    '0x82aaff'
+                magenta: '0xff966c'
+                cyan:    '0xb4f9f8'
+                white:   '0x5f8787'
+        '';
+      };
+
     };
 
-        # epkgs.emacs28Packages.pdf-tools
+    programs.git = {
+      enable = true;
+      userName = "Josh Ponelat";
+      userEmail = "jponelat@gmail.com";
+      extraConfig = {
+        push.autoSetupRemote = true; # git config --global --add --bool push.autoSetupRemote true
+      };
+      aliases = {
+        aa = "add";
+        cm = "commit -m";
+      };
+    };
 
     # Emacs (probably need to add in the packages here at some point)
     programs.emacs = {
@@ -293,7 +383,17 @@ in {
       };
       enable = true;
       shellInit = ''
+
+        # Some clipboard stuff. Grabbed from https://github.com/fish-shell/fish-shell/issues/3299
+        function fish_user_key_bindings
+            bind yy fish_clipboard_copy
+            bind Y fish_clipboard_copy
+            bind p fish_clipboard_paste
+            # bind -k nul accept-autosuggestion
+            # bind -M default \$ end-of-line accept-autosuggestion
+        end
         fish_vi_key_bindings
+        set -g fish_escape_delay_ms 10
 
         function fasd_cd -d "fasd builtin cd"
         if test (count $argv) -le 1
@@ -311,12 +411,9 @@ in {
     };
   };
     
-
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  # nixpkgs.config.allowUnfree = true;
   nixpkgs = {
     # overlays = [];
+
     overlays = [
       (self: super:
         {
@@ -348,6 +445,10 @@ in {
       # WTF firefox??
       "firefox-bin"
       "firefox-release-bin-unwrapped"
+
+      # Nvidia
+      "nvidia-x11"
+      "nvidia-settings"
     ];
   };
 
@@ -371,6 +472,9 @@ in {
 
     pkgs.leiningen # For emacs
 
+
+    pkgs.shared-mime-info # For copy/pasting from fish shell 
+
     pkgs.openvpn
 
     pkgs.binutils pkgs.gcc pkgs.libgccjit
@@ -387,36 +491,51 @@ in {
     pkgs.nodejs-16_x 
     pkgs.nodePackages.typescript-language-server
     pkgs.nodePackages.typescript
+    pkgs.nodePackages.js-beautify
     pkgs.jdk
+    pkgs.maven
     pkgs.jdt-language-server
+
+    # Image and document tools
+    pkgs.imagemagick pkgs.qpdf
 
     pkgs.pulseaudio
 
-    pkgs.firefox pkgs.google-chrome pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux pkgs.teams pkgs.obsidian
+    pkgs.firefox pkgs.google-chrome pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux pkgs.teams 
+    unstable.obsidian
     pkgs.deluge
     pkgs.obs-studio
     pkgs.vlc
 
     # Unstable 
     # unstable.gnomeExtensions.pop-shell
+    # unstable.zoomUsFixed
     pkgs.zoomUsFixed
     # pkgs.zoom
+
+
   ];
 
   
 # Needed for i3
 # environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
+
+
+
 services.xserver = {
-#   # Enable the X11 windowing system.
+  enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
   # libinput.enable = true;
 
-  enable = true;
+  # Sway crashes with nvidia drivers. Try fix when possible.
+  # videoDrivers = [ "nvidia" ];
+
   desktopManager = {
     xterm.enable = false;
     gnome.enable = true; # Gnome 4 in 21.05
   };
+
   displayManager = {
     defaultSession = "sway";
     gdm.enable = true;
@@ -438,16 +557,26 @@ services.xserver = {
 
 # pathsToLink is needed by polkit_gnome
 environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
-# programs.gnome.enable = true;
-xdg.portal = {
-  enable = true;
-  gtkUsePortal = true; 
-};
+
+# To help with Sway
+services.dbus.enable = true;
+
+# xdg.portal = {
+#   enable = false;
+#   wlr.enable = true;
+#   gtkUsePortal = true; 
+#   extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+# };
 
 programs.sway = {
   enable = true;
   wrapperFeatures.gtk = true; # so that gtk works properly
+
   extraPackages = [
+
+    # Custom
+    custom.dbus-sway-environment # See 'let' above. This is custom. https://nixos.wiki/wiki/Sway
+    custom.configure-gtk # See 'let' above. This is custom. https://nixos.wiki/wiki/Sway 
 
     pkgs.swaylock
     pkgs.swayidle
@@ -473,12 +602,14 @@ programs.sway = {
     # Screenshots
     pkgs.slurp
     pkgs.grim
+    pkgs.ksnip
 
     # GTK Themeing
     pkgs.gtk-engine-murrine
     pkgs.gtk_engines
     pkgs.gsettings-desktop-schemas
     pkgs.lxappearance
+    pkgs.dracula-theme
   ];
 };
 
