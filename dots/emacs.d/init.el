@@ -642,6 +642,19 @@ Version 2017-01-11"
   ("t" ponelat/cycle-default-font "toggle"))
 
 
+;;; Sound, mixer volume
+
+(defhydra hydra-volume (global-map "C-x -")
+  "Sound / Volume\n"
+  ("k" (lambda () (interactive) (shell-command "pamixer -i 5")) "up")
+  ("j" (lambda () (interactive) (shell-command "pamixer -d 5")) "down")
+  ("l" (lambda () (interactive) (shell-command "playerctl next")) "next")
+  ("h" (lambda () (interactive) (shell-command "playerctl previous")) "previous"))
+
+;; bindsym XF86AudioPlay exec playerctl play-pause
+;; bindsym XF86AudioNext exec playerctl next
+;; bindsym XF86AudioPrev exec playerctl previous
+
 (defun ponelat/visual-fill-column-width-decrease ()
   "It decreases the `visual-fill-column-width' variable by 10."
   (interactive)
