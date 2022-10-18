@@ -318,9 +318,9 @@ hide_edge_borders smart
 
 gaps top 0
 gaps bottom 6
-gaps left 6
-gaps right 6
-gaps inner 12
+gaps left 4
+gaps right 4
+gaps inner 10
 
 #
 # Status Bar:
