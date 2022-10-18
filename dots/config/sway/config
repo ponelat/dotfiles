@@ -51,8 +51,8 @@ output * bg "#1f1f1f" solid_color
 # output * bg /run/current-system/sw/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 
 # Enable/disable laptop screen when it closes/opens
-exec_always ~/.config/sway/clam-shell-display.sh $laptop-display
-exec_always ~/.config/sway/clam-shell-display.sh $laptop-display
+# exec_always ~/.config/sway/clam-shell-display.sh $laptop-display
+# exec_always ~/.config/sway/clam-shell-display.sh $laptop-display
 
 # Example configuration:
 #

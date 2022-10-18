@@ -9,6 +9,15 @@ let
 in {
 
   networking.hostName = "office-under-desktop"; # Define your hostname.
+  networking.useDHCP = false;
+  networking.interfaces.eno1.useDHCP = true;
+  # If you leave this on and don't have wifi plugged in, it'll take 1:30min to search for the device.
+  # networking.interfaces.wlp0s20u5.useDHCP = true;
+
+  # Set your time zone.
+  time.timeZone = "Africa/Johannesburg";
+  # time.timeZone = "Europe/Dublin";
+  # time.timeZone = "America/Los_Angeles";
 
   imports =
     [ # Include the results of the hardware scan.
@@ -38,30 +47,9 @@ in {
 
   # Custom wifi drivers. For the little TP-Link dongle
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Set your time zone.
-  time.timeZone = "Africa/Johannesburg";
-  # time.timeZone = "Europe/Dublin";
-  # time.timeZone = "America/Los_Angeles";
-
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
   # replicates the default behaviour.
-  networking.useDHCP = false;
-  networking.interfaces.eno1.useDHCP = true;
-  # If you leave this on and don't have wifi plugged in, it'll take 1:30min to search for the device.
-  # networking.interfaces.wlp0s20u5.useDHCP = true;
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Select internationalisation properties.
-  # i18n.defaultLocale = "en_US.UTF-8";
-  # console = {
-  #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
-  # };
 
   # Going with pipewire
   sound.enable = false;

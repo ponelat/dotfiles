@@ -107,8 +107,8 @@ in {
    ];
 
 
-  # Set your time zone.
-  time.timeZone = "Africa/Johannesburg";
+  # Set your time zone. This is best in hardware specific. For when I want servers
+  # time.timeZone = "Africa/Johannesburg";
   # time.timeZone = "Europe/Dublin";
   # time.timeZone = "America/Los_Angeles";
 
