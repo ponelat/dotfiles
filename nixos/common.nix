@@ -165,6 +165,7 @@ in {
     home.packages = with pkgs; [
       rnix-lsp
       node2nix
+      playerctl
     ];
 
  # xdg.configFile."i3blocks/config".source = ./i3blocks.conf;
