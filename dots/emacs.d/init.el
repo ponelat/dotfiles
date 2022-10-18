@@ -4146,6 +4146,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
     "xs" #'ponelat/toggle-whitespace
 
+    "m" #'hydra-volume/body
+
     "d" '(:wk "debug/diff")
     "dd" 'dap-hydra/body
     "ds" 'dap-debug
@@ -4303,6 +4305,10 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    (general-define-key
     :keymaps 'override
     "M-u" 'evil-scroll-up)
+
+   (general-define-key
+    :keymaps 'override
+    "M-d" 'evil-scroll-down)
 
   (general-def 'insert
     "C-x C-l" #'ponelat/expand-lines)
