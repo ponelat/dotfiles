@@ -85,7 +85,7 @@ Plug 'vim-scripts/ReplaceWithRegister'
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 
-Plug 'Valloric/YouCompleteMe', { 'do': './install.py --tern-completer' }
+" Plug 'Valloric/YouCompleteMe', { 'do': './install.py --tern-completer' }
 
 Plug 'neomake/neomake'
 " Plug 'scrooloose/syntastic'
@@ -247,6 +247,7 @@ function! s:echoline(line)
 endfunction
 
 command! -nargs=1 -complete=file Lines call PasteLineFromFile(<q-args>)
+
 
 function! PasteLineFromFile(line)
   call fzf#run({'source': 'cat '.a:line, 'sink': function('s:echoline'), 'options': '-m'})
@@ -437,7 +438,7 @@ set novisualbell
 " let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"    " To make `termguicolors` work
 " set termguicolors
 set t_Co=256
-colorscheme jellybeans
+" colorscheme jellybeans
 
 hi StatusLine ctermfg=7 guifg=#c0c0c0 ctermbg=234 guibg=#1c1c1c
 hi StatusLineNC ctermfg=237 guifg=#3a3a3a ctermbg=234 guibg=#1c1c1c
