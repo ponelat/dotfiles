@@ -4390,7 +4390,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 (use-package nix-mode
   :general
   (:keymaps 'nix-mode-map
-   "C-c C-c" (lambda () (interactive) (async-shell-command "sudo nixos-rebuild switch" "*NixOS Rebuild*")))
+   "C-c C-c" (lambda () (interactive) (async-shell-command "sudo nixos-rebuild switch" "*NixOS Rebuild*"))
+   "C-c C-r" (lambda () (interactive) (async-shell-command (format "nix eval -f %s" buffer-file-name ) "*NixOS Rebuild*")))
   :mode ("\\.nix\\'"))
 
 
