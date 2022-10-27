@@ -27,10 +27,7 @@ pinned = import (fetchTarball
   #     (import (builtins.fetchTarball {
   #       url = "https://github.com/nix-community/emacs-overlay/archive/master@{2%20hours%20ago}.tar.gz";
   #     }))
-
-
   #   ];
-
   # };
 
   unstable = import (fetchTarball
@@ -111,6 +108,9 @@ in {
   # time.timeZone = "Africa/Johannesburg";
   # time.timeZone = "Europe/Dublin";
   # time.timeZone = "America/Los_Angeles";
+
+  # See: https://nixos.wiki/wiki/Flakes
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   fonts.fonts = [
     pkgs.noto-fonts
@@ -284,8 +284,16 @@ in {
         "j" = "fasd_cd -d";
         "cs" = "git status || ls";
         "em" = "emacsclient -c -a ''";
+        ",," = "nix-shell -p";
       };
       enable = true;
+
+      interactiveShellInit = ''
+        # See:  https://github.com/haslersn/any-nix-shell#fish-1
+        # It's for using the same shell when invoking `nix-shell` or `nix-run`
+        any-nix-shell fish --info-right | source
+      '';
+
       shellInit = ''
 
         # Some clipboard stuff. Grabbed from https://github.com/fish-shell/fish-shell/issues/3299
@@ -373,6 +381,8 @@ in {
     pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
 
     pkgs.psmisc # for 'fuser -k 3000/tcp'
+
+    pkgs.comma pkgs.any-nix-shell # For `, some-command`
 
     pkgs.leiningen # For emacs
 
