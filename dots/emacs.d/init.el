@@ -1352,7 +1352,7 @@ Will use `projectile-default-project-name' .rest as the file name."
   :config
   ;; we choose this instead of tsx-mode so that eglot can automatically figure out language for server
   ;; see https://github.com/joaotavora/eglot/issues/624 and https://github.com/joaotavora/eglot#handling-quirky-servers
-  (progn 
+  (progn
     (define-derived-mode typescriptreact-mode typescript-mode
       "TypeScript TSX"))
 
@@ -1490,13 +1490,13 @@ Will use `projectile-default-project-name' .rest as the file name."
 	 (expand-file-name
 	  "../../lib" ;; Get to the lib directory.
 	  (file-truename ;; Handle symlinks
-	   (executable-find "tsserver")))) ;; Find tsserver. 
+	   (executable-find "tsserver")))) ;; Find tsserver.
 	(path-to-typescript-language-server (executable-find "typescript-language-server"))
 	(path-to-jdtls (executable-find "jdt-language-server"))
 	(path-to-lemminx (executable-find "lemminx")))
 
   ;; The actual change for eglot. You can replace the variables with hardcoded strings if it helps.
-    (progn 
+    (progn
       (add-to-list 'eglot-server-programs
 		   `((js-mode typescript-mode) .
 		     (,path-to-typescript-language-server
@@ -2228,7 +2228,7 @@ eg: /one/two => two
                                         (variable (styles +orderless-with-initialism))
                                         (symbol (styles +orderless-with-initialism)))
         orderless-component-separator #'orderless-escapable-split-on-space ;; allow escaping space with backslash!
-        orderless-style-dispatchers '(+orderless-dispatch))) 
+        orderless-style-dispatchers '(+orderless-dispatch)))
 
   ;; Enable vertico
   (use-package vertico
@@ -2342,7 +2342,7 @@ eg: /one/two => two
     (setq consult-narrow-key "<") ;; (kbd "C-+")
 
 
-    (progn 
+    (progn
       (defun define-minibuffer-key (key &rest defs)
 	"Define KEY conditionally in the minibuffer.
 DEFS is a plist associating completion categories to commands."
@@ -2355,7 +2355,7 @@ DEFS is a plist associating completion categories to commands."
 							       minibuffer-completion-predicate)
 					  'category))))))
 
-      (define-minibuffer-key "\C-d" 'file #'find-file)) 
+      (define-minibuffer-key "\C-d" 'file #'find-file))
 
     ;; Optionally make narrowing help available in the minibuffer.
     ;; You may want to use `embark-prefix-help-command' or which-key instead.
@@ -2406,7 +2406,7 @@ DEFS is a plist associating completion categories to commands."
     (define-key projectile-command-map (kbd "n") #'ponelat/projectile-project-run)
     (global-set-key (kbd "C-j") nil)
     (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-    (projectile-mode 1))) 
+    (projectile-mode 1)))
 
 ;;; Fuzzy, ido
 (comment use-package counsel-projectile
@@ -2957,7 +2957,7 @@ is positive, move after, and if negative, move before."
     ;; automatically annotate highlights
     (setq pdf-annot-activate-created-annotations t)
     ;; use normal isearch
-    (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)) 
+    (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
 
  ;;; External Org mode, Office, Gmail
 
@@ -4085,6 +4085,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
       "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
       "oz" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/zshrc" ponelat/projects-dir))) :wk ".zshrc")
       "on" `(,(lambda () (interactive) (find-file "/etc/nixos/configuration.nix" )) :wk "NixOS")
+      "oc" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/nixos/common.nix" ponelat/projects-dir))) :wk "NixOS Common")
       ;; "op" `(,(lambda () (interactive) (find-file (format "%s/dotfiles/dots/profile" ponelat/projects-dir))) :wk ".profile")
       "os" `(,(lambda () (interactive) (find-file "~/.ssh/config")) :wk "ssh config")
       "ok" `(,(lambda () (interactive) (find-file "~/.kube/config")) :wk "kube config")
