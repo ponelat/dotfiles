@@ -166,6 +166,7 @@ in {
       rnix-lsp
       node2nix
       playerctl
+      spotify
     ];
 
  # xdg.configFile."i3blocks/config".source = ./i3blocks.conf;
@@ -343,26 +344,30 @@ in {
       )
     ];
 
-    config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "obsidian"
-      "google-chrome"
-      "slack"
-      "skypeforlinux"
-      "teams"
-      "dropbox"
-      "dropbox-cli"
-      "corefonts"
-      "zoom"
-      "zoom-us"
-      "zoomUsFixed"
-      # WTF firefox??
-      "firefox-bin"
-      "firefox-release-bin-unwrapped"
+  # Darn it, allow all unfree!
+  config.allowUnfree = true;
+  #   config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+  #     "obsidian"
+  #     "spotify"
+  #     "google-chrome"
+  #     "slack"
+  #     "skypeforlinux"
+  #     "teams"
+  #     "dropbox"
+  #     "dropbox-cli"
+  #     "corefonts"
+  #     "zoom"
+  #     "zoom-us"
+  #     "zoomUsFixed"
+  #     # WTF firefox??
+  #     "firefox-bin"
+  #     "firefox-release-bin-unwrapped"
 
-      # Nvidia
-      "nvidia-x11"
-      "nvidia-settings"
-    ];
+  #     # Nvidia
+  #     "nvidia-x11"
+  #     "nvidia-settings"
+  #   ];
+
   };
 
   # Services
@@ -375,7 +380,12 @@ in {
   nix.package = pkgs.nixUnstable;
   nix.extraOptions = ''
       experimental-features = nix-command
+
    '';
+
+  # For Wayland
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+
 
   environment.systemPackages = [
     # Dev stuff
@@ -476,12 +486,16 @@ environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /
 # To help with Sway
 services.dbus.enable = true;
 
-# xdg.portal = {
-#   enable = false;
-#   wlr.enable = true;
-#   gtkUsePortal = true;
-#   extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-# };
+xdg = {
+  portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-wlr
+      # xdg-desktop-portal-gtk
+    ];
+    gtkUsePortal = true;
+  };
+};
 
 programs.sway = {
   enable = true;
