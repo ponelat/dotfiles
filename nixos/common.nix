@@ -196,6 +196,10 @@ in {
       #     '';
       # };
 
+      "fish/functions/fish_prompt.fish" = {
+        source = "/home/josh/projects/dotfiles/dots/config/fish/functions/fish_prompt.fish";
+      };
+
       "mako/config" = {
         text = ''
         default-timeout=5000
@@ -297,6 +301,8 @@ in {
       '';
 
       shellInit = ''
+        fish_vi_key_bindings
+        set -g fish_escape_delay_ms 10
 
         # Some clipboard stuff. Grabbed from https://github.com/fish-shell/fish-shell/issues/3299
         function fish_user_key_bindings
@@ -306,8 +312,6 @@ in {
             # bind -k nul accept-autosuggestion
             # bind -M default \$ end-of-line accept-autosuggestion
         end
-        fish_vi_key_bindings
-        set -g fish_escape_delay_ms 10
 
         function fasd_cd -d "fasd builtin cd"
         if test (count $argv) -le 1
@@ -426,7 +430,8 @@ in {
 
     pkgs.pulseaudio
 
-    pkgs.firefox pkgs.google-chrome pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux pkgs.teams
+    # pkgs.firefox
+    pkgs.google-chrome pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux pkgs.teams
     unstable.obsidian
     pkgs.deluge
     pkgs.obs-studio
@@ -495,6 +500,19 @@ xdg = {
     ];
     gtkUsePortal = true;
   };
+
+  mime = {
+    enable = true;
+
+    addedAssociations = {
+      "application/x-mimearchive" = ["google-chrome.desktop"];
+    };
+
+    defaultApplications = {
+      "application/x-mimearchive" = ["google-chrome.desktop"];
+    };
+  };
+
 };
 
 programs.sway = {

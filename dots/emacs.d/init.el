@@ -2237,7 +2237,8 @@ eg: /one/two => two
     :bind
     (:map vertico-map
       ("C-j" . #'vertico-next)
-      ("C-k" . #'vertico-previous)))
+      ("C-k" . #'vertico-previous)
+      ("C-y" . #'vertico-save)))
 
   ;; Example configuration for Consult
   (use-package consult
