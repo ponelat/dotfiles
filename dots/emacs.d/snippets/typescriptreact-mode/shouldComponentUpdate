@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: scu
+# key: scu
+# --
+shouldComponentUpdate(nextProps) {
+  $0
+}

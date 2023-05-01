@@ -1,0 +1,21 @@
+# -*- mode: snippet -*-
+# name: yargs
+# key:yargs 
+# --
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+function argsToOpts(args) {
+    return yargs(hideBin(process.argv))
+	.options({
+	    path: {
+		alias: 'p',
+		type: 'array',
+		required: true,
+		description: '(JSONPath): The path to add to query over input '
+	    },
+	    where: {
+		alias: 'w',
+		type: 'string',
+		description: '(JSONPath): Where clause to test if the sub-paths exist.'
+	    }}).parse()
+}

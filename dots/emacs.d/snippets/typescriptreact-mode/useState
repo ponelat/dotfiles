@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name:useState 
+# key:us 
+# --
+const [${1:thing}, set${1:$(ponelat/capitalize-first-char yas-text)}] = useState($2)

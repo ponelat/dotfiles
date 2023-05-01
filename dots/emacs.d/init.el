@@ -4402,6 +4402,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    "C-c C-r" (lambda () (interactive) (async-shell-command (format "nix eval -f %s" buffer-file-name ) "*NixOS Rebuild*")))
   :mode ("\\.nix\\'"))
 
+(use-package company-nixos-options
+  :config (add-to-list 'company-backends 'company-nixos-options))
 
 (use-package app-launcher
   :straight '(app-launcher :host github :repo "SebastienWae/app-launcher"))

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name:useEffect on one thing 
+# key:usew
+# --
+useEffect(() => {
+	console.log('$1', $1)
+},[$1])

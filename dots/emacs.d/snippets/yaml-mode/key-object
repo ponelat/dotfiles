@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: Key Object
+# key: sss
+# --
+- name: $1s Object
+  fields:
+    - name: name
+      collection: map
+      type: $1 Object

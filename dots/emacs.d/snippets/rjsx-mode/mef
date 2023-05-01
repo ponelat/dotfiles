@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name:module.export function 
+# key:mef
+# --
+module.exports = function $1() {
+	$0
+}

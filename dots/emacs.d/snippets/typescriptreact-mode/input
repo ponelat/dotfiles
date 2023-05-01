@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name:input 
+# key:input
+# --
+<input value={${1:thing}} onChange={(e) => set${1:$(ponelat/capitalize-first-char yas-text)}(e.target.value)} placeholder="${1:$(ponelat/capitalize-first-char yas-text)}"/>

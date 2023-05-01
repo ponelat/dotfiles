@@ -10,6 +10,7 @@
 
 let
 
+
 pinned = import (fetchTarball
     "https://github.com/NixOS/nixpkgs/archive/6c4b9f1a2fd761e2d384ef86cff0d208ca27fdca.tar.gz") {
       overlays = [
@@ -290,7 +291,8 @@ in {
         "j" = "fasd_cd -d";
         "cs" = "git status || ls";
         "em" = "emacsclient -c -a ''";
-        ",," = "nix-shell -p";
+        # Moved the following into shellInit as a function
+        # ",," = "nix-shell -p";
       };
       enable = true;
 
@@ -311,6 +313,15 @@ in {
             bind p fish_clipboard_paste
             # bind -k nul accept-autosuggestion
             # bind -M default \$ end-of-line accept-autosuggestion
+        end
+
+
+        function ,,
+            if test (count $argv) -gt 0
+                nix-shell -p $argv
+            else
+                nix-shell 
+            end
         end
 
         function fasd_cd -d "fasd builtin cd"
@@ -376,6 +387,8 @@ in {
 
   # Services
   virtualisation.docker.enable = true;
+  # virtualisation.virtualbox.host.enable = true;
+  # users.extraGroups.vboxusers.members = [ "josh" ];
 
   # Lorri is a nix-shell replacement built on direnv.
   services.lorri.enable = true;
@@ -431,11 +444,14 @@ in {
     pkgs.pulseaudio
 
     # pkgs.firefox
-    pkgs.google-chrome pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux pkgs.teams
+    pkgs.google-chrome pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux
+    # pkgs.teams
     unstable.obsidian
     pkgs.deluge
     pkgs.obs-studio
     pkgs.vlc
+
+    pkgs.steam-run # Great for running binaries that aren't NixOS friendly.
 
     # Unstable
     # unstable.gnomeExtensions.pop-shell

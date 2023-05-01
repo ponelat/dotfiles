@@ -1,572 +1,62 @@
-set nocompatible              " be iMproved, required
-filetype off
-
-set path+=**/*
-
-"""" Plugins
-" Start the plugins! ( stored them at the given path )
-call plug#begin('~/.vim/plugged')
-
-" Motions, Core
-Plug 'tpope/vim-commentary'
-Plug 'tpope/vim-surround'
-Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-dispatch'
-Plug 'tpope/vim-unimpaired'
-Plug 'tpope/vim-classpath'
-Plug 'tpope/vim-abolish'
-Plug 'tpope/vim-obsession'
-Plug 'haya14busa/incsearch.vim'
-Plug 'Chiel92/vim-autoformat'
-" Repl
-Plug 'metakirby5/codi.vim'
-
-" SQL
-Plug 'vim-scripts/dbext.vim'
-Plug 'vim-scripts/SQLComplete.vim'
-let g:sql_type_default = 'sqlite'
-
-" Clojure
-Plug 'vim-scripts/paredit.vim'
-
-" Tabularize!
-Plug 'godlygeek/tabular'
-
-" Unix tools
-Plug 'tpope/vim-eunuch'
-
-" .editorconfig file support
-Plug 'editorconfig/editorconfig-vim'
-
-" Git
-Plug 'airblade/vim-gitgutter'
-Plug 'tpope/vim-fugitive'
-Plug 'jaxbot/github-issues.vim'
-
-" Color theme, from terminal
-" Plug 'chriskempson/base16-vim'
-Plug 'nanotech/jellybeans.vim'
-Plug 'guns/xterm-color-table.vim'
-
-" Color highlighter
-Plug 'ap/vim-css-color'
-
-" TMUX <c-{hjkl}> movements
-Plug 'christoomey/vim-tmux-navigator'
-
-" Tag matching ( with % )
-Plug 'tmhedberg/matchit'
-" Closing tags
-" Plug 'alvan/vim-closetag'
-
-" Toggle quickfix and location lists
-Plug 'Valloric/ListToggle'
-
-" Emmet
-Plug 'mattn/emmet-vim'
-
-" Motions
-Plug 'kana/vim-textobj-user'
-Plug 'kana/vim-textobj-function'
-Plug 'kana/vim-textobj-line'
-Plug 'kana/vim-textobj-indent'
-" Plug 'glts/vim-textobj-comment'
-Plug 'Chun-Yang/vim-textobj-chunk'
-Plug 'kana/vim-textobj-entire'
-Plug 'bkad/CamelCaseMotion'
-Plug 'gaving/vim-textobj-argument'
-
-Plug 'easymotion/vim-easymotion'
-
-" Replace motion ( super useful )
-Plug 'vim-scripts/ReplaceWithRegister'
-
-" Completers
-Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
-
-" Plug 'Valloric/YouCompleteMe', { 'do': './install.py --tern-completer' }
-
-Plug 'neomake/neomake'
-" Plug 'scrooloose/syntastic'
-
-" Family syntaxes
-" Plug 'Markdown-syntax'
-Plug 'tpope/vim-jdaddy'
-Plug 'elzr/vim-json'
-Plug 'groenewege/vim-less'
-Plug 'hail2u/vim-css3-syntax'
-
-" Man pages
-Plug 'vim-utils/vim-man'
-
-" Show marks visually
-" Plug 'vim-scripts/ShowMarks'
-
-" Ansi colors, useful for when looking at console dumps with ansi-escape codes
-" ( ie: colors )
-" Plug 'powerman/vim-plugin-AnsiEsc'
-
-" Ag, faster than ack, faster than grep
-Plug 'gabesoft/vim-ags' " Faster ack, which is faster grep :)
-
-" Ctags
-Plug 'xolox/vim-misc'
-" Plug 'xolox/vim-easytags'
-
-" Docs
-Plug 'KabbAmine/zeavim.vim'
-
-" Linters, javascript
-Plug 'pangloss/vim-javascript' " Includes indenting
-Plug 'mxw/vim-jsx'
-Plug 'marijnh/tern_for_vim', { 'do': 'npm install' }
-Plug 'okcompute/vim-javascript-motions'
-
-" All langs ( ftdetect, syntax, etc )
-" Plug 'sheerun/vim-polyglot'
-
-" Nvim nodejs
-" Plug 'neovim/node-host'
-
-" Parenthesis inflector
-" Plug 'snoe/nvim-parinfer.js'
-Plug 'bhurlow/vim-parinfer'
-Plug 'tpope/vim-fireplace'
-
-" Org mode
-" Plug 'tpope/vim-speeddating' " Required by org-mode
-" Plug 'jceb/vim-orgmode'
-
-" FZF, fuzzy searching
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-Plug 'junegunn/fzf.vim'
-
-"""" Ledger cli
-" Plug 'ledger/vim-ledger'
-
-" Experimental
-Plug 'dkarter/bullets.vim'
-
-" All of your Plugins must be added before the following line
-" End the plugins!
-call plug#end()
-
-"""" Runtime, My own runtime ( For Ultisnips )
-set runtimepath+=~/projects/dotfiles/.vim
-
-
-"""" Leader key
-let mapleader = "\<Space>"
-let maplocalleader = ","
-
-"""" Motions, easymotion
-let g:EasyMotion_do_mapping = 0 " Disable default mappings
-
-
-" Turn on case insensitive feature
-let g:EasyMotion_smartcase = 1
-
-" `s{char}{char}{label}`
-map ss <Plug>(easymotion-overwin-f2)
-map sj <Plug>(easymotion-overwin-line)
-map sw <Plug>(easymotion-overwin-w)
-map sn <Plug>(easymotion-vim-n)
-map sN <Plug>(easymotion-vim-N)
-
-"""" Map camelCaseMotion
-map <silent> ,w <Plug>CamelCaseMotion_w
-map <silent> ,b <Plug>CamelCaseMotion_b
-map <silent> ,e <Plug>CamelCaseMotion_e
-map <silent> ,ge <Plug>CamelCaseMotion_ge
-
-omap <silent> ,iw <Plug>CamelCaseMotion_iw
-xmap <silent> ,iw <Plug>CamelCaseMotion_iw
-omap <silent> ,ie <Plug>CamelCaseMotion_ie
-xmap <silent> ,ie <Plug>CamelCaseMotion_ie
-map <silent> ,ib <Plug>CamelCaseMotion_ib
-xmap <silent> ,ib <Plug>CamelCaseMotion_ib
-
-let g:lt_location_list_toggle_map = '<leader>l'
-let g:lt_quickfix_list_toggle_map = '<leader>L'
-
-"""" Ledger cli
-" augroup ledger-cli
-"   inoremap <silent> <buffer> <Tab> <C-r>=ledger#autocomplete_and_align()<CR>
-"   vnoremap <silent> <buffer> <Tab> :LedgerAlign<CR>
-" augroup END
-
-"""" JSDoc,js-doc
-let g:javascript_plugin_jsdoc = 1
-
-"""" Fzf
-let g:fzf_command_prefix = 'Fzf'
-let g:fzf_layout = { 'window': 'enew' }
-let g:fzf_layout = { 'window': '-tabnew' }
-
-"""" Session, obsession
-map <leader>sn :Obsess ~/.vim/global-session.vim<cr>
-map <leader>sN :Obsess!<cr>
-""" Mnemonic, session go
-map <leader>sg :source ~/.vim/global-session.vim<cr>
-
-"""" Map Fzf
-nnoremap <Leader>f :GitIndexFiles<CR>
-nnoremap <Leader>j :AgFiles<CR>
-nnoremap <Leader>a :FzfAg<CR>
-nnoremap <Leader>b :FzfBuffer<CR>
-nnoremap <Leader>t :FzfTags<CR>
-
-execute "set <M-x>=\ex"
-nnoremap <M-x> :FzfCommands<cr>
-nnoremap <leader>h :FzfHelp<cr>
-
-imap <c-x><c-l> <plug>(fzf-complete-line)
-" Set the current dir, based on fasd jump list
-nnoremap <Leader>p :Fasd<CR><CR>
-
-"""" Unicode fun
-inoremap <c-u>t ✓
-inoremap <c-u>c ☕
-inoremap <c-u>x ✗
-inoremap <c-u>s ☹
-
-
-"""" Tags, xml, jsx
-let g:closetag_filenames = '*.html,*.xhtml,*.phtml, *.jsx'
-
-"""" Silly dash, moves me up a line when in normal mode
-nnoremap - <nop>
-
-"""" Emmet
-imap   <C-e>   <plug>(emmet-expand-abbr)
-
-"""" Functions Fzf
-function! s:echoline(line)
-  execute append(line('.'), a:line)
-endfunction
-
-command! -nargs=1 -complete=file Lines call PasteLineFromFile(<q-args>)
-
-
-function! PasteLineFromFile(line)
-  call fzf#run({'source': 'cat '.a:line, 'sink': function('s:echoline'), 'options': '-m'})
-endfunction
-
-" Recent jump list with fasd
-command! Fasd call fzf#run(
-      \ {'source': 'fasd -l -d | uniq', 'sink': 'cd', 'options': ''})
-
-command! AgFiles call fzf#run(fzf#wrap({
-      \ 'source':  "ag -g '' -l --hidden ",
-      \ 'options': '-m --prompt "Ag Files> "',
-      \}))
-
-command! GitIndexFiles call fzf#run(fzf#wrap({
-      \ 'source':  "git status --short | cut -f3 -d' '",
-      \ 'options': '-m --prompt "Git Index> "',
-      \}))
-
-"""" Neomake
-" nnoremap <Leader>l :lopen<CR>
-let g:neomake_javascript_enabled_makers = ['eslint_d']
-let g:neomake_jsx_enabled_makers = ['eslint_d']
-let g:neomake_vim_enabled_makers = ['vint']
-let g:neomake_highlight_columns = 1
-let g:neomake_highlight_lines = 1
-" let g:neomake_open_list = 1
-
-"""" Easy Tags ( ctags )
-" let g:easytags_async = 1
-
-"""" JSX for all both .js and .jsx
-let g:jsx_ext_required = 0
-
-"""" YCM You complete me
-let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
-let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
-
-" Show errors
-" Show errors and move into window
-nnoremap <leader>err :w<CR>:Errors<CR><C-W>j<CR>
-nnoremap gen :lnext<cr>
-nnoremap gep :lprev<cr>
-
-
-"""" Ultisnips
-" better key bindings for UltiSnipsExpandTrigger
-let g:UltiSnipsExpandTrigger = '<tab>'
-let g:UltiSnipsJumpForwardTrigger = '<tab>'
-let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
-
-" 'snips' is in my dotfiles runtimepath dir
-let g:UltiSnipsSnippetsDir = "~/projects/dotfiles/.vim/snips"
-let g:UltiSnipsSnippetDirectories=["snips", "UltiSnips"]
-let g:UltiSnipsEditSplit= "context"
-
-
-"""" Tern
-let g:tern_show_argument_hints = "no"
-set completeopt-=preview " Remove the scratch/preview window that pops up when I use Tern/Omnicomplete
-
-"""" Map File Edits
-nnoremap <silent><leader>eu :UltiSnipsEdit<cr>
-nnoremap <silent><leader>eh :tabnew $HOME/.hyperterm.js<cr>
-nnoremap <silent><leader>ec :tabnew $HOME/.ctags<cr>
-nnoremap <silent><leader>ez :tabnew $HOME/.zshrc<cr>
-nnoremap <silent><leader>eb :tabnew ~/.bashrc<CR>
-nnoremap <silent><leader>ev :tabnew ~/.vimrc<CR>
-nnoremap <silent><leader>ea :tabnew ~/.config/awesome/rc.lua<CR>
-nnoremap <silent><leader>ei :tabnew ~/.config/i3/config<CR>
-nnoremap <silent><leader>ee :tabnew ~/.env<CR>
-" Set the current file's path as the current working dir, in vim
-nnoremap <Leader><c-j> :cd %:p:h<CR>
-
-nnoremap <silent><leader>rc :!ctags<cr>
-
-nnoremap <leader>" :%s/'/"/g<cr>
-
-
-"""" Map CRUD
-"Map leader q to quit with saving
-nnoremap <leader>q :q<CR>
-nnoremap <leader>Q :xa<CR>
-"Map leader s to save file...
-nnoremap <leader>w :w<CR>
-" Close List view
-nmap <leader>x :cclose <bar> :lclose<cr>
-"Map 'so' to parse the vim source file
-nnoremap <leader>so :source %<CR>
-"Map 's.' to run the current shell script
-nnoremap <leader>s. :! . %<CR>
-" open with xdg-open
-nnoremap <leader>o :!xdg-open %<CR>
-
-"""" Map surround
-" :echo char2nr("-"))
-" JSX comments, 56 = '8'
-let b:surround_56 = "/* \r */"
-
-"""" Map General
-" Make sure nothing conflicts with tmux ( c-a, is my tmux prefix )
-map <c-a> <nop>
-" For consistant behaviour with s-D and s-C
-nnoremap Y y$
-
-"""" Map Search
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-" Search with selection
-vnoremap * y/<c-r>0<cr>
-" Count search instances
-nnoremap <leader>8 :%s///gn<cr>
-" <Ctrl-l> redraws the screen and removes any search highlighting.
-nnoremap <leader>/ :nohl \| :redraw!<cr>
-
-"""" Map Plug
-" Plug PluginInstall
-" nmap <leader>pi :PlugInstall<CR>
-
-"""" Map Dispatch: in ex mode
-nnoremap <leader>dd :Dispatch<SPACE>
-
-"""" Spelling
-" Autocomplete with dictionary words when spell check is on
-set complete+=kspell
-set spelllang=en_gb " Set region to British English
-" set spellfile=$HOME/.vim-spell-en.utf-8.add
-
-"""" Map Spelling
-nnoremap <leader>s :set spell!<cr>
-
-
-"""" Map Git
-" Git status mapping
-nnoremap <silent><leader>gs :Gstatus<CR>
-nnoremap <silent><leader>gd :Gvdiff<CR>
-
-"""" Git Gutter
-let g:gitgutter_map_keys = 0
-nnoremap <leader>g :GitGutterLineHighlightsToggle <cr>
-nmap [g <Plug>GitGutterPrevHunk
-nmap ]g <Plug>GitGutterNextHunk
-nmap gbs <Plug>GitGutterStageHunk
-nmap gbr <Plug>GitGutterUndoHunk
-
-omap ig <Plug>GitGutterTextObjectInnerPending
-omap ag <Plug>GitGutterTextObjectOuterPending
-xmap ig <Plug>GitGutterTextObjectInnerVisual
-xmap ag <Plug>GitGutterTextObjectOuterVisual
-
-"""" Bullets, markdown
-" Bullets.vim
-let g:bullets_enabled_file_types = [
-    \ 'markdown',
-    \ 'text',
-    \ 'gitcommit',
-    \ 'scratch'
-    \]
-
-"""" File Types
-" my filetype syntax definitions
-augroup filetypedetect
-  au BufRead,BufNewFile *.hbs,*.volt	set filetype=html
-  au BufRead,BufNewFile *.json          set filetype=json
-  au BufRead,BufNewFile *.ledger        set filetype=ledger
-  au BufRead,BufNewFile *.snippets   set noexpandtab
-  au BufRead,BufNewFile *.md   setlocal spell
-  au BufRead,BufNewFile *.gitcommit   setlocal spell
-  au BufRead,BufNewFile *.org   setlocal spell
-  au BufRead,BufNewFile *.less set filetype=less
-  au BufRead,BufNewFile *eslintrc set filetype=json
-  au BufRead,BufNewFile *vimrc setlocal foldmethod=marker
-  au BufRead,BufNewFile *profile set ft=sh
-  " au BufWritePost       * Neomake
-  au FileType less set omnifunc=csscomplete#CompleteCSS
-augroup END
-
-"""" Colours, colors
-syntax on
-set background=dark
-set novisualbell
-" let base16colorspace=256
-" colorscheme base16-default-dark
-
-" Terminal color mode, if in a non-true-color term
-" let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"    " To make `termguicolors` work
-" let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"    " To make `termguicolors` work
-" set termguicolors
-set t_Co=256
-" colorscheme jellybeans
-
-hi StatusLine ctermfg=7 guifg=#c0c0c0 ctermbg=234 guibg=#1c1c1c
-hi StatusLineNC ctermfg=237 guifg=#3a3a3a ctermbg=234 guibg=#1c1c1c
-
-" Use the terminal's BG color, useful if the colorscheme does wierd things
-" highlight Normal ctermbg=NONE
-" highlight nonText ctermbg=NONE
-
-"""" Variables
-set nocursorline          " Disable cursor highlight
-set nocursorcolumn        " Disable cursor highlight
-set clipboard=unnamedplus " Use the global clipboard, by default
-set lazyredraw
-set synmaxcol=180         " (only highlight syntax, up to this column )
-set noshowmatch           " Supposedly the showing the matching [({
-set path+=**              " Find files recursively, with :file
-set exrc                  " enable per-directory .vimrc files
-set secure                " disable unsafe commands in local .vimrc files
-set number                " Numbers in the gutter ( fixed )
-" Use the same symbols as TextMate for tabstops and EOLs
-set listchars=tab:▸\ ,eol:¬,nbsp:_,trail:#
-set ssop-=options    " do not store global and local values in a session
-set ssop-=folds      " do not store folds
-set wildmode=longest,list,full   " Autocomplete in ex readline...
-set backspace=indent,eol,start " Backspace, goes over everything
-set nobackup       " No backup files!
-set nowritebackup  " No backup files!
-set noswapfile     " No backup files!
-set hidden " Allow open buffers ( prevents warning about unsaved changes, when opening a new file
-"""" Fixes:  User defined completion (U N P) pattern not found
-set shortmess+=c
-"""" Default Indents ( prefer to use .editorconfig, if you can )
-set shiftwidth=2   " Rememb
-set softtabstop=2
-set tabstop=2
-set expandtab
-set nowrap
-set smartindent
-set cindent
-set autoindent
-
-"""" Search
-set hlsearch
-set incsearch
-set ignorecase    " ignore case when searching
-set smartcase     " ignore case if search pattern is all lowercase,
-                  " case-sensitive otherwise
-
-
-"""" Statusline, 0=never, 1=if-other-windows, 2=always
-set laststatus=2
-
-"""" HACKs!!!!
-nnoremap <silent><localleader>t :!tmux send-keys -t test 'npm run test-server-watch' Enter<cr>
-nnoremap <silent><localleader>e :Eval<cr>
-nnoremap <silent><localleader>r :w\|:Dispatch %:p<cr>
-" A way to open the current line + basePath in the browser..
-"" map ,o :execute "!xdg-open 'http://localhost:3200" . getline('.') . "'"<cr>
-
-function! Lint()
-  if &filetype =~ 'javascript'
-    Neomake eslint_d
-  else
-    Neomake
-  end
-endfunction
-
-augroup lint_events
-  autocmd!
-  autocmd BufWritePost * call Lint()
-augroup end
-
-"""" Functions, functions
-function! HighlightRepeats() range
-  let lineCounts = {}
-  let lineNum = a:firstline
-  while lineNum <= a:lastline
-    let lineText = getline(lineNum)
-    if lineText != ""
-      let lineCounts[lineText] = (has_key(lineCounts, lineText) ? lineCounts[lineText] : 0) + 1
-    endif
-    let lineNum = lineNum + 1
-  endwhile
-  exe 'syn clear Repeat'
-  for lineText in keys(lineCounts)
-    if lineCounts[lineText] >= 2
-      exe 'syn match Repeat "^' . escape(lineText, '".\^$*[]') . '$"'
-    endif
-  endfor
-endfunction
-command! -range=% HighlightRepeats <line1>,<line2>call HighlightRepeats()
-
-" Newline each comma
-nnoremap <leader>cn :s/,/,/g<CR>
-
-function! SplitWithDevelop()
-  exe 'vnew'
-  exe 'r! git cat-file -p develop:#'
-endfunction
-command! SplitWithDevelop call SplitWithDevelop()
-
-function! SplitWithMaster()
-  exe 'vnew'
-  exe 'r! git cat-file -p master:#'
-endfunction
-command! SplitWithMaster call SplitWithMaster()
-
-function! SplitWith()
-  let branch = input('Branch: ', 'master')
-  let file = input('File: ',expand('%p:h'))
-  exe 'vnew ' . file
-  exe 'r! git cat-file -p ' . branch . ':' . file
-endfunction
-command! SplitWith call SplitWith()
-
-function! Fork()
-  let file = input('File: ',expand('%p:h'))
-  exe 'saveas ' . file
-endfunction
-command! Fork call Fork()
-
-
-
-"""" Greviences
-" I want comments to only extend, when I hit C-RET, not on RET
-" ~I want my theme to use the underlying colors ( without base16 )~
-" toggle between `let { one, two } = this.props; to...
-" let {
-"   one,
-"   two
-" } = this.props
+"
+" A (not so) minimal vimrc.
+"
+
+" You want Vim, not vi. When Vim finds a vimrc, 'nocompatible' is set anyway.
+" We set it explicitely to make our position clear!
+set nocompatible
+
+filetype plugin indent on  " Load plugins according to detected filetype.
+syntax on                  " Enable syntax highlighting.
+
+set autoindent             " Indent according to previous line.
+set expandtab              " Use spaces instead of tabs.
+set softtabstop =4         " Tab key indents by 4 spaces.
+set shiftwidth  =4         " >> indents by 4 spaces.
+set shiftround             " >> indents to next multiple of 'shiftwidth'.
+
+set backspace   =indent,eol,start  " Make backspace work as you would expect.
+set hidden                 " Switch between buffers without having to save first.
+set laststatus  =2         " Always show statusline.
+set display     =lastline  " Show as much as possible of the last line.
+
+set showmode               " Show current mode in command-line.
+set showcmd                " Show already typed keys when more are expected.
+
+set incsearch              " Highlight while searching with / or ?.
+set hlsearch               " Keep matches highlighted.
+
+set ttyfast                " Faster redrawing.
+set lazyredraw             " Only redraw when necessary.
+
+set splitbelow             " Open new windows below the current window.
+set splitright             " Open new windows right of the current window.
+
+set cursorline             " Find the current line quickly.
+set wrapscan               " Searches wrap around end-of-file.
+set report      =0         " Always report changed lines.
+set synmaxcol   =200       " Only highlight the first 200 columns.
+
+set list                   " Show non-printable characters.
+if has('multi_byte') && &encoding ==# 'utf-8'
+  let &listchars = 'tab:▸ ,extends:❯,precedes:❮,nbsp:±'
+else
+  let &listchars = 'tab:> ,extends:>,precedes:<,nbsp:.'
+endif
+
+" The fish shell is not very compatible to other shells and unexpectedly
+" breaks things that use 'shell'.
+if &shell =~# 'fish$'
+  set shell=/bin/bash
+endif
+
+" Put all temporary files under the same directory.
+" https://github.com/mhinz/vim-galore#temporary-files
+set backup
+set backupdir   =$HOME/.vim/files
+set backupext   =-vimbackup
+set backupskip  =
+set directory   =$HOME/.vim/files
+set updatecount =100
+set undofile
+set undodir     =$HOME/.vim/files

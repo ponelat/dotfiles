@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: it
+# key: it
+# --
+it('should ${1:do something}',${2: async} () => {
+	// Given
+	$0
+	// When
+	// Then
+})
