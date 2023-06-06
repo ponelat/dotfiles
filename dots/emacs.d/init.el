@@ -535,16 +535,7 @@ becomes
   (progn
     (setq
       avy-timeout-seconds 0.3
-      avy-single-candidate-jump nil)
-    (defun my-avy-action-copy-and-yank (pt)
-      "Copy and yank sexp starting on PT."
-      (avy-action-copy pt)
-      (yank))
-    ;; Instead of the home keys (default `avy-keys' ) you can launch a command with this alist..
-    (setq avy-dispatch-alist
-      '(
-         (?y . my-avy-action-copy-and-yank)))
-    ))
+      avy-single-candidate-jump nil)))
 
 ;;; Strings
 (use-package string-inflection)
@@ -1512,7 +1503,7 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 ;; Optional Flutter packages
 ;; Flutter dart
-;; (use-package dart-mode)
+(use-package dart-mode)
 ;; (use-package lsp-dart
 ;;   :hook '((dart-mode . lsp))
 ;;   :config  (setq lsp-dart-sdk-dir "~/snap/flutter/common/flutter/bin/cache/dart-sdk"))
@@ -1615,6 +1606,7 @@ Will use `projectile-default-project-name' .rest as the file name."
   :config
   (progn
     (setq js2-mode-show-parse-errors t)
+    (setq-default js-indent-level 2) 
     (setq js2-mode-show-strict-warnings nil)
     (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
 
