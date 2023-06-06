@@ -138,7 +138,7 @@ in {
   };
 
   # For Flutter/Android
-  # programs.adb.enable = true;
+  programs.adb.enable = true;
 
   # Configure keymap in X11
   # services.xserver.layout = "us";
@@ -162,7 +162,9 @@ in {
   };
 
   home-manager.users.josh = { pkgs, ... }: {
+    # stateVersion = "21.11";
 
+    home.stateVersion = "21.11";
     home.packages = with pkgs; [
       rnix-lsp
       node2nix
@@ -258,6 +260,7 @@ in {
       aliases = {
         aa = "add";
         cm = "commit -m";
+        co = "checkout";
       };
     };
 
@@ -364,7 +367,7 @@ in {
   #   config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
   #     "obsidian"
   #     "spotify"
-  #     "google-chrome"
+      # "google-chrome"
   #     "slack"
   #     "skypeforlinux"
   #     "teams"
@@ -430,7 +433,7 @@ in {
 
     pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger
     #pdflatex
-    pkgs.nodejs-16_x
+    pkgs.nodejs-18_x
     pkgs.nodePackages.typescript-language-server
     pkgs.nodePackages.typescript
     pkgs.nodePackages.js-beautify
@@ -444,9 +447,10 @@ in {
     pkgs.pulseaudio
 
     # pkgs.firefox
-    pkgs.google-chrome pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux
+     pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux
     # pkgs.teams
     unstable.obsidian
+    unstable.google-chrome
     pkgs.deluge
     pkgs.obs-studio
     pkgs.vlc
