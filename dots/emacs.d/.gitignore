@@ -1,3 +1,9 @@
+.org-id-locations
+eclipse.jdt.ls/
+history
+multisession/
+type-break
+workspace/
 auto-save-list/
 elpa/
 eshell/
