@@ -3393,7 +3393,6 @@ Version 2017-12-27"
              (cond ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
                ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
                ((x-list-fonts "Noto Sans")         '(:font "Noto Sans"))
-               ((x-list-fonts "Verdana")         '(:font "Verdana"))
                ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
                (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
             (fixed-tuple
@@ -3440,7 +3439,8 @@ Version 2017-12-27"
 ;; (with-eval-after-load 'zerodark-theme ())
 ;; This can only run in window mode...
 
-(use-package org-beautify-theme :defer t)
+;; Fails on Verdana font. Could add it, but lazy for now.
+(comment use-package org-beautify-theme :defer t)
 
 ;; (use-package sublime-themes
 ;;   :defer t
@@ -3533,8 +3533,8 @@ Version 2017-12-27"
     (progn
       ;; (ponelat/setup-mode-line)
       (load-theme-only ponelat:theme)
-      (setq org-beautify-theme-use-box-hack nil)
-      (load-theme 'org-beautify 1)
+      ;; (setq org-beautify-theme-use-box-hack nil)
+      ;; (load-theme 'org-beautify 1)
       (setq ponelat:theme-window-loaded t)
       (ponelat/face-extras)
       (set-frame-parameter (selected-frame) 'alpha '(100 . 100))
