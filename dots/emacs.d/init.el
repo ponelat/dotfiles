@@ -1,10 +1,7 @@
-
-;; init.el --- Just my dot file.
+;;; init.el --- Just my dot file.
 ;; -*- lexical-binding: t -*-
-;; Commentary:
-;; Code:
-
-;;; Custom variables stored here...
+;;; Commentary:
+;;; Code:
 
 (defmacro comment (&rest body)
   "Comment out sexp (BODY)."
@@ -42,7 +39,7 @@
 
 
 (setq lexical-binding t)
-(setq emacs-dir "~/.emacs.d")
+(defvar emacs-dir "~/.emacs.d" "The home Emacs directory." )
 (setq custom-file (concat emacs-dir "/custom.el"))
 (add-to-list 'load-path "~/.emacs.d/custom")
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
@@ -630,7 +627,7 @@ Version 2017-01-11"
   ("h" ponelat/visual-fill-column-width-decrease "narrow")
   ("l" ponelat/visual-fill-column-width-increase "widen")
   ("0" ponelat/size-reset "reset")
-  ("t" ponelat/cycle-default-font "toggle"))
+  ("t" ponelat/toggle-default-font "toggle"))
 
 
 ;;; Sound, mixer volume
@@ -1903,6 +1900,13 @@ module.exports = {
     (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
     (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion)))
 
+(defun ponelat/cider-babashka ()
+  "Creates a babashka REPL and runs `cider-connect-clj'"
+  (interactive)
+  (async-shell-command "nix-shell -p babashka --run \"bb --nrepl-server\"" "*Babashka NREPL*")
+  (run-with-timer 5 nil #'cider-connect-clj '(:host "localhost" :port "1667")))
+
+
 ;;; Clojure
 (use-package clojure-mode
 
@@ -2526,8 +2530,13 @@ DEFS is a plist associating completion categories to commands."
   (defun ponelat/insert-ledger-account-into-string ()
     "Completes and inserts an account from ledger file"
     (interactive)
-    (ponelat/replace-within-string-or-visual
-      (completing-read "Account: " (read-lines "/home/josh/projects/accounts/accounts.txt"))))
+    (save-mark-and-excursion
+      (when-let ((bounds 
+		  (or (ponelat/use-region-bounds)
+		      (bounds-of-thing-at-point 'filename)))
+		 (account 
+		  (completing-read "Account: " (read-lines "/home/josh/projects/accounts/accounts.txt"))))
+	(replace-bounds account bounds))))
 
   (defun ponelat/insert-ledger-batch-rule ()
     "Grabs a rule from batch-rules.edn to add to rules.edn file."
@@ -2937,7 +2946,6 @@ is positive, move after, and if negative, move before."
      (match-beginning 0)
       (match-end 0)))))
 
-
 ;;; PDFs / doc view (nix managed)
 (with-eval-after-load 'pdf-tools  ;; Nix manages installation of pdf-tools package
     (setq doc-view-continuous nil)
@@ -3143,6 +3151,17 @@ Version 2019-01-18"
 (define-key package-menu-mode-map "s" #'package-menu-filter-by-status)
 
 (define-key package-menu-mode-map "a" #'package-menu-find-marks)
+
+(defun chatgpt/file-has-shebang-p (filename)
+  "Check if the file has a shebang line."
+  (when (file-exists-p filename)
+    (with-temp-buffer
+      (insert-file-contents filename nil 0 2)
+      (goto-char (point-min))
+      (let ((first-two-chars (buffer-substring-no-properties (point-min) (point-max))))
+        (string-equal first-two-chars "#!")))))
+
+
 ;;; Run current file
 (defun xah/run-this-file-fn (filename)
   "Execute FILENAME
@@ -3187,6 +3206,10 @@ Version 2017-12-27"
     (setq -prog-name (cdr (assoc -fSuffix -suffix-map)))
     (setq -cmd-str (format "cd %s && %s \"%s\"" -fdir -prog-name -fname))
     (cond
+     ((chatgpt/file-has-shebang-p filename)
+      (progn
+	(message "Running with Shebang")
+        (async-shell-command (format "cd %s && \"%s\"" -fdir -fname) "*Run this*" )))
      ((string-equal -fSuffix "el") (load -fname))
      ((string-equal -fSuffix "java")
       (progn
@@ -3592,14 +3615,14 @@ Interactively you can choose the FONT-NAME"
 
 ;;; Cycle through fonts
 (defvar ponelat/default-font-index 1)
-(defun ponelat/cycle-default-font ()
+(defun ponelat/toggle-default-font ()
   "It cycles through the default fonts."
   (interactive)
   (let* ((index ponelat/default-font-index)
           (next-index (mod (+ 1 index) (length ponelat/fonts))))
     (ponelat/default-font (first (nth next-index ponelat/fonts)))
     (setq ponelat/default-font-index next-index)))
-(bind-key "C-x f" #'ponelat/cycle-default-font)
+(bind-key "C-x f" #'ponelat/toggle-default-font)
 
 ;;; General Emacs stuff
 (setq warning-minimum-level :error)
@@ -3725,6 +3748,11 @@ Version 2015-07-24"
           ($to (cdr bounds)))
     (buffer-substring-no-properties $from $to)))
 
+(defun ponelat/use-region-bounds ()
+  "Returns the bounds if `use-region-p' is t."
+  (if (use-region-p)
+      (cons (region-beginning) (region-end))))
+
 (defun ponelat/replace-thing-at-point-or-mark (fn &optional thing)
   "Replace THING at point or Mark by running that text though FN."
   (interactive)
@@ -3737,6 +3765,30 @@ Version 2015-07-24"
       (insert (apply fn (list text))))))
 
 
+(defun ponelat/mark-bounds (bounds)
+  "Visually mark the BOUNDS provided."
+  (let ((start-pos (car bounds))
+	(end-pos (cdr bounds)))
+    (progn 
+      (message (format "Marking bounds: %s" bounds))
+      (goto-char start-pos)
+      (set-mark (point))
+      (goto-char (- end-pos 1)))))
+
+(defvar ponelat/things-i-know-of
+  '(symbol list sexp defun filename
+	   existing-filename url email uuid word sentence
+	   whitespace line page) "The things I know of, from `thing-at-point' documentation.")
+
+(defun ponelat/mark-thing-at-point (&optional provided-thing)
+  "Mark thing at point from list or from PROVIDED-THING."
+  (interactive "P")
+  (let* ((thing
+	 (or provided-thing
+	     (intern (completing-read "Choose an option: " ponelat/things-i-know-of nil t nil nil "line"))))
+	 (bounds (bounds-of-thing-at-point thing)))
+    (if bounds  (ponelat/mark-bounds bounds))))
+
 (defun ponelat/replace-within-string-or-visual (new-str)
   "Replace contents within string at point or mark with NEW-STR."
   (let* ((bounds (if (use-region-p)
@@ -3745,7 +3797,6 @@ Version 2015-07-24"
     (when bounds
       (delete-region (+ 1 (car bounds)) (- (cdr bounds) 1))
       (insert new-str))))
-
 
 (defun replace-bounds (str bounds)
   "Replace BOUNDS with STR."
@@ -3757,7 +3808,6 @@ Version 2015-07-24"
 
 ;;; Visual regexp, search replace
 (use-package visual-regexp)
-
 
 ;;; Keys, emojis
 
@@ -4186,6 +4236,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
     ;;; Toggle things globally
     "tv" 'visual-line-mode
+    "tf" 'ponelat/toggle-default-font
+    "tw" 'ponelat/toggle-whitespace
 
       ;; Font size
     "=" '(hydra-zoom/body :wk "size")
@@ -4394,8 +4446,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    "C-c C-r" (lambda () (interactive) (async-shell-command (format "nix eval -f %s" buffer-file-name ) "*NixOS Rebuild*")))
   :mode ("\\.nix\\'"))
 
-(use-package company-nixos-options
-  :config (add-to-list 'company-backends 'company-nixos-options))
+;; (use-package company-nixos-options
+;;   :config (add-to-list 'company-backends 'company-nixos-options))
 
 (use-package app-launcher
   :straight '(app-launcher :host github :repo "SebastienWae/app-launcher"))
