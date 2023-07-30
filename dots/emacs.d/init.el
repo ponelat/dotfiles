@@ -7,22 +7,6 @@
   "Comment out sexp (BODY)."
   nil)
 
-;; NixOS + NativeComp stuff
-;; (setq is-nixos (executable-find "nixos-rebuild"))
-					; This may not be needed after the unstable version of emacsGcc.
-; Keeping it for posterity
-; (comment when is-nixos
-  ; (defun nix-path (pkg) (shell-command-to-string (format "nix eval --raw nixos.%s.outPath" pkg)))
-  ; ;; Deferred compiling requires the path to the build tools and apparently nixos doesn't give it to us quite yet.
-  ; (setq comp-deferred-compilation t)
-  ; (setq comp-async-env-modifier-form
-;; 	; '((setenv "LIBRARY_PATH"
-;; 		  ; (concat
-;; 		   ; (nix-path "gcc") "/lib:"
-;; 		   ; (nix-path "glibc") "/lib:"
-;; 		   ; (nix-path "libgccjit") "/lib/gcc/x86_64-unknown-linux-gnu/9.3.0")))))
-
-
 ;; Dir for eln-cache. Needed if the original one ends up in the /nix/store (which is readonly)
 (when (boundp 'native-comp-eln-load-path)
   (setcar native-comp-eln-load-path
@@ -2542,8 +2526,7 @@ DEFS is a plist associating completion categories to commands."
     "Grabs a rule from batch-rules.edn to add to rules.edn file."
     (interactive)
     (insert
-      (completing-read "Rule: " (read-lines "/home/josh/projects/accounts/batch-rules.edn"))))
-  )
+      (completing-read "Rule: " (read-lines "/home/josh/projects/accounts/batch-rules.edn")))))
 
 ;; "^\\(=====[ 	]+\\)\\([^\t\n].*?\\)\\(\\([ \t]+=====\\)?[ \t]*\\(?:\n\\|\\'\\)\\)"
 (defun ponelat/grab-imenu-of (filename)

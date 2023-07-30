@@ -116,7 +116,7 @@
   (interactive)
   (let* ( (seperator " -::- ")
           (list-of-urls (ponelat/chrome-history seperator))
-          (selected-history (ivy-read "Chrome: " list-of-urls))
+          (selected-history (completing-read "Chrome: " list-of-urls))
           (selected-url (car (cdr (split-string selected-history seperator)))))
     (ponelat/open selected-url)))
 
