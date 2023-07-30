@@ -13,22 +13,27 @@
           (expand-file-name (convert-standard-filename ".local/eln-cache/")
                             user-emacs-directory)))
 
-;; Silence nativecomp warnings popping up
-;; (setq native-comp-async-report-warnings-errors nil)
-
-;; Settings
-;; (setq native-comp-speed 2
-;;       native-comp-deferred-compilation t
-      ;; package-native-compile t)
-
-
+;;; Core flags
 (setq lexical-binding t)
+
+;;; Startup
+(setq inhibit-splash-screen t
+      inhibit-startup-message t
+      inhibit-startup-echo-area-message t)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+(setq make-backup-files nil)
+(setq-default truncate-lines t)
+
+;;; Dirs and files
 (defvar emacs-dir "~/.emacs.d" "The home Emacs directory." )
 (setq custom-file (concat emacs-dir "/custom.el"))
 (add-to-list 'load-path "~/.emacs.d/custom")
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-
-;; (setq native-comp-eln-load-path '("/var/cache/emacs-eln"))
+(defvar ponelat/org-dir "~/Dropbox/org" "My base ORG-MODE folder.")
+(defvar ponelat/org-roam-dir "~/Dropbox/org/roam" "My base ORG-MODE Roam folder.")
+(defvar ponelat/projects-dir "~/projects" "My base projects folder, used with PROJECTILE and others.")
 
 ;;; Package, Straight, use-package
 (defvar bootstrap-version)
@@ -71,7 +76,8 @@
 (electric-pair-mode t)
 ; Gotten from https://emacs-lsp.github.io/lsp-mode/page/performance/ to help with LSP performance
 ;;; Garbage collection
-(setq gc-cons-threshold (* 100 1024 1024)
+(setq
+ gc-cons-threshold (* 100 1024 1024)
  read-process-output-max (* 1024 1024))
 
 ;; Disable
@@ -255,8 +261,6 @@
     (concat (ponelat/shortened-path (eshell/pwd) 40)
 	    (if (= (user-uid) 0) " # " " $ ")))
 
-
-
   (setq eshell-prompt-function 'ponelat/rjs-eshell-prompt-function))
 
 
@@ -266,22 +270,6 @@
   (add-to-list 'auto-mode-alist '("\\.?zshrc\\'" . sh-mode))
   (add-to-list 'auto-mode-alist '("\\.?profile\\'" . sh-mode))
   (add-to-list 'auto-mode-alist '("\\.?aliases\\'" . sh-mode)))
-(defun ponelat/term ()
-  "Create or jump to an 'ansi-term', running zsh."
-  (interactive)
-  (if (get-buffer "*terminal*")
-      (switch-to-buffer "*terminal*")
-    (ansi-term "/bin/zsh" "terminal")))
-
-;; Used to source .zshrc and .profile ( for $PATH )
-;; This causes RGB pain
-;; (setq shell-command-switch "-ic")
-(global-set-key (kbd "M-C-z") #'projectile-run-async-shell-command-in-root)
-(global-set-key (kbd "M-z") #'ponelat/term)
-
-
-;;; Help, man, tldr
-(use-package tldr)
 
 ;; Colors, CSS
 (defun xah-syntax-color-hex ()
@@ -319,7 +307,6 @@ Version 2017-03-12"
 ;;; Nix queries file paths
 (defun nix-path (exeFile &rest joins)
   "It returns the path to the /nix/store of EXEFILE and joins JOINS together into a string."
-  (interactive)
   (let* ((target (string-trim (executable-find exeFile)))
 	 (path (string-trim (shell-command-to-string (format "nix-store -q %s" target)))))
     (string-join (cons path joins))))
@@ -331,35 +318,12 @@ Version 2017-03-12"
           (method (downcase (car (split-string methodpath " "))))
           (path (url-hexify-string (car (cdr (split-string methodpath)))))
           (color (cond
-                 ((string= method "get") "1391FF")
-                 ((string= method "post") "009D77")
-                 ((string= method "put") "E97500")
-                 ((string= method "delete") "CF3030")
+                 ((string= method "get") "1391FF") ;; #1391FF
+                 ((string= method "post") "009D77") ;; #009D77
+                 ((string= method "put") "E97500") ;; #E97500
+                 ((string= method "delete") "CF3030") ;; #cf3030
                  "1391FF")))
     (insert (format "<img:https://raster.shields.io/static/v1?label=%s&message=%s&color=%s>  /' %s %s '/" method path color   (upcase method) (url-unhex-string path)))))
-
-(ignore-errors
-  (require 'ansi-color)
-  (defun my-colorize-compilation-buffer ()
-    (when (eq major-mode 'compilation-mode)
-      (ansi-color-apply-on-region compilation-filter-start (point-max))))
-  (add-hook 'compilation-filter-hook 'my-colorize-compilation-buffer))
-
-;;; Dirs
-(defvar ponelat/org-dir "~/Dropbox/org" "My base ORG-MODE folder.")
-(defvar ponelat/org-roam-dir "~/Dropbox/org/roam" "My base ORG-MODE Roam folder.")
-(defvar ponelat/projects-dir "~/projects" "My base projects folder, used with PROJECTILE and others.")
-
-;;; Startup
-(setq inhibit-splash-screen t
-      inhibit-startup-message t
-      inhibit-startup-echo-area-message t)
-
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-(setq make-backup-files nil)
-(setq-default truncate-lines t)
 
 ;;; Encode/decode
 (defun xah-html-decode-percent-encoded-url ()
@@ -1280,13 +1244,6 @@ Version 2019-06-11"
             (define-key map (kbd "C-c C-k") (lambda () (interactive) (kill-buffer)))
             map))
 
-
-;; (straight-use-package
-;;   '(libyaml :type git :host github :repo "syohex/emacs-libyaml"))
-
-;; (use-package openapi-yaml-mode
-;;   :after '(yaml yaml-imenu))
-
 ;;; HTTP, REST, Swagger
 (use-package restclient
   :config
@@ -1314,10 +1271,6 @@ Will use `projectile-default-project-name' .rest as the file name."
   :config
   (add-to-list 'company-backends 'company-restclient))
 
-;;; Typescript
-;; (use-package typescript-mode
-;;   :config (setq typescript-indent-level 2))
-
 (use-package typescript-mode
   :after tree-sitter
   :config
@@ -1333,7 +1286,6 @@ Will use `projectile-default-project-name' .rest as the file name."
   ;; use our derived mode to map both .tsx AND .ts -> typescriptreact-mode -> treesitter tsx
   (add-to-list 'tree-sitter-major-mode-language-alist '(typescriptreact-mode . tsx)))
 
-
 (use-package web-mode
   :mode (("\\.html\\'" . web-mode)
          ("\\.html\\.eex\\'" . web-mode)
@@ -1347,45 +1299,11 @@ Will use `projectile-default-project-name' .rest as the file name."
         web-mode-css-indent-offset 2
         web-mode-code-indent-offset 2))
 
-;; (use-package prettier
-;;   :hook ((typescript-tsx-mode . prettier-mode)
-;;          (typescript-mode . prettier-mode)
-;;          (js-mode . prettier-mode)
-;;          (json-mode . prettier-mode)
-;;          (css-mode . prettier-mode)
-;;          (scss-mode . prettier-mode)))
-
-;; (defun ponelat/setup-tide-mode ()
-;;   "Setup the typescript IDE mode ( tide )."
-;;   (interactive)
-;;   (tide-setup)
-;;   (eldoc-mode +1)
-;;   (setq-local flycheck-check-syntax-automatically nil)
-;;   (tide-hl-identifier-mode +1))
-
-;; (defun ponelat/setup-tide-if-tsx ()
-;; ;; This guards against ediff not working. TODO maybe fix?
-;;   (if buffer-file-name
-;;     (when (string-equal "tsx" (file-name-extension buffer-file-name))
-;;       (ponelat/setup-tide-mode))))
-
-;; (use-package tide)
-
-;; (use-package tide
-;;   :config
-;;   (add-hook 'typescript-mode-hook #'ponelat/setup-tide-mode)
-;;   (add-to-list 'auto-mode-alist '("\\.tsx\\'" . rjsx-mode))
-;;   (add-hook 'rjsx-mode-hook #'ponelat/setup-tide-if-tsx))
-
 ;; aligns annotation to the right hand side
 (setq company-tooltip-align-annotations t)
-;; (setq flycheck-check-syntax-automatically '(save mode-enabled))
 
-;; formats the buffer before saving
-;; (add-hook 'before-save-hook 'tide-format-before-save)
 
 ;;; UML PlantUML
-
 (use-package plantuml-mode
   :config
   (add-to-list 'auto-mode-alist '(".puml\\'" . plantuml-mode))
@@ -1396,29 +1314,8 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;; CSV
 (use-package csv-mode)
 
-;;; Ruby, rspec
-;; (use-package ruby-mode)
-;; (use-package rspec-mode)
-
-;;; Rust, cargo
-
-;; (use-package rust-mode
-;;   :config
-;;   (progn
-;;     (define-key rust-mode-map (kbd "TAB") #'company-indent-or-complete-common)
-;;     (setq company-tooltip-align-annotations t)
-;;     (setq rust-cargo-bin "~/.cargo/bin/cargo"))
-;;   )
-
+;;; TOML
 (use-package toml-mode)
-
-;; (use-package racer
-;;   :config
-;;   (progn
-;;     (add-hook 'rust-mode-hook #'racer-mode)
-;;     (add-hook 'racer-mode-hook #'eldoc-mode)
-;;     (setq racer-rust-src-path "~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src"))
-;;   )
 
 ;;; Docker, Dockerfile
 (use-package dockerfile-mode
@@ -1427,11 +1324,7 @@ Will use `projectile-default-project-name' .rest as the file name."
     (add-to-list 'auto-mode-alist '("Dockerfile\\'" . dockerfile-mode)))
   )
 
-;; (use-package docker-compose-mode)
-
-;; LDAP, LDIF, Active Directory
-;; (use-package ldap)
-
+;;; JSON
 (use-package json-mode)
 
 ;;; Nginx,HAproxy,Caddy Server
@@ -1439,7 +1332,6 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 
 ;;; LSP, language server protocol, eglot
-
 (use-package lsp-mode
   :hook '((lsp-mode . lsp-enable-which-key-integration))
   :bind ("C-x C-l" . lsp-command-map)
@@ -1498,18 +1390,6 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;   :config
 ;;   (add-to-list 'company-backends #'company-tabnine))
 
-
-;;; Debugging, LSP, AST, Tree-Sitter
-;; (use-package dap-mode
-;;   :init
-;;   (progn
-;;     (require 'dap-node)
-;;     (dap-node-setup))
-;;   :ensure t :after lsp-mode
-;;   :config
-;;   (dap-mode t)
-;;   (dap-ui-mode t))
-
 (use-package tree-sitter
   :ensure t
   :config
@@ -1523,18 +1403,6 @@ Will use `projectile-default-project-name' .rest as the file name."
   :ensure t
   :after tree-sitter)
 
-;; (use-package tree-sitter
-;;   :ensure t
-;;   :hook ((typescript-mode . tree-sitter-hl-mode)
-;; 	 (typescript-tsx-mode . tree-sitter-hl-mode)))
-
-;; (use-package tree-sitter-langs
-;;   :ensure t
-;;   :after tree-sitter
-;;   :config
-;;   (tree-sitter-require 'tsx)
-;;   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx)))
-
 ;;; Java
 (progn
   (require 'cc-mode)
@@ -1546,41 +1414,7 @@ Will use `projectile-default-project-name' .rest as the file name."
 (use-package gradle-mode)
 (use-package groovy-mode)
 
-;;; SHUB - automation
-;; mvn verify -Dmaven.test.failure.ignore=true -Denv=dev -Dselenium=browser.chrome
-
-;; (defun shub/test-features (&rest extra)
-;;   (interactive)
-;;   "Run features, with EXTRA flags."
-;;   (let*
-;;     ((task "verify")
-;;       (directory (projectile-project-root))
-;;       (flags '("-Dmaven.test.failure.ignore=true"
-;;                 "-Denv.url=http://localhost:3200"
-;;                 "-Dagent=browser.chrome"
-;;                 "-DdriverPath=/home/josh/bin/chromedriver"))
-;;       (cmd
-;;         (format "cd %s && %s %s %s %s"
-;;           directory
-;;           jdee-maven-program
-;;           task
-;;           (string-join flags " ")
-;;           (string-join extra " "))))
-;;     (compilation-start cmd)))
-
-;; (defun shub/test-current-feature (&rest extra)
-;;   "Run all feature tests."
-;;   (interactive)
-;;   (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name)))
-
-
-;; (defun shub/test-current-feature-staging (&rest extra)
-;;   "Run all feature tests."
-;;   (interactive)
-;;   (shub/test-features (format "-Dcucumber.options=%s" buffer-file-name) "-Denv=staging"))
-
 ;;; Javascript, js-mode, js2-mode
-
 (use-package js2-mode
   :diminish js2-mode
   :config
@@ -1590,22 +1424,6 @@ Will use `projectile-default-project-name' .rest as the file name."
     (setq js2-mode-show-strict-warnings nil)
     (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
 
-;; (use-package indium)
-
-;; (use-package jest
-;;   :after '((js2-mode))
-;;   :hook (js2-mode . 'jest-minor-mode))
-
-(use-package jest-test-mode)
-
-;; (use-package nodejs-repl)
-
-;; (use-package company-tern
-;;   :defer 1
-;;   :config
-;;   (progn
-;;     (add-to-list 'company-backends 'company-tern))
-;;   )
 
 (defun ponelat/shell-command-on-region-to-string (begin end command)
   "It wraps `shell-command-on-region' using BEGIN, END and COMMAND, so that it returnes a string."
@@ -1651,47 +1469,11 @@ Will use `projectile-default-project-name' .rest as the file name."
     (js2r-add-keybindings-with-prefix "C-c C-r")
     (add-hook 'js2-mode-hook #'js2-refactor-mode)))
 
-;; ;;; Apps, spotify
-;; (defun ponelat/spotify (command)
-;;   "Runs the ~/bin/spot spotify client (DBus) with COMMAND as argument.
-;; See: https://gist.githubusercontent.com/wandernauta/6800547/raw/2c2ad0f3849b1b1cd1116b80718d986f1c1e7966/sp"
-;;   (call-process-shell-command (format "~/bin/spot %s" command)))
-
-;; (defun ponelat/spotify-next ()
-;;   "Skips next spotify song."
-;;   (interactive)
-;;   (ponelat/spotify "next"))
-;; (defun ponelat/spotify-previous ()
-;;   "Visit previous spotify song."
-;;   (interactive)
-;;   (ponelat/spotify "prev"))
-;; (defun ponelat/spotify-play-toggle ()
-;;   "Play/pause spotify."
-;;   (interactive)
-;;   (ponelat/spotify "play"))
-
 (defun assoc-recursive (alist &rest keys)
   "Recursively search ALIST for KEYS."
   (while keys
     (setq alist (cdr (assoc (pop keys) alist))))
   alist)
-
-;;; ag projects
-
-;; ;; TODO finish this
-;; (comment defun ponelat/ag (filename folder)
-;;   "Search for uses of FILENAME, within FOLDER."
-;;   (ag-regexp (format "import .* from *['\"]%s(.js|.jsx)?['\"]" filename) folder))
-
-;; (comment defun ponelat/get-babel-aliases (project-dir)
-;; (let* ((file-path (concat project-dir "package.json"))
-;;           (json-data (json-read-file file-path))
-;;           (scripts (assoc-recursive json-data 'babel ))
-;;           (script-keys (alist-keys scripts))
-;;           (choice (completing-read "Npm: " script-keys))
-;;           (project-name (ponelat/last-dir project-dir)))
-;;     (async-shell-command (format "cd %s && npm run %s" project-dir choice) (format "*npm* - %s - %s" choice project-name))))
-
 
 (use-package web-beautify)
 
@@ -1701,9 +1483,7 @@ Will use `projectile-default-project-name' .rest as the file name."
   (define-key rjsx-mode-map "<" nil)
   (define-key rjsx-mode-map (kbd "C-d") nil)
   (define-key rjsx-mode-map (kbd "C-c C-j") nil)
-  (define-key rjsx-mode-map (kbd "C-c r") #'rjsx-rename-tag-at-point)
-  )
-
+  (define-key rjsx-mode-map (kbd "C-c r") #'rjsx-rename-tag-at-point))
 
 ;;; Boostrap, template code
 (defconst ponelat/nix-shell-nodejs
@@ -1786,10 +1566,6 @@ module.exports = {
       (find-file $buffer)
       (insert $template))))
 
-;; (setq one `(("One" . ,ponelat/nix-shell-java)))
-;; (completing-read "One: " one)
-;; (cdr (assoc "One" one))
-
 (defun create-react-app ()
   "Create a react app, by unzipping a .tar.gz into ~/projects/NAME, firing up the server and opening src/App.js."
   (interactive)
@@ -1806,33 +1582,13 @@ module.exports = {
       (find-file-other-window (format "%s/src/%s" project-path (if typescript? "App.tsx" "App.js")))
       (async-shell-command "npm run dev"))))
 
-;; (defun creat-project ()
-;;   "Create a simple project folder with .git/."
-;;   (interactive)
-;;   (let* ((name (read-from-minibuffer "Project name: "))
-;;           (project-path (format "~/projects/%s" name)))
-;;     (shell-command (format "mkdir -p %s" project-path))
-;;     (shell-command (format "git init" project-path))
-;;     (shell-command (read-from-minibuffer "Your next command? "))))
-
-;;; Less/Css tailwindcss
-;; (use-package less-css-mode)
-
-;; (use-package lsp-tailwindcss
-;;   :straight '(lsp-tailwindcss :host github :repo "merrickluo/lsp-tailwindcss")
-;;   :config (setq lsp-tailwindcss-add-on-mode t))
 
 ;;; Flycheck, syntax, lint
 (use-package flycheck
-
   :diminish flycheck-mode
   :config
     (setq flycheck-highlighting-mode 'lines)
     (global-flycheck-mode))
-
-;;; $PATH environment variable
-;; (setenv "PATH" (concat (getenv "PATH") ":/home/josh/.nix-profile/bin"))
-;; (setq exec-path (append exec-path '("~/.nix-profile/bin" exec-directory)))
 
 ;; So that we can access `./node_modules/.bin/eslint` mostly
 (use-package add-node-modules-path
@@ -1846,36 +1602,8 @@ module.exports = {
 ;;; Jq
 (use-package jq-mode)
 
-;; ;;; Go lang
-;;  (use-package go-mode
-;;    :config
-;;    (setq gofmt-command "gofmt")
-;;    (add-hook 'before-save-hook 'gofmt-before-save)
-;;    (evil-define-key 'normal go-mode-map "gd" #'godef-jump)
-;;    )
-
-;; (use-package company-go
-;;   :after company
-;;   :init
-;;   (add-to-list 'company-backends 'company-go))
-
-
-;; (use-package go-eldoc
-;;   :init (add-hook 'go-mode-hook 'go-eldoc-setup))
-
-;; (use-package go-guru
-;;   :init (add-hook 'go-mode-hook 'go-guru-hl-identifier-mode))
-
-;;; Haskell, FP
-;; (use-package haskell-mode
-;;   :config
-;;   (progn
-;;     (add-hook 'haskell-mode-hook 'interactive-haskell-mode))
-;;   )
-
 ;;; Clojure
 (use-package cider
-
   :config
   (progn
     (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
@@ -1938,11 +1666,9 @@ module.exports = {
   :init (setq yas-snippet-dirs
 	      '("~/.emacs.d/snippets"))
 
-  :config (yas-global-mode 1)
-  )
+  :config (yas-global-mode 1))
 
-(use-package react-snippets
-  )
+(use-package react-snippets)
 
 ;;; npm
 (require 'json)
@@ -2119,13 +1845,6 @@ eg: /one/two => two
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
   (use-package savehist :init (savehist-mode))
   (use-package recentf :init (recentf-mode))
-
-;;; Consult ivy  helm  vertico completing read libs
-
-  ;; (use-package orderless
-  ;;   :ensure t
-  ;;   :custom (completion-styles '(orderless)))
-
 
 (use-package orderless
   :demand t
