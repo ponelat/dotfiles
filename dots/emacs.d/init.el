@@ -1228,9 +1228,9 @@ Version 2019-06-11"
 
 (defun ponelat/edit-url--build-url-from-httphash (hash)
   "HASH is a hashtable with (base \"https://localhost:3000\" path \"/one\" query <hash>). Turns into into a URL again."
-  (let* ((base (gethash "base" hash))
-          (path (gethash "path" hash))
-          (query (gethash "query" hash))
+  (let* ((base (gethash 'base hash))
+          (path (gethash 'path hash))
+          (query (gethash 'query hash))
           (query-str (if (hash-table-p query)
                        (url-build-query-string
                          (ponelat/edit-url--normalize-query-list (xah-hash-to-list query))))))
@@ -1261,9 +1261,8 @@ Version 2019-06-11"
 (defun ponelat/implode-edit-url-buffer ()
   "Decodes the region from yaml to lisp."
   (interactive)
-  (let* ((hash
-	  (json-parse-string
-	   (ponelat/yaml-to-json (point-min) (point-max))))
+  (let* ((data (buffer-substring-no-properties (point-min) (point-max)))
+	 (hash (yaml-parse-string data))
 	 (url (ponelat/edit-url--build-url-from-httphash hash))
 	 (pos edit-url--position)
 	 (bounds edit-url--bounds)
