@@ -10,7 +10,6 @@
 
 let
 
-
 pinned = import (fetchTarball
     "https://github.com/NixOS/nixpkgs/archive/6c4b9f1a2fd761e2d384ef86cff0d208ca27fdca.tar.gz") {
       overlays = [
@@ -51,64 +50,27 @@ pinned = import (fetchTarball
       config.allowUnfree = true;
     };
 
-  # From: https://nixos.wiki/wiki/Sway
-  # bash script to let dbus know about important env variables and
-  # propogate them to relevent services run at the end of sway config
-  # see
-  # https://github.com/emersion/xdg-desktop-portal-wlr/wiki/"It-doesn't-work"-Troubleshooting-Checklist
-  # note: this is pretty much the same as  /etc/sway/config.d/nixos.conf but also restarts
-  # some user services to make sure they have the correct environment variables
-
-  custom.dbus-sway-environment = pkgs.writeTextFile {
-    name = "dbus-sway-environment";
-    destination = "/bin/dbus-sway-environment";
-    executable = true;
-
-    text = ''
-  dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
-  systemctl --user stop pipewire pipewire-media-session xdg-desktop-portal xdg-desktop-portal-wlr
-  systemctl --user start pipewire pipewire-media-session xdg-desktop-portal xdg-desktop-portal-wlr
-      '';
-  };
-
-  # From: https://nixos.wiki/wiki/Sway
-  # currently, there is some friction between sway and gtk:
-  # https://github.com/swaywm/sway/wiki/GTK-3-settings-on-Wayland
-  # the suggested way to set gtk settings is with gsettings
-  # for gsettings to work, we need to tell it where the schemas are
-  # using the XDG_DATA_DIR environment variable
-  # run at the end of sway config
-  custom.configure-gtk = pkgs.writeTextFile {
-      name = "configure-gtk";
-      destination = "/bin/configure-gtk";
-      executable = true;
-      text = let
-        schema = pkgs.gsettings-desktop-schemas;
-        datadir = "${schema}/share/gsettings-schemas/${schema.name}";
-      in ''
-        export XDG_DATA_DIRS=${datadir}:$XDG_DATA_DIRS
-        gnome_schema=org.gnome.desktop.interface
-        gsettings set $gnome_schema gtk-theme 'Dracula'
-        '';
-  };
-
-
 
 in {
   imports = [
-      # Include the results of the hardware scan.
-      # /etc/nixos/hardware-configuration.nix
-      /etc/nixos/cachix.nix
+    # Include the results of the hardware scan.
+    # /etc/nixos/hardware-configuration.nix
+    /etc/nixos/cachix.nix
 
-      # Home Manager
-      <home-manager/nixos>
-   ];
+    # Home Manager
+    <home-manager/nixos>
+
+    # Sway is complex enough to move out here.
+    /home/josh/projects/dotfiles/nixos/sway.nix
+
+    # For flashing the Ergodox-EZ
+    /home/josh/projects/dotfiles/nixos/zsa-keyboard-flashing.nix
+  ];
 
 
   # Set your time zone. This is best in hardware specific. For when I want servers
   # time.timeZone = "Africa/Johannesburg";
-  # time.timeZone = "Europe/Dublin";
-  # time.timeZone = "America/Los_Angeles";
+
 
   # See: https://nixos.wiki/wiki/Flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -124,7 +86,7 @@ in {
   # Map capslock => control key
   # services.xserver.xkbOptions = "ctrl:nocaps";
   # console.useXkbConfig = true;
-      # NAME: "AT Translated Set 2 keyboard"
+  # NAME: "AT Translated Set 2 keyboard"
   services.interception-tools = {
     enable = true;
     # The "-m 1" is for 'minimal' mode, see: https://gitlab.com/interception/linux/plugins/caps2esc
@@ -172,11 +134,11 @@ in {
       spotify
     ];
 
- # xdg.configFile."i3blocks/config".source = ./i3blocks.conf;
- #
- #  home.file.".gdbinit".text = ''
- #      set auto-load safe-path /nix/store
- #  '';
+    # xdg.configFile."i3blocks/config".source = ./i3blocks.conf;
+    #
+    #  home.file.".gdbinit".text = ''
+    #      set auto-load safe-path /nix/store
+    #  '';
 
     home.file = {
       # ".josh/test.2" = {
@@ -243,10 +205,6 @@ in {
         '';
       };
 
-      "sway" = {
-        # recursive = true;
-        source = "/home/josh/projects/dotfiles/dots/config/sway";
-      };
 
     };
 
@@ -279,16 +237,9 @@ in {
       defaultEditor = true;
     };
 
-    # programs.emacs = {
-    #   enable = true;
-    #   package = pinned.emacsPgtkGcc;
-    # };
-
-
-    # systemd.user.services.emacs.serviceConfig.TimeoutStartSec = "20min";
-
-
     programs.fish = {
+      enable = true;
+
       # Needs direnv installed
       shellAliases = {
         "j" = "fasd_cd -d";
@@ -297,7 +248,6 @@ in {
         # Moved the following into shellInit as a function
         # ",," = "nix-shell -p";
       };
-      enable = true;
 
       interactiveShellInit = ''
         # See:  https://github.com/haslersn/any-nix-shell#fish-1
@@ -341,6 +291,7 @@ in {
       '';
 
     };
+
   };
 
   nixpkgs = {
@@ -362,29 +313,29 @@ in {
       )
     ];
 
-  # Darn it, allow all unfree!
-  config.allowUnfree = true;
-  #   config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-  #     "obsidian"
-  #     "spotify"
-      # "google-chrome"
-  #     "slack"
-  #     "skypeforlinux"
-  #     "teams"
-  #     "dropbox"
-  #     "dropbox-cli"
-  #     "corefonts"
-  #     "zoom"
-  #     "zoom-us"
-  #     "zoomUsFixed"
-  #     # WTF firefox??
-  #     "firefox-bin"
-  #     "firefox-release-bin-unwrapped"
+    # Darn it, allow all unfree!
+    config.allowUnfree = true;
+    #   config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    #     "obsidian"
+    #     "spotify"
+    # "google-chrome"
+    #     "slack"
+    #     "skypeforlinux"
+    #     "teams"
+    #     "dropbox"
+    #     "dropbox-cli"
+    #     "corefonts"
+    #     "zoom"
+    #     "zoom-us"
+    #     "zoomUsFixed"
+    #     # WTF firefox??
+    #     "firefox-bin"
+    #     "firefox-release-bin-unwrapped"
 
-  #     # Nvidia
-  #     "nvidia-x11"
-  #     "nvidia-settings"
-  #   ];
+    #     # Nvidia
+    #     "nvidia-x11"
+    #     "nvidia-settings"
+    #   ];
 
   };
 
@@ -400,7 +351,6 @@ in {
   nix.package = pkgs.nixUnstable;
   nix.extraOptions = ''
       experimental-features = nix-command
-
    '';
 
   # For Wayland
@@ -416,7 +366,6 @@ in {
     pkgs.comma pkgs.any-nix-shell # For `, some-command`
 
     pkgs.leiningen # For emacs
-
 
     pkgs.shared-mime-info # For copy/pasting from fish shell
 
@@ -434,6 +383,7 @@ in {
     pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger
     #pdflatex
     pkgs.nodejs-18_x
+    unstable.bun
     pkgs.nodePackages.typescript-language-server
     pkgs.nodePackages.typescript
     pkgs.nodePackages.js-beautify
@@ -447,7 +397,7 @@ in {
     pkgs.pulseaudio
 
     # pkgs.firefox
-     pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux
+    pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux
     # pkgs.teams
     unstable.obsidian
     unstable.google-chrome
@@ -466,155 +416,54 @@ in {
 
   ];
 
-
-# Needed for i3
-# environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
-
-
-
-services.xserver = {
-  enable = true;
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # libinput.enable = true;
-
-  # Sway crashes with nvidia drivers. Try fix when possible.
-  # videoDrivers = [ "nvidia" ];
-
-  desktopManager = {
-    xterm.enable = false;
-    gnome.enable = true; # Gnome 4 in 21.05
-  };
-
-  displayManager = {
-    defaultSession = "sway";
-    gdm.enable = true;
-    # sddm.enable = true;
-    gdm.wayland = true;
-  };
-
-#   # i3 Window Manager
-#   # windowManager.i3 = {
-#   #   enable = false;
-#   #   package = pkgs.i3-gaps;
-#   #   extraPackages = [
-#   #     pkgs.dmenu #application launcher most people use
-#   #     # i3status # gives you the default i3 status bar
-#   #  ];
-#   # };
-
-};
-
-# pathsToLink is needed by polkit_gnome
-environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
-
-# To help with Sway
-services.dbus.enable = true;
-
-xdg = {
-  portal = {
-    enable = true;
-    extraPortals = with pkgs; [
-      xdg-desktop-portal-wlr
-      # xdg-desktop-portal-gtk
-    ];
-    gtkUsePortal = true;
-  };
-
-  mime = {
+  services.xserver = {
     enable = true;
 
-    addedAssociations = {
-      "application/x-mimearchive" = ["google-chrome.desktop"];
+    desktopManager = {
+      xterm.enable = false;
+      gnome.enable = true; # Gnome 4 in 21.05
     };
 
-    defaultApplications = {
-      "application/x-mimearchive" = ["google-chrome.desktop"];
+    displayManager = {
+      gdm.enable = true;
+      # sddm.enable = true;
+      gdm.wayland = true;
     };
+
   };
 
-};
+  # pathsToLink is needed by polkit_gnome
+  environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
 
-programs.sway = {
-  enable = true;
-  wrapperFeatures.gtk = true; # so that gtk works properly
+  xdg = {
+    portal = {
+      enable = true;
+      extraPortals = with pkgs; [
+        xdg-desktop-portal-wlr
+        # xdg-desktop-portal-gtk
+      ];
 
-  extraPackages = [
+      # trace: warning: The option `xdg.portal.gtkUsePortal' defined in `/home/josh/projects/dotfiles/nixos/common.nix' has been deprecated. Setting the variable globally with `environment.sessionVariables' NixOS option can have unforeseen side-effects.
+      # gtkUsePortal = true;
+    };
 
-    # Custom
-    custom.dbus-sway-environment # See 'let' above. This is custom. https://nixos.wiki/wiki/Sway
-    custom.configure-gtk # See 'let' above. This is custom. https://nixos.wiki/wiki/Sway
+    mime = {
+      enable = true;
 
-    pkgs.swaylock
-    pkgs.swayidle
+      addedAssociations = {
+        "application/x-mimearchive" = ["google-chrome.desktop"];
+      };
 
-    # Bar
-    pkgs.waybar
+      defaultApplications = {
+        "application/x-mimearchive" = ["google-chrome.desktop"];
+      };
+    };
 
-    # SSH
-    pkgs.polkit_gnome
-    pkgs.openssh
+  };
 
-    pkgs.wl-clipboard
-    pkgs.mako # notification daemon
-    pkgs.alacritty # Alacritty is the default terminal in the config
-    # pkgs.dmenu # Dmenu is the default in the config but i recommend wofi since its wayland native
-    pkgs.wofi
-
-    # Sound / Audio
-    pkgs.pavucontrol
-    pkgs.pamixer
-    pkgs.brightnessctl
-
-    # Screenshots
-    pkgs.slurp
-    pkgs.grim
-    pkgs.ksnip
-
-    # GTK Themeing
-    pkgs.gtk-engine-murrine
-    pkgs.gtk_engines
-    pkgs.gsettings-desktop-schemas
-    pkgs.lxappearance
-    pkgs.dracula-theme
-  ];
-};
-
-
-
-
-# Some programs need SUID wrappers, can be configured further or are
-# started in user sessions.
-# programs.mtr.enable = true;
-# programs.gnupg.agent = {
-#   enable = true;
-#   enableSSHSupport = true;
-# };
-
-# List services that you want to enable:
-
-# Enable the OpenSSH daemon.
-# services.openssh.enable = true;
-
-programs.ssh = {
-  # askPassword = true;
-  startAgent = true;
-};
-
-# Open ports in the firewall.
-# networking.firewall.allowedTCPPorts = [ ... ];
-# networking.firewall.allowedUDPPorts = [ ... ];
-# Or disable the firewall altogether.
-# networking.firewall.enable = false;
-
-# This value determines the NixOS release from which the default
-# settings for stateful data, like file locations and database versions
-# on your system were taken. It‘s perfectly fine and recommended to leave
-# this value at the release version of the first install of this system.
-# Before changing this value read the documentation for this option
-# (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-
-# This is assumed to exist in the calling nixos configuration file
-# system.stateVersion = "21.11"; # Did you read the comment?
+  programs.ssh = {
+    # askPassword = true;
+    startAgent = true;
+  };
 
 }

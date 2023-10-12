@@ -350,6 +350,7 @@ exec export SSH_AUTH_SOCK
 
 exec dbus-sway-environment
 exec configure-gtk
+exec systemctl --user import-environment
 
 
 include /etc/sway/config.d/*
