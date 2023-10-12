@@ -53,15 +53,11 @@ pinned = import (fetchTarball
 
 in {
   imports = [
-    # Include the results of the hardware scan.
-    # /etc/nixos/hardware-configuration.nix
-    /etc/nixos/cachix.nix
-
     # Home Manager
     <home-manager/nixos>
 
-    # Sway is complex enough to move out here.
-    /home/josh/projects/dotfiles/nixos/sway.nix
+    # Sway is complex enough to move out here. Ignoring for now.
+    # /home/josh/projects/dotfiles/nixos/sway.nix
 
     # For flashing the Ergodox-EZ
     /home/josh/projects/dotfiles/nixos/zsa-keyboard-flashing.nix
@@ -436,16 +432,16 @@ in {
   environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
 
   xdg = {
-    portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal-wlr
-        # xdg-desktop-portal-gtk
-      ];
+    # portal = {
+    #   enable = true;
+    #   extraPortals = with pkgs; [
+    #     xdg-desktop-portal-wlr
+    #     # xdg-desktop-portal-gtk
+    #   ];
 
-      # trace: warning: The option `xdg.portal.gtkUsePortal' defined in `/home/josh/projects/dotfiles/nixos/common.nix' has been deprecated. Setting the variable globally with `environment.sessionVariables' NixOS option can have unforeseen side-effects.
-      # gtkUsePortal = true;
-    };
+    #   # trace: warning: The option `xdg.portal.gtkUsePortal' defined in `/home/josh/projects/dotfiles/nixos/common.nix' has been deprecated. Setting the variable globally with `environment.sessionVariables' NixOS option can have unforeseen side-effects.
+    #   # gtkUsePortal = true;
+    # };
 
     mime = {
       enable = true;
