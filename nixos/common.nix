@@ -20,16 +20,6 @@ pinned = import (fetchTarball
       ];
     };
 
-  # stableWithOverlays = import <nixos> {
-  #   overlays = [
-  #     # Need to test the "fix" below. As the upstream builder takes around an hour to build, if we run an update in that period it'll cause a cache miss and we'll build it ourselves!
-  #     # `sudo nix-channel --update` needed as well.
-  #     (import (builtins.fetchTarball {
-  #       url = "https://github.com/nix-community/emacs-overlay/archive/master@{2%20hours%20ago}.tar.gz";
-  #     }))
-  #   ];
-  # };
-
   unstable = import (fetchTarball
     "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
       overlays = [
@@ -53,11 +43,15 @@ pinned = import (fetchTarball
 
 in {
   imports = [
+    # Adding cache for nix-community (emacs)
+    /etc/nixos/cachix.nix
+
     # Home Manager
     <home-manager/nixos>
 
     # Sway is complex enough to move out here. Ignoring for now.
     # /home/josh/projects/dotfiles/nixos/sway.nix
+
 
     # For flashing the Ergodox-EZ
     /home/josh/projects/dotfiles/nixos/zsa-keyboard-flashing.nix
@@ -392,8 +386,13 @@ in {
 
     pkgs.pulseaudio
 
+    # Termina
+
+    pkgs.alacritty
+
     # pkgs.firefox
-    pkgs.inkscape pkgs.slack pkgs.dropbox-cli pkgs.skypeforlinux
+    pkgs.inkscape pkgs.slack pkgs.dropbox-cli
+    # pkgs.skypeforlinux
     # pkgs.teams
     unstable.obsidian
     unstable.google-chrome
@@ -402,6 +401,9 @@ in {
     pkgs.vlc
 
     pkgs.steam-run # Great for running binaries that aren't NixOS friendly.
+
+    # # Gnome Extensions
+    # pkgs.gnomeExtensions.forge
 
     # Unstable
     # unstable.gnomeExtensions.pop-shell
