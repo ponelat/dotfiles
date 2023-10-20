@@ -3378,11 +3378,16 @@ Version 2015-07-24"
 (use-package eros
   :bind (("C-c C-c" . #'eval-defun))
   :config
-  (progn (eros-mode 1))
-  )
+  (progn (eros-mode 1)))
+
+;; Disable flycheck for emacs-lisp mode
+(progn 
+  (defun ponelat/disable-flycheck-mode ()
+    "Disable `flycheck-mode'."
+    (flycheck-mode -1))
+  (add-hook 'emacs-lisp-mode-hook #'ponelat/disable-flycheck-mode))
 
 (use-package direnv)
-
 
 ;;; Diff, vimdiff
 (use-package vdiff)
