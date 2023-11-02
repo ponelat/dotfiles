@@ -266,6 +266,8 @@
 
 ;;; Term, bash, zsh, shell
 ;; Set certain files to be in sh-mode automagically
+;; (use-package vterm)
+
 (progn
   (add-to-list 'auto-mode-alist '("\\.?zshrc\\'" . sh-mode))
   (add-to-list 'auto-mode-alist '("\\.?profile\\'" . sh-mode))
@@ -2161,6 +2163,8 @@ DEFS is a plist associating completion categories to commands."
 ;; For Manning's style guide, around code snippet text lengths
 (setq whitespace-line-column 55)
 (setq indent-tabs-mode nil)
+(use-package lorem-ipsum)
+
 
 ;;; GhostText, browser, live
 (use-package atomic-chrome

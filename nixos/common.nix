@@ -218,6 +218,7 @@ in {
       package = pinned.emacsPgtkGcc;
       extraPackages = epkgs: [
         epkgs.pdf-tools
+        epkgs.vterm
       ];
     };
 
