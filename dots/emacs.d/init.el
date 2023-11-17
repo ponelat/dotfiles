@@ -2193,6 +2193,18 @@ DEFS is a plist associating completion categories to commands."
   (add-to-list 'auto-mode-alist '("/itsalltext/.*jira.*\\.txt$" . jira-markup-mode)))
 
 ;;; GitHub
+(use-package copilot
+  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :bind (("C-c C-g" . #'copilot-mode)
+	 ("C-j" . #'copilot-accept-completion))
+  :ensure t)
+
+
+;; Simple fib function
+
+
+
+;; you can utilize :map :hook and :config to customize copilot
 (use-package forge
  :after magit)
 
@@ -4106,8 +4118,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
   (general-define-key
     :states '(visual normal insert)
-    :keymaps 'emacs-lisp-mode-map
-    "C-j" 'ponelat/emmet-for-lisp)
+    :keymaps 'emacs-lisp-mode-map)
+    ;; "C-j" 'ponelat/emmet-for-lisp)
   (general-define-key
    :states '(visual normal)
    :keymaps 'override

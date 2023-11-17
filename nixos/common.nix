@@ -155,6 +155,11 @@ in {
         source = "/home/josh/projects/dotfiles/dots/config/fish/functions/fish_prompt.fish";
       };
 
+      "fish/conf.d/github-copilot-cli.fish" = {
+        source = "/home/josh/projects/dotfiles/dots/config/fish/conf.d/github-copilot-cli.fish";
+      };
+
+
       "mako/config" = {
         text = ''
         default-timeout=5000
@@ -268,6 +273,10 @@ in {
             end
         end
 
+        function ,,,
+            nix-shell -I nixpkgs=channel:nixpkgs-unstable -p $argv
+        end
+
         function fasd_cd -d "fasd builtin cd"
         if test (count $argv) -le 1
             command fasd "$argv"
@@ -354,7 +363,7 @@ in {
 
     pkgs.psmisc # for 'fuser -k 3000/tcp'
 
-    pkgs.comma pkgs.any-nix-shell # For `, some-command`
+    pkgs.any-nix-shell # For `, some-command`
 
     pkgs.leiningen # For emacs
 
@@ -375,12 +384,15 @@ in {
     #pdflatex
     pkgs.nodejs-18_x
     unstable.bun
+    unstable.github-copilot-cli
     pkgs.nodePackages.typescript-language-server
     pkgs.nodePackages.typescript
     pkgs.nodePackages.js-beautify
     pkgs.jdk
     pkgs.maven
     pkgs.jdt-language-server
+
+    pkgs.babashka
 
     # Image and document tools
     pkgs.imagemagick pkgs.qpdf
