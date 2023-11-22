@@ -35,6 +35,37 @@
 (defvar ponelat/org-roam-dir "~/Dropbox/org/roam" "My base ORG-MODE Roam folder.")
 (defvar ponelat/projects-dir "~/projects" "My base projects folder, used with PROJECTILE and others.")
 
+
+(defun fdx/rename-current-buffer-file ()
+  "Renames current buffer and file it is visiting. https://kundeveloper.com/blog/buffer-files/#:~:text=File%3A%20%3Dfdx%2Frename%2D,(or%20move%20the%20file)."
+  (interactive)
+  (let ((name (buffer-name))
+	(filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+	(error "Buffer '%s' is not visiting a file!" name)
+      (let ((new-name (read-file-name "New name: " filename)))
+	(if (get-buffer new-name)
+	    (error "A buffer named '%s' already exists!" new-name)
+	  (rename-file filename new-name 1)
+	  (rename-buffer new-name)
+	  (set-visited-file-name new-name)
+	  (set-buffer-modified-p nil)
+	  (message "File '%s' successfully renamed to '%s'"
+		   name (file-name-nondirectory new-name)))))))
+
+(defun fdx/delete-current-buffer-file ()
+    "Removes file connected to current buffer and kills buffer. https://kundeveloper.com/blog/buffer-files"
+    (interactive)
+    (let ((filename (buffer-file-name))
+          (buffer (current-buffer))
+          (name (buffer-name)))
+      (if (not (and filename (file-exists-p filename)))
+          (ido-kill-buffer)
+        (when (yes-or-no-p (format "Are you sure you want to remove \"%s\": " filename))
+          (delete-file filename)
+          (kill-buffer buffer)
+          (message "File '%s' successfully removed" filename)))))
+
 ;;; Package, Straight, use-package
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -3803,7 +3834,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   (general-evil-setup)
   (general-auto-unbind-keys t))
 
-;;; General, keys
+;;; General, keys, toggle keys
 (progn
   (defconst ponelat/global-leader-key "SPC")
   (defconst ponelat/local-leader-key ",")
@@ -3945,6 +3976,10 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "gC" 'git-gutter+-stage-and-commit
      "gY" 'git-gutter+-stage-and-commit-whole-buffer
      "gU" 'git-gutter+-unstage-whole-buffer
+
+    "f" '(:wk "file")
+    "fr" #'fdx/rename-current-buffer-file
+    "fd" #'fdx/delete-current-buffer-file
 
     "r" '(:wk "replace")
     "rr" #'vr/replace
