@@ -2227,7 +2227,7 @@ DEFS is a plist associating completion categories to commands."
 (use-package copilot
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :bind (("C-c C-g" . #'copilot-mode)
-	 ("C-j" . #'copilot-accept-completion))
+	 ("C-." . #'copilot-accept-completion))
   :ensure t)
 
 
@@ -2930,8 +2930,8 @@ Version 2017-12-27"
            ("rb" . "ruby")
            ("nix" . "nix eval -f")
            ("go" . "go run")
-           ("js" . "node") ; node.js
-            ("ts" . "ts-node") ; TypeScript
+           ("js" . "bun") ; node.js
+	   ("ts" . "bun") ; "ts-node") ; TypeScript
            ;; ("ts" . "tsc --alwaysStrict --lib DOM,ES2015,DOM.Iterable,ScriptHost --target ES5") ; TypeScript
            ("sh" . "bash")
            ("clj" . "java -cp /home/xah/apps/clojure-1.6.0/clojure-1.6.0.jar clojure.main")
