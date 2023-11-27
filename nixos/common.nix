@@ -214,6 +214,7 @@ in {
         aa = "add";
         cm = "commit -m";
         co = "checkout";
+        di = "diff";
       };
     };
 
