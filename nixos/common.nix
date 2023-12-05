@@ -92,6 +92,9 @@ in {
   # For Flutter/Android
   programs.adb.enable = true;
 
+  # For running some script
+  programs.java.enable = true;
+
   # Configure keymap in X11
   # services.xserver.layout = "us";
   # services.xserver.xkbOptions = "eurosign:e";
@@ -256,6 +259,9 @@ in {
         fish_vi_key_bindings
         set -g fish_escape_delay_ms 10
 
+        # \v = ctrl-k and forward-char will drive foward, completing the suggestion.
+        bind -M insert \v forward-char
+
         # Some clipboard stuff. Grabbed from https://github.com/fish-shell/fish-shell/issues/3299
         function fish_user_key_bindings
             bind yy fish_clipboard_copy
@@ -390,6 +396,7 @@ in {
     pkgs.nodePackages.typescript
     pkgs.nodePackages.js-beautify
     pkgs.jdk
+    pkgs.clojure
     pkgs.maven
     pkgs.jdt-language-server
 

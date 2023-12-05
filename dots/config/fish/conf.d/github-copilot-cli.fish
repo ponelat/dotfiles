@@ -25,6 +25,7 @@ function __copilot_what-the-shell
         return 1
     end
 end
+
 alias ','='__copilot_what-the-shell'
 
 function __copilot_git-assist

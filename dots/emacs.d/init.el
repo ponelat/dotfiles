@@ -649,7 +649,6 @@ Version 2017-01-11"
   ("a" (ponelat/open-notes "log.org") "log")
   ("w" (ponelat/open-notes "web-office.org") "web office")
   ("f" (ponelat/open-notes "money.org") "money")
-  ("b" (find-file (concat ponelat/projects-dir "/api-book/book/api-book.org")) "api-book")
   ("m" (ponelat/open-notes "meetups.org") "meetups")
   ("p" (ponelat/open-notes "projects.org") "projects")
   ("n" (ponelat/open-notes "notes.org") "notes")
@@ -1287,6 +1286,25 @@ Version 2019-06-11"
 (straight-use-package
   '(openapi-yaml-mode :type git :host github :repo "magoyette/openapi-yaml-mode"))
 
+;; Swagger UI(ish) in Emacs
+(use-package swagg
+  :straight (:host github :repo "isamert/swagg.el")
+  :config
+  (setq
+   swagg-definitions
+   '((:name "GitHub"
+	    :json "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json"
+	    :base "https://api.github.com")
+     (:name "Petstore3"
+	    :json "https://petstore3.swagger.io/api/v3/openapi.json"
+	    :base "https://petstore3.swagger.io/api/v3")
+     (:name "SwaggerHub"
+	    :json "https://api.swaggerhub.com/apis/swagger-hub/registry-api/1.0.67"
+	    :base "https://api.swaggerhub.com")
+     ))
+  )
+
+
 ;; Add command to jump into a restclient scratch, stored by projectile project.
 (defun ponelat/jump-to-restclient (&optional project)
   "Jump to the restclient buffer for making rest calls.
@@ -1635,13 +1653,19 @@ module.exports = {
 ;;; Jq
 (use-package jq-mode)
 
+;;; Voice and Talon
+(use-package talonscript-mode)
+
+
 ;;; Clojure
 (use-package cider
   :config
   (progn
-    (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
-    (setq cljr-suppress-no-project-warning t)
+    ;; (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
+    ;; (setq cljr-suppress-no-project-warning t)
+    (setq cider-clojure-cli-aliases ":cider")
     (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
+    (add-hook 'cider-repl-mode-hook #'evil-local-mode)
     (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion)))
 
 (defun ponelat/cider-babashka ()
@@ -2227,7 +2251,7 @@ DEFS is a plist associating completion categories to commands."
 (use-package copilot
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
   :bind (("C-c C-g" . #'copilot-mode)
-	 ("C-." . #'copilot-accept-completion))
+	 ("C-k" . #'copilot-accept-completion))
   :ensure t)
 
 
@@ -3225,17 +3249,6 @@ Version 2017-12-27"
     org-bullets-face-name 'shadow)
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-;;; Window background
-(comment progn
-  (defun highlight-selected-window ()
-    "Highlight selected window with a different background color."
-    (walk-windows (lambda (w)
-                    (unless (eq w (selected-window))
-                      (with-current-buffer (window-buffer w)
-                        (buffer-face-set '(:background "#3D3A49"))))))
-    (buffer-face-set 'default))
-  (add-hook 'buffer-list-update-hook 'highlight-selected-window))
-
 ;; Disabling for now...
 (defun ponelat/setup-mode-line ()
   "Set up the modeline."
@@ -3980,6 +3993,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "f" '(:wk "file")
     "fr" #'fdx/rename-current-buffer-file
     "fd" #'fdx/delete-current-buffer-file
+    "fm" #'make-directory
 
     "r" '(:wk "replace")
     "rr" #'vr/replace

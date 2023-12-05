@@ -31,7 +31,7 @@ for dir in $1/*; do
 
           # Print header and body if body is not empty else if header contains "Dirty", print just that
           if [ -n "$body" ]; then
-              echo "$header:"
+              echo "$header (Unpushed):"
               # Indent the body
               # Print ascii yellow color
               echo -e "\e[33m$body\e[0m" | sed 's/^/\t/'
