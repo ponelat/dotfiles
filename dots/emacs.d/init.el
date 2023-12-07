@@ -1485,17 +1485,24 @@ Will use `projectile-default-project-name' .rest as the file name."
         (kill-buffer buf)
         result))))
 
-(defun ponelat/yaml-to-json (begin end)
+(defun ponelat/kill-command-on-region (shell-cmd)
   "Convert the BEGIN END region into JSON.  Putting the result into the kill ring."
-  (interactive "r")
-  (kill-new
-    (ponelat/shell-command-on-region-to-string begin end "rq -yJ")))
+  (save-mark-and-excursion
+    (let* ((begin (if mark-active (min (point) (mark)) (point-min)))
+	   (end (if mark-active (max (point) (mark)) (point-max)))
+	   (output (ponelat/shell-command-on-region-to-string begin end shell-cmd)))
+      (kill-new output)
+      (message output))))
 
-(defun ponelat/json-to-yaml (begin end)
-  "Convert the BEGIN END region into YAML  Putting the result into the kill ring."
-  (interactive "r")
-  (kill-new
-    (ponelat/shell-command-on-region-to-string begin end "rq -jY")))
+(defun ponelat/yaml-to-json ()
+  (interactive)
+  (ponelat/kill-command-on-region
+   "bb '(println (json/generate-string (clj-yaml.core/parse-stream *in*) {:pretty true}))'"))
+
+(defun ponelat/json-to-yaml ()
+  (interactive)
+  (ponelat/kill-command-on-region
+   "bb '(println (clj-yaml.core/generate-string (json/parse-stream *in*) {:flow-style :auto}))'"))
 
 (defun ponelat/beautify-json ()
   "Will prettify JSON."
@@ -4134,10 +4141,16 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     :prefix "C-SPC"
      "ri" #'org-roam-insert)
 
+;;; Key go or g
    (general-define-key
     :prefix "C-SPC"
      "ga" '(:wk "avy")
      "gas" #'avy-goto-char-timer)
+
+   (general-define-key
+    :states '(normal visual)
+     "gl" #'evilmi-jump-items)
+
 
   (general-define-key
     :states 'normal
