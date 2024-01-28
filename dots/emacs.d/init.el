@@ -192,6 +192,14 @@
       (kill-new filename)
       (message "Copied buffer file name '%s' to the clipboard." filename))))
 
+;;; General for general-define-key with leaders
+(use-package general
+  :config
+  (general-evil-setup)
+  (general-auto-unbind-keys t)
+  (defconst ponelat/global-leader-key "SPC")
+  (defconst ponelat/local-leader-key ","))
+
 ;;; Revert buffer/file reload
 (global-set-key  (kbd "C-x RET RET") (lambda () (interactive) (revert-buffer t t nil)))
 
@@ -785,6 +793,9 @@ Version 2017-01-11"
   :bind (:map dired-mode-map
           (("C-c s" . dired-narrow))))
 
+(straight-use-package
+  '(dired-gitignore :type git :host github :repo "johannes-mueller/dired-gitignore.el"))
+
 ;; (use-package dired-filter)
 ;; (use-package dired-collapse)
 ;; (use-package dired-rainbow
@@ -1015,7 +1026,32 @@ Version 2017-01-11"
 ;;        '((lambda (endp delimiter) nil)))
 ;;   (paredit-mode 1))
 
-(use-package paredit)
+(use-package paredit
+  :config
+  ;; Duplicate sexp
+  (defun paredit-duplicate-after-point
+      ()
+    "Duplicates the content of the line that is after the point."
+    (interactive)
+    ;; skips to the next sexp
+    (while (looking-at " ")
+      (forward-char))
+    (set-mark-command nil)
+    ;; while we find sexps we move forward on the line
+    (while (and (<= (point) (car (bounds-of-thing-at-point 'sexp)))
+		(not (= (point) (line-end-position))))
+      (forward-sexp)
+      (while (looking-at " ")
+	(forward-char)))
+    (kill-ring-save (mark) (point))
+    ;; go to the next line and copy the sexprs we encountered
+    (paredit-newline)
+    (set-mark-command nil)
+    (yank)
+    (exchange-point-and-mark)
+    ))
+
+
 (use-package evil-paredit
   :init
   (add-hook 'cider-repl-mode-hook 'evil-paredit-mode)
@@ -1670,7 +1706,13 @@ module.exports = {
   (progn
     ;; (setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
     ;; (setq cljr-suppress-no-project-warning t)
-    (setq cider-clojure-cli-aliases ":cider")
+    (general-define-key
+     :states '(normal insert)
+     :keymaps 'cider-mode-map
+     "C-c C-S-c" 'cider-eval-buffer)
+
+    (setq cider-clojure-cli-aliases ":cider"
+	  cider-repl-display-help-banner nil)
     (add-hook 'cider-repl-mode-hook #'cider-company-enable-fuzzy-completion)
     (add-hook 'cider-repl-mode-hook #'evil-local-mode)
     (add-hook 'cider-mode-hook #'cider-company-enable-fuzzy-completion)))
@@ -1683,8 +1725,8 @@ module.exports = {
 
 
 ;;; Clojure
+(use-package clj-refactor)
 (use-package clojure-mode
-
   :config
   (add-hook 'clojure-mode-hook (lambda ()
                                  (clj-refactor-mode)
@@ -1694,12 +1736,10 @@ module.exports = {
 (use-package flycheck-joker)
 
 
-(use-package clj-refactor)
-
 ; Auto load buffer, when in jacked-in
-(add-hook 'cider-mode-hook
-  (lambda ()
-    (add-hook 'after-save-hook 'cider-load-buffer nil 'make-it-local)))
+;; (add-hook 'cider-mode-hook
+;;   (lambda ()
+;;     (add-hook 'after-save-hook 'cider-load-buffer nil 'make-it-local)))
 
 ;;; Autocomplete, company, snippets
 (use-package company
@@ -3379,7 +3419,7 @@ Interactively you can choose the FONT-NAME"
     (apply 'set-face-attribute (append '(default nil) font-props))))
 
 ;;; Set default font
-(ponelat/default-font "Small")
+(ponelat/default-font "Normal")
 
 ;;; Cycle through fonts
 (defvar ponelat/default-font-index 1)
@@ -3846,22 +3886,11 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   (message (format "Whitespace: %s" whitespace-manning-toggle)))
 
 
-;;; General, Leader, Key mapping
-
-
-(use-package general
-  :config
-  (general-evil-setup)
-  (general-auto-unbind-keys t))
-
-;;; General, keys, toggle keys
+;;; General key bindings local and global leader keys
 (progn
-  (defconst ponelat/global-leader-key "SPC")
-  (defconst ponelat/local-leader-key ",")
 
   ;; Need to find a way to use  this in insert mode
    (general-unbind "C-SPC")
-  ;; (general-unbind :states '(normal) ",c")
 
    (general-create-definer ponelat/global-leader
      :prefix ponelat/global-leader-key
@@ -3872,6 +3901,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      :prefix ponelat/local-leader-key
      :states '(normal visual))
 
+;;; Global leader (space key)
    (ponelat/global-leader
      "Q" #'save-buffers-kill-terminal
      "p" #'projectile-command-map
@@ -3932,8 +3962,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 ;;; Quit keys
      "q" #'quit-window)
 
-
-;;; Local keybindings
+;;; Local leader (comma key) 
 
   (setq org-trello-current-prefix-keybinding "SPC ro")
 
@@ -3965,14 +3994,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
     "m" #'hydra-volume/body
 
-    "d" '(:wk "debug/diff")
-    "dd" 'dap-hydra/body
-    "ds" 'dap-debug
-    "de" 'dap-debug-edit-template
-    "da" '(lambda () (interactive)
-            (if
-              (yes-or-no-p "Delete all DAP sessions")
-              (dap-delete-all-sessions)))
+    "dd" #'dired-jump
+    "dg" #'dired-gitignore-mode
 
     "e" '(:wk "edit")
     "eu" 'ponelat/edit-url
@@ -4012,10 +4035,16 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "bK" 'kill-buffer
 
 
-    ;;; Toggle things globally
+;;; Toggle things globally
     "tv" 'visual-line-mode
     "tf" 'ponelat/toggle-default-font
     "tw" 'ponelat/toggle-whitespace
+
+;;; Lisp keys
+
+    "l" '(:wk "Lisp")
+    "l d" 'paredit-duplicate-after-point
+    "l r" 'paredit-raise-sexp
 
       ;; Font size
     "=" '(hydra-zoom/body :wk "size")
@@ -4040,60 +4069,13 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "o" '(:wk "org-mode")
     "h" #'org-toggle-heading)
 
-
-   ;; (ponelat/local-leader
-   ;;  :modes 'js2-mode
-   ;;  :state '(normal)
-   ;;   "t" #'jest-popup)
-
-
-  ;; (ponelat/local-leader
-  ;;   :modes 'org-trello
-  ;;   :state '(normal)
-  ;;   "t" '(:wk "trello")
-  ;;   "tv" 'org-trello-version
-  ;;   "ti" 'org-trello-install-key-and-token
-  ;;   "tI" 'org-trello-install-board-metadata
-  ;;   "tc" 'org-trello-sync-card
-  ;;   "ts" 'org-trello-sync-buffer
-  ;;   "ta" 'org-trello-assign-me
-  ;;   "td" 'org-trello-check-setup
-  ;;   "tD" 'org-trello-delete-setup
-  ;;   "tb" 'org-trello-create-board-and-install-metadata
-  ;;   "tk" 'org-trello-kill-entity
-  ;;   "tK" 'org-trello-kill-cards
-  ;;   "ta" 'org-trello-archive-card
-  ;;   "tA" 'org-trello-archive-cards
-  ;;   "tj" 'org-trello-jump-to-trello-card
-  ;;   "tJ" 'org-trello-jump-to-trello-board
-  ;;   "tC" 'org-trello-add-card-comments
-  ;;   "to" 'org-trello-show-card-comments
-  ;;   "tl" 'org-trello-show-card-labels
-  ;;   "tu" 'org-trello-update-board-metadata
-  ;;   "th" 'org-trello-help-describing-bindings)
-
-
-  ;; (general-unbind
-  ;;   :mode 'js2-mode
-  ;;   :state '(normal)
-  ;;   "c")
-
-;;; Eshell keys
-
-  ;; (general-define-key
-  ;;   :states '(normal insert)
-  ;;   :keymaps 'eshell-mode-map
-  ;;   "C-k" 'eshell-previous-matching-input-from-input
-  ;;   "C-j" 'eshell-next-matching-input-from-input)
-
-
 ;;; Lisp/Paredit keys
+
   (general-define-key
     :states '(normal insert)
     :keymaps '(emacs-lisp-mode-map clojure-mode-map)
     "C-." 'paredit-forward-slurp-sexp
     "C-," 'paredit-forward-barf-sexp)
-
 
 ;;; Yaml/OpenAPI
   (general-define-key
@@ -4230,8 +4212,9 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    "C-c C-r" (lambda () (interactive) (async-shell-command (format "nix eval -f %s" buffer-file-name ) "*NixOS Rebuild*")))
   :mode ("\\.nix\\'"))
 
-;; (use-package company-nixos-options
-;;   :config (add-to-list 'company-backends 'company-nixos-options))
+(use-package company-nixos-options
+  :config
+   (add-to-list 'company-backends 'company-nixos-options))
 
 (use-package app-launcher
   :straight '(app-launcher :host github :repo "SebastienWae/app-launcher"))
