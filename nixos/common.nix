@@ -38,6 +38,10 @@ pinned = import (fetchTarball
         )
       ];
       config.allowUnfree = true;
+      # Required by _one_ of the unstable.* packages I used.
+      config.permittedInsecurePackages = [
+        "electron-25.9.0"
+      ];
     };
 
 
@@ -87,6 +91,28 @@ in {
           EV_KEY: [KEY_CAPSLOCK]
     '';
 
+
+  };
+
+  systemd.services.ulauncher = {
+    # WantedBy=graphical-session.target
+    wantedBy = [ "graphical-session.target" ];
+    description = "Start the ulauncher";
+    unitConfig = {
+      Documentation = "https://ulauncher.io";
+    };
+    serviceConfig = {
+    # BusName=io.ulauncher.Ulauncher
+    # Type=dbus
+      Type = "dbus";
+      BusName="io.ulauncher.Ulauncher";
+    # Restart=always
+      Restart = "always";
+      # RestartSec=1;
+      RestartSec=1;
+      # ExecStart=/usr/bin/ulauncher --hide-window
+      ExecStart = ''${pkgs.ulauncher}/bin/ulauncher --hide-window'';
+    };
   };
 
   # For Flutter/Android
@@ -242,7 +268,7 @@ in {
 
       # Needs direnv installed
       shellAliases = {
-        "j" = "fasd_cd -d";
+        # "j" = "fasd_cd -d";
         "cs" = "git status || ls";
         "em" = "emacsclient -c -a ''";
         # Moved the following into shellInit as a function
@@ -284,15 +310,15 @@ in {
             nix-shell -I nixpkgs=channel:nixpkgs-unstable -p $argv
         end
 
-        function fasd_cd -d "fasd builtin cd"
-        if test (count $argv) -le 1
-            command fasd "$argv"
-        else
-            fasd -e 'printf %s' $argv | read -l ret
-            test -z "$ret"; and return
-            test -d "$ret"; and cd "$ret"; or printf "%s\n" $ret
-        end
-        end
+        # function fasd_cd -d "fasd builtin cd"
+        # if test (count $argv) -le 1
+            # command fasd "$argv"
+        # else
+            # fasd -e 'printf %s' $argv | read -l ret
+            # test -z "$ret"; and return
+            # test -d "$ret"; and cd "$ret"; or printf "%s\n" $ret
+        # end
+        # end
 
         direnv hook fish | source
       '';
@@ -322,6 +348,7 @@ in {
 
     # Darn it, allow all unfree!
     config.allowUnfree = true;
+
     #   config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
     #     "obsidian"
     #     "spotify"
@@ -348,11 +375,20 @@ in {
 
   # Services
   virtualisation.docker.enable = true;
-  # virtualisation.virtualbox.host.enable = true;
-  # users.extraGroups.vboxusers.members = [ "josh" ];
+
+  virtualisation.virtualbox = {
+    host = {
+      enable = true; 
+      # enableExtensionPack = true;
+    };
+    # guest.enable = true;
+    # guest.x11 = true;
+  };
+
+  users.extraGroups.vboxusers.members = [ "josh" ];
 
   # Lorri is a nix-shell replacement built on direnv.
-  services.lorri.enable = true;
+  # services.lorri.enable = true;
 
   # Enable nix eval --expr
   nix.package = pkgs.nixUnstable;
@@ -363,10 +399,12 @@ in {
   # For Wayland
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
+  # Used for openvpnforticlient. See: https://github.com/adrienverge/openfortivpn/issues/1076#issuecomment-1777003887
+  environment.etc."ppp/options".text = "ipcp-accept-remote";
 
   environment.systemPackages = [
     # Dev stuff
-    pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
+    pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.zoxide pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
 
     pkgs.psmisc # for 'fuser -k 3000/tcp'
 
@@ -420,11 +458,14 @@ in {
     pkgs.deluge
     pkgs.obs-studio
     pkgs.vlc
+    pkgs.ulauncher
+    pkgs.vscode
 
     pkgs.steam-run # Great for running binaries that aren't NixOS friendly.
 
     # # Gnome Extensions
     # pkgs.gnomeExtensions.forge
+    pkgs.gnome.gnome-tweaks
 
     # Unstable
     # unstable.gnomeExtensions.pop-shell
@@ -446,7 +487,7 @@ in {
     displayManager = {
       gdm.enable = true;
       # sddm.enable = true;
-      gdm.wayland = true;
+      gdm.wayland = false;
     };
 
   };
@@ -455,7 +496,7 @@ in {
   environment.pathsToLink = [ "/libexec" ]; # links /libexec from derivations to /run/current-system/sw
 
   xdg = {
-    # portal = {
+   # portal = {
     #   enable = true;
     #   extraPortals = with pkgs; [
     #     xdg-desktop-portal-wlr
