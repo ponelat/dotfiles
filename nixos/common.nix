@@ -65,6 +65,10 @@ in {
   # Set your time zone. This is best in hardware specific. For when I want servers
   # time.timeZone = "Africa/Johannesburg";
 
+  # This is to set nixos rtc to local time to help with dual booting windows and linux
+  # Curtesy of Papa
+  time.hardwareClockInLocalTime = true;
+
 
   # See: https://nixos.wiki/wiki/Flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -198,6 +202,15 @@ in {
 
       "alacritty/alacritty.yml" = {
         text =''
+        shell:
+            program: /usr/bin/env
+            args:
+            - tmux 
+            - new-session
+            - -A
+            - -s
+            - general
+
         colors:
             primary:
                 background: '0x1e2030'
@@ -405,6 +418,15 @@ in {
   environment.systemPackages = [
     # Dev stuff
     pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.zoxide pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
+
+    # JSON view in cli, like 'less'
+    pkgs.jless
+
+    # XF86 window system
+    pkgs.xclip
+
+    # Screenshot. I just can't use it, so frustrating. 
+    # pkgs.ksnip
 
     pkgs.psmisc # for 'fuser -k 3000/tcp'
 

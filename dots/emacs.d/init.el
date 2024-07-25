@@ -1417,18 +1417,124 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;; Nginx,HAproxy,Caddy Server
 (use-package caddyfile-mode)
 
-
 ;;; LSP, language server protocol, eglot
-(use-package lsp-mode
-  :hook '((lsp-mode . lsp-enable-which-key-integration))
+(comment use-package lsp-mode
+  :hook
+  '((lsp-mode . lsp-enable-which-key-integration) 
+    (typescript-mode . lsp-deferred))
   :bind ("C-x C-l" . lsp-command-map)
   :config
   ;; (add-to-list 'lsp-language-id-configuration '(".*\\.njk" . "html"))
+
+  ;; Add Deno to the list of LSP clients
+  (add-to-list 'lsp-language-id-configuration '(typescript-mode . "deno"))
+  (add-to-list 'lsp-language-id-configuration '(js-mode . "deno"))
+  (add-to-list 'lsp-language-id-configuration '(js2-mode . "deno"))
+  (add-to-list 'lsp-language-id-configuration '(web-mode . "deno"))
+
+  ;; Optionally disable ts-ls
+  (setq lsp-disabled-clients '(ts-ls))
+
+
   (setq lsp-idle-delay 2.000
     lsp-eslint-enable nil
-    lsp-eslint-package-manager "yarn"
+    lsp-clients-deno-server-command '("deno" "lsp")
+    lsp-enable-suggest-server-download nil
+    ;; lsp-eslint-package-manager "yarn"
     lsp-eslint-run "onSave")
-  :commands lsp)
+
+  :commands (lsp lsp-deferred))
+
+
+(defhydra hydra-lsp (:exit t :hint nil)
+  "
+ Buffer^^               Server^^                   Symbol
+-------------------------------------------------------------------------------------
+ [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
+ [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
+ [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
+  ("d" lsp-find-declaration)
+  ("D" lsp-ui-peek-find-definitions)
+  ("R" lsp-ui-peek-find-references)
+  ("i" lsp-ui-peek-find-implementation)
+  ("t" lsp-find-type-definition)
+  ("s" lsp-signature-help)
+  ("o" lsp-describe-thing-at-point)
+  ("r" lsp-rename)
+
+  ("f" my/format-buffer)
+  ("m" lsp-ui-imenu)
+  ("x" lsp-execute-code-action)
+
+  ("M-s" lsp-describe-session)
+  ("M-r" lsp-restart-workspace)
+  ("S" lsp-shutdown-workspace))
+
+(defun ponelat/setup-lsp-mode ()
+  (message "my/setup-lsp-mode called")
+  (flycheck-mode 1)
+  (company-mode 1)
+  (yas-minor-mode-on)
+  (flyspell-prog-mode)
+  (lsp-enable-which-key-integration)
+  (lsp-diagnostics-mode 1)
+  (lsp-completion-mode 1)
+  ;; (when (lsp-feature? "textDocument/formatting")
+  ;;   (setq my/format-buffer-function 'lsp-format-buffer)))
+  )
+
+(use-package format-all)
+(defvar-local my/format-buffer-function 'format-all-buffer
+  "Function to call in order to format the current buffer.")
+(defun my/format-buffer ()
+  "Run `my/format-buffer-function' to format the current buffer."
+  (interactive)
+  (funcall my/format-buffer-function))
+(bind-key "C-c f f" 'my/format-buffer)
+
+(use-package lsp-mode
+  :commands lsp
+  :config
+  (add-to-list 'lsp-language-id-configuration '(typescript-mode . "deno"))
+  (setq lsp-disabled-clients '(ts-ls))
+  :custom
+  (lsp-log-io nil)
+  (lsp-print-performance nil)
+  (lsp-report-if-no-buffer nil)
+  (lsp-keep-workspace-alive nil)
+  (lsp-enable-snippet t)
+  (lsp-auto-guess-root t)
+  (lsp-restart 'iteractive)
+ ;(lsp-session-file)
+  (lsp-auto-configure nil)
+ ;(lsp-document-sync-method)
+  (lsp-auto-execute-action nil)
+  (lsp-eldoce-render-all nil)
+  (lsp-enable-completion-at-point t)
+  (lsp-enable-xref t)
+  (lsp-diagnostics-provider :flycheck)
+  (lsp-enable-indentation t)
+  (lsp-enable-on-type-formatting nil)
+  (lsp-before-save-edits nil)
+  (lsp-imenu-show-container-name t)
+  (lsp-imenu-container-name-separator "/")
+  (lsp-imenu-sort-methods '(kind name))
+  (lsp-response-timeout 5)
+  (lsp-enable-file-watchers nil)
+  (lsp-server-trace nil)
+  (lsp-semantic-highlighting nil)
+  (lsp-enable-imenu t)
+  (lsp-signature-auto-activate t)
+  (lsp-signature-render-documentation nil)
+  (lsp-enable-text-document-color nil)
+  (lsp-completion-provider :capf)
+  (gc-cons-threshold 100000000)
+  (read-process-output-max (* 3 1024 1024))
+  :hook ((lsp-mode . ponelat/setup-lsp-mode))
+  :bind (:map lsp-mode-map
+         ("C-c f" . hydra-lsp/body)))
+
+;;; LSP - JavaScript / Typescript
 
 (use-package eglot
   :ensure t)
@@ -1469,7 +1575,6 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 (comment use-package hover) ;; run app from desktop without emulator
 
-;; (use-package company-lsp )
 ;; (use-package lsp-ui )
 
 ;; (use-package company-tabnine
@@ -1741,7 +1846,8 @@ module.exports = {
 ;;   (lambda ()
 ;;     (add-hook 'after-save-hook 'cider-load-buffer nil 'make-it-local)))
 
-;;; Autocomplete, company, snippets
+;;; Autocomplete, company, snippets, ivy, helm, company, etc
+
 (use-package company
 
   :config
