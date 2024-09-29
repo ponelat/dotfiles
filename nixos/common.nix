@@ -10,15 +10,15 @@
 
 let
 
-pinned = import (fetchTarball
-    "https://github.com/NixOS/nixpkgs/archive/6c4b9f1a2fd761e2d384ef86cff0d208ca27fdca.tar.gz") {
-      overlays = [
-        (import (builtins.fetchTarball {
-          url =
-            "https://github.com/nix-community/emacs-overlay/archive/ccf704241a96879f117b49490de1ba617defac25.tar.gz";
-        }))
-      ];
-    };
+  # pinned = import (fetchTarball
+  #   "https://github.com/NixOS/nixpkgs/archive/24.05.tar.gz") {
+  #     overlays = [
+  #       (import (builtins.fetchTarball {
+  #         url =
+  #           "https://github.com/nix-community/emacs-overlay/archive/ccf704241a96879f117b49490de1ba617defac25.tar.gz";
+  #       }))
+  #     ];
+  #   };
 
   unstable = import (fetchTarball
     "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
@@ -38,10 +38,6 @@ pinned = import (fetchTarball
         )
       ];
       config.allowUnfree = true;
-      # Required by _one_ of the unstable.* packages I used.
-      config.permittedInsecurePackages = [
-        "electron-25.9.0"
-      ];
     };
 
 
@@ -73,7 +69,7 @@ in {
   # See: https://nixos.wiki/wiki/Flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  fonts.fonts = [
+  fonts.packages = [
     pkgs.noto-fonts
     pkgs.open-sans
     pkgs.corefonts
@@ -151,7 +147,7 @@ in {
 
     home.stateVersion = "21.11";
     home.packages = with pkgs; [
-      rnix-lsp
+      # rnix-lsp
       node2nix
       playerctl
       spotify
@@ -200,48 +196,41 @@ in {
 
       };
 
-      "alacritty/alacritty.yml" = {
+      "alacritty/alacritty.toml" = {
         text =''
-        shell:
-            program: /usr/bin/env
-            args:
-            - tmux 
-            - new-session
-            - -A
-            - -s
-            - general
+            [colors.bright]
+            black = "0x828bb8"
+            blue = "0x82aaff"
+            cyan = "0xb4f9f8"
+            green = "0xc3e88d"
+            magenta = "0xff966c"
+            red = "0xff98a4"
+            white = "0x5f8787"
+            yellow = "0xffc777"
 
-        colors:
-            primary:
-                background: '0x1e2030'
-                foreground: '0x7f85a3'
+            [colors.cursor]
+            cursor = "0x808080"
+            text = "0x7f85a3"
 
-            cursor:
-                text:   '0x7f85a3'
-                cursor: '0x808080'
+            [colors.normal]
+            black = "0x444a73"
+            blue = "0x3e68d7"
+            cyan = "0x86e1fc"
+            green = "0x4fd6be"
+            magenta = "0xfc7b7b"
+            red = "0xff5370"
+            white = "0xd0d0d0"
+            yellow = "0xffc777"
 
-            normal:
-                black:   '0x444a73'
-                red:     '0xff5370'
-                green:   '0x4fd6be'
-                yellow:  '0xffc777'
-                blue:    '0x3e68d7'
-                magenta: '0xfc7b7b'
-                cyan:    '0x86e1fc'
-                white:   '0xd0d0d0'
+            [colors.primary]
+            background = "0x1e2030"
+            foreground = "0x7f85a3"
 
-            bright:
-                black:   '0x828bb8'
-                red:     '0xff98a4'
-                green:   '0xc3e88d'
-                yellow:  '0xffc777'
-                blue:    '0x82aaff'
-                magenta: '0xff966c'
-                cyan:    '0xb4f9f8'
-                white:   '0x5f8787'
+            [shell]
+            args = ["tmux", "new-session", "-A", "-s", "general"]
+            program = "/usr/bin/env"
         '';
       };
-
 
     };
 
@@ -263,25 +252,27 @@ in {
     # Emacs (probably need to add in the packages here at some point)
     programs.emacs = {
       enable = true;
-      package = pinned.emacsPgtkGcc;
-      extraPackages = epkgs: [
-        epkgs.pdf-tools
-        epkgs.vterm
-      ];
+      package = with pkgs; (
+        (emacsPackagesFor emacs29).emacsWithPackages (
+          epkgs: with epkgs; [
+            vterm pdf-tools
+          ]
+        )
+      );
     };
 
-    services.emacs = {
-      enable = true;
-      package = pinned.emacsPgtkGcc;
-      defaultEditor = true;
-    };
+    # services.emacs = {
+    #   enable = true;
+    #   package = pinned.emacsPgtkGcc;
+    #   defaultEditor = true;
+    # };
 
     programs.fish = {
       enable = true;
 
       # Needs direnv installed
       shellAliases = {
-        # "j" = "fasd_cd -d";
+            # "j" = "fasd_cd -d";
         "cs" = "git status || ls";
         "em" = "emacsclient -c -a ''";
         # Moved the following into shellInit as a function
@@ -361,6 +352,10 @@ in {
 
     # Darn it, allow all unfree!
     config.allowUnfree = true;
+    # Required by (older versions of)obsidian
+    # config.permittedInsecurePackages = [
+    #   "electron-25.9.0"
+    # ];
 
     #   config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
     #     "obsidian"
@@ -404,7 +399,7 @@ in {
   # services.lorri.enable = true;
 
   # Enable nix eval --expr
-  nix.package = pkgs.nixUnstable;
+  # nix.package = pkgs.nix;
   nix.extraOptions = ''
       experimental-features = nix-command
    '';
@@ -451,9 +446,10 @@ in {
     #pdflatex
     pkgs.nodejs-18_x
     unstable.bun
+    unstable.deno
     unstable.github-copilot-cli
     pkgs.nodePackages.typescript-language-server
-    pkgs.nodePackages.typescript
+    # pkgs.nodePackages.typescript
     pkgs.nodePackages.js-beautify
     pkgs.jdk
     pkgs.clojure
@@ -473,6 +469,7 @@ in {
 
     # pkgs.firefox
     pkgs.inkscape pkgs.slack pkgs.dropbox-cli
+    pkgs.onlyoffice-bin
     # pkgs.skypeforlinux
     # pkgs.teams
     unstable.obsidian
@@ -492,9 +489,9 @@ in {
     # Unstable
     # unstable.gnomeExtensions.pop-shell
     # unstable.zoomUsFixed
-    pkgs.zoomUsFixed
-    # pkgs.zoom
-
+    # pkgs.zoomUsFixed
+    # unstable.zoom-us
+    pkgs.zoom-us
 
   ];
 
