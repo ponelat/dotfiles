@@ -9,3 +9,4 @@ dots/emacs.d/private-functions.el
 /dots/emacs.d/bookmarks
 /dots/emacs.d/.lsp-eslint-choices
 /dots/emacs.d/.dap-breakpoints
+/dots/emacs.d/.lsp-session

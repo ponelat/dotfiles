@@ -575,9 +575,6 @@ Version 2017-01-11"
     (interactive)
     (find-file "/sudo::/etc/hosts"))
   )
-(use-package hydra
-  )
- ;;; Hydra, menus
 
 (defun ponelat/size-increase ()
   "Increase text/image size."
@@ -609,14 +606,18 @@ Version 2017-01-11"
   (if (equal major-mode 'pdf-view-mode)
     (pdf-view-scale-reset)))
 
-(defhydra hydra-zoom (global-map "C-x =")
-  "zoom"
-  ("k" ponelat/size-increase "in")
-  ("j" ponelat/size-decrease "out")
-  ("h" ponelat/visual-fill-column-width-decrease "narrow")
-  ("l" ponelat/visual-fill-column-width-increase "widen")
-  ("0" ponelat/size-reset "reset")
-  ("t" ponelat/toggle-default-font "toggle"))
+(use-package hydra)
+
+ ;;; Hydra, menus
+
+; (defhydra hydra-zoom (global-map "C-x =")
+ ;  "zoom"
+  ; ("k" ponelat/size-increase "in")
+  ; ("j" ponelat/size-decrease "out")
+  ; ("h" ponelat/visual-fill-column-width-decrease "narrow")
+  ; ("l" ponelat/visual-fill-column-width-increase "widen")
+  ; ("0" ponelat/size-reset "reset")
+  ; ("t" ponelat/toggle-default-font "toggle"))
 
 
 ;;; Sound, mixer volume
@@ -1112,7 +1113,7 @@ Version 2017-01-11"
 (add-hook 'find-file-hook 'xml-find-file-hook t)
 ;;; Ag, RipGrep
 ;; use the_silver_searcher when available
-(use-package ag :if (executable-find "ag"))
+;; (use-package ag :if (executable-find "ag"))
 
 (use-package rg)
 
@@ -1358,20 +1359,20 @@ Will use `projectile-default-project-name' .rest as the file name."
   :config
   (add-to-list 'company-backends 'company-restclient))
 
-(use-package typescript-mode
-  :after tree-sitter
-  :config
-  ;; we choose this instead of tsx-mode so that eglot can automatically figure out language for server
-  ;; see https://github.com/joaotavora/eglot/issues/624 and https://github.com/joaotavora/eglot#handling-quirky-servers
-  (progn
-    (define-derived-mode typescriptreact-mode typescript-mode
-      "TypeScript TSX"))
+;; (use-package typescript-mode
+;;   :after tree-sitter
+;;   :config
+;;   ;; we choose this instead of tsx-mode so that eglot can automatically figure out language for server
+;;   ;; see https://github.com/joaotavora/eglot/issues/624 and https://github.com/joaotavora/eglot#handling-quirky-servers
+;;   (progn
+;;     (define-derived-mode typescriptreact-mode typescript-mode
+;;       "TypeScript TSX"))
 
-  ;; use our derived mode for tsx files
-  (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescriptreact-mode))
-  ;; by default, typescript-mode is mapped to the treesitter typescript parser
-  ;; use our derived mode to map both .tsx AND .ts -> typescriptreact-mode -> treesitter tsx
-  (add-to-list 'tree-sitter-major-mode-language-alist '(typescriptreact-mode . tsx)))
+;;   ;; use our derived mode for tsx files
+;;   (add-to-list 'auto-mode-alist '("\\.tsx?\\'" . typescriptreact-mode))
+;;   ;; by default, typescript-mode is mapped to the treesitter typescript parser
+;;   ;; use our derived mode to map both .tsx AND .ts -> typescriptreact-mode -> treesitter tsx
+;;   (add-to-list 'tree-sitter-major-mode-language-alist '(typescriptreact-mode . tsx)))
 
 (use-package web-mode
   :mode (("\\.html\\'" . web-mode)
@@ -1492,83 +1493,152 @@ Will use `projectile-default-project-name' .rest as the file name."
   (funcall my/format-buffer-function))
 (bind-key "C-c f f" 'my/format-buffer)
 
-(use-package lsp-mode
-  :commands lsp
-  :config
-  (add-to-list 'lsp-language-id-configuration '(typescript-mode . "deno"))
-  (setq lsp-disabled-clients '(ts-ls))
-  :custom
-  (lsp-log-io nil)
-  (lsp-print-performance nil)
-  (lsp-report-if-no-buffer nil)
-  (lsp-keep-workspace-alive nil)
-  (lsp-enable-snippet t)
-  (lsp-auto-guess-root t)
-  (lsp-restart 'iteractive)
- ;(lsp-session-file)
-  (lsp-auto-configure nil)
- ;(lsp-document-sync-method)
-  (lsp-auto-execute-action nil)
-  (lsp-eldoce-render-all nil)
-  (lsp-enable-completion-at-point t)
-  (lsp-enable-xref t)
-  (lsp-diagnostics-provider :flycheck)
-  (lsp-enable-indentation t)
-  (lsp-enable-on-type-formatting nil)
-  (lsp-before-save-edits nil)
-  (lsp-imenu-show-container-name t)
-  (lsp-imenu-container-name-separator "/")
-  (lsp-imenu-sort-methods '(kind name))
-  (lsp-response-timeout 5)
-  (lsp-enable-file-watchers nil)
-  (lsp-server-trace nil)
-  (lsp-semantic-highlighting nil)
-  (lsp-enable-imenu t)
-  (lsp-signature-auto-activate t)
-  (lsp-signature-render-documentation nil)
-  (lsp-enable-text-document-color nil)
-  (lsp-completion-provider :capf)
-  (gc-cons-threshold 100000000)
-  (read-process-output-max (* 3 1024 1024))
-  :hook ((lsp-mode . ponelat/setup-lsp-mode))
-  :bind (:map lsp-mode-map
-         ("C-c f" . hydra-lsp/body)))
+;; (comment use-package lsp-mode
+;;   :commands lsp
+;;   :config
+;;   (add-to-list 'lsp-language-id-configuration '(typescriptreact-mode . "deno"))
+;;   (setq lsp-disabled-clients '(ts-ls))
+;;   :custom
+;;   (lsp-log-io nil)
+;;   (lsp-print-performance nil)
+;;   (lsp-report-if-no-buffer nil)
+;;   (lsp-keep-workspace-alive nil)
+;;   (lsp-enable-snippet t)
+;;   (lsp-auto-guess-root t)
+;;   (lsp-restart 'iteractive)
+;;  ;(lsp-session-file)
+;;   (lsp-auto-configure nil)
+;;  ;(lsp-document-sync-method)
+;;   (lsp-auto-execute-action nil)
+;;   (lsp-eldoce-render-all nil)
+;;   (lsp-enable-completion-at-point t)
+;;   (lsp-enable-xref t)
+;;   (lsp-diagnostics-provider :flycheck)
+;;   (lsp-enable-indentation t)
+;;   (lsp-enable-on-type-formatting nil)
+;;   (lsp-before-save-edits nil)
+;;   (lsp-imenu-show-container-name t)
+;;   (lsp-imenu-container-name-separator "/")
+;;   (lsp-imenu-sort-methods '(kind name))
+;;   (lsp-response-timeout 5)
+;;   (lsp-enable-file-watchers nil)
+;;   (lsp-server-trace nil)
+;;   (lsp-semantic-highlighting nil)
+;;   (lsp-enable-imenu t)
+;;   (lsp-signature-auto-activate t)
+;;   (lsp-signature-render-documentation nil)
+;;   (lsp-enable-text-document-color nil)
+;;   (lsp-completion-provider :capf)
+;;   (gc-cons-threshold 100000000)
+;;   (read-process-output-max (* 3 1024 1024))
+;;   :hook ((lsp-mode . ponelat/setup-lsp-mode))
+;;   :bind (:map lsp-mode-map
+;;          ("C-c f" . hydra-lsp/body)))
 
-;;; LSP - JavaScript / Typescript
+;;; Corfu completion
 
-(use-package eglot
-  :ensure t)
+(use-package corfu
+      :ensure t
+      ;; Optional customizations
+      :custom
+      (corfu-cycle t)                 ; Allows cycling through candidates
+      (corfu-auto t)                  ; Enable auto completion
+      (corfu-auto-prefix 2)           ; Minimum length of prefix for completion
+      (corfu-auto-delay 0)            ; No delay for completion
+      (corfu-popupinfo-delay '(0.5 . 0.2))  ; Automatically update info popup after that numver of seconds
+      (corfu-preview-current 'insert) ; insert previewed candidate
+      (corfu-preselect 'prompt)
+      (corfu-on-exact-match nil)      ; Don't auto expand tempel snippets
+      ;; Optionally use TAB for cycling, default is `corfu-complete'.
+      :bind (:map corfu-map
+                  ("M-SPC"      . corfu-insert-separator)
+                  ("TAB"        . corfu-next)
+                  ([tab]        . corfu-next)
+                  ("S-TAB"      . corfu-previous)
+                  ([backtab]    . corfu-previous)
+                  ("S-<return>" . corfu-insert)
+                  ("RET"        . corfu-insert))
 
-(with-eval-after-load 'eglot
-  ;; Find the paths to the executables...
-  ;; Requires that typescript-language-server and typescript are both installed.
+      :init
+      (global-corfu-mode)
+      (corfu-history-mode)
+      (corfu-popupinfo-mode) ; Popup completion info
+      :config
+      (add-hook 'eshell-mode-hook
+                (lambda () (setq-local corfu-quit-at-boundary t
+                                       corfu-quit-no-match t
+                                       corfu-auto nil)
+                  (corfu-mode))
+                nil
+                t))
+
+
+(defun ponelat/typescript-language-server-bin-and-args ()
+  "This returns a list of the tls bin path and its arguments.
+e.g., (\"../path/bin\" \"--stdio\" \"--tserver-path\" \"../lib\" "
+
   (let ((path-to-typescript-lib-dir
 	 (expand-file-name
 	  "../../lib" ;; Get to the lib directory.
 	  (file-truename ;; Handle symlinks
-	   (executable-find "tsserver")))) ;; Find tsserver.
-	(path-to-typescript-language-server (executable-find "typescript-language-server"))
-	(path-to-jdtls (executable-find "jdt-language-server"))
-	(path-to-lemminx (executable-find "lemminx")))
+	   (executable-find "tsserver")))) ;; Find tsserver. 
+	(path-to-typescript-language-server
+	 (executable-find "typescript-language-server")))
 
-  ;; The actual change for eglot. You can replace the variables with hardcoded strings if it helps.
-    (progn
-      (add-to-list 'eglot-server-programs
-		   `((js-mode typescript-mode) .
-		     (,path-to-typescript-language-server
-		      "--stdio"
-		      "--tsserver-path"
-		      ,path-to-typescript-lib-dir)))
-      (add-to-list 'eglot-server-programs
-		   `((java-mode) .
-		     (,path-to-jdtls )))
-      (add-to-list 'eglot-server-programs
-		   `((nxml-mode) .
-		     (,path-to-lemminx))))))
+     `(,path-to-typescript-language-server
+	"--stdio"
+	"--tsserver-path"
+	,path-to-typescript-lib-dir)))
+
+(ponelat/typescript-language-server-bin-and-args)
+
+
+;;; LSP from ovistoica
+  (use-package lsp-mode
+    :ensure t
+    :hook ((lsp-mode . lsp-diagnostics-mode)
+	   (lsp-mode . lsp-enable-which-key-integration)
+	   ((tsx-ts-mode
+	     typescript-ts-mode
+	     js-ts-mode) . lsp-deferred))
+    :custom
+    (lsp-keymap-prefix "C-c l")           ; Prefix for LSP actions
+    (lsp-completion-provider :none)       ; Using Corfu as the provider
+    :config
+    (comment progn ;; TS-LS
+      (setq
+       lsp-clients-typescript-tls-path (executable-find "typescript-language-server")
+       )
+      )
+    (comment progn ;; Deno. God damn deno vs ts-ls nonsense
+      (setq 
+       lsp-disabled-clients '(ts-ls)
+       lsp-clients-deno-server-command '("deno" "lsp")
+       lsp-enable-suggest-server-download nil)))
+
+    ;; (comment add-to-list 'lsp-language-id-configuration '(typescript-ts-mode . "deno")))
+
+(use-package lsp-ui
+      :ensure t
+      :after lsp-mode
+      :commands
+      (lsp-ui-doc-show
+       lsp-ui-doc-glance)
+      :bind (:map lsp-mode-map
+                  ("C-c C-d" . 'lsp-ui-doc-glance))
+      :after (lsp-mode evil)
+      :config (setq lsp-ui-doc-enable t
+                    evil-lookup-func #'lsp-ui-doc-glance ; Makes K in evil-mode toggle the doc for symbol at point
+                    lsp-ui-doc-show-with-cursor nil      ; Don't show doc when cursor is over symbol - too distracting
+                    lsp-ui-doc-include-signature t       ; Show signature
+                    lsp-ui-doc-position 'at-point))
+
+;;; LSP - JavaScript / Typescript
+
 
 ;; Optional Flutter packages
 ;; Flutter dart
-(use-package dart-mode)
+;; (use-package dart-mode)
 ;; (use-package lsp-dart
 ;;   :hook '((dart-mode . lsp))
 ;;   :config  (setq lsp-dart-sdk-dir "~/snap/flutter/common/flutter/bin/cache/dart-sdk"))
@@ -1582,40 +1652,8 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;   :config
 ;;   (add-to-list 'company-backends #'company-tabnine))
 
-(use-package tree-sitter
-  :ensure t
-  :config
-  ;; activate tree-sitter on any buffer containing code for which it has a parser available
-  (global-tree-sitter-mode)
-  ;; you can easily see the difference tree-sitter-hl-mode makes for python, ts or tsx
-  ;; by switching on and off
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-
-(use-package tree-sitter-langs
-  :ensure t
-  :after tree-sitter)
-
-;;; Java
-(progn
-  (require 'cc-mode)
-  (use-package lsp-java
-    :after lsp
-    :config
-    (setq lsp-java-server-install-dir (nix-path "jdt-language-server") )))
-
 (use-package gradle-mode)
 (use-package groovy-mode)
-
-;;; Javascript, js-mode, js2-mode
-(use-package js2-mode
-  :diminish js2-mode
-  :config
-  (progn
-    (setq js2-mode-show-parse-errors t)
-    (setq-default js-indent-level 2) 
-    (setq js2-mode-show-strict-warnings nil)
-    (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
-
 
 (defun ponelat/shell-command-on-region-to-string (begin end command)
   "It wraps `shell-command-on-region' using BEGIN, END and COMMAND, so that it returnes a string."
@@ -1847,6 +1885,9 @@ module.exports = {
 ;;     (add-hook 'after-save-hook 'cider-load-buffer nil 'make-it-local)))
 
 ;;; Autocomplete, company, snippets, ivy, helm, company, etc
+
+;;; Git, magit
+(use-package magit)
 
 (use-package company
 
@@ -2154,6 +2195,7 @@ eg: /one/two => two
     :bind (;; C-c bindings (mode-specific-map)
             ("C-*" . ponelat/swiper-region-or-symbol)
             ("C-&" . (lambda () (interactive) (rg (thing-at-point-or-mark 'symbol) "*.*" (projectile-project-root))))
+
             ("C-c h" . consult-history)
             ("C-c m" . consult-mode-command)
             ("C-c b" . consult-bookmark)
@@ -2243,7 +2285,6 @@ eg: /one/two => two
       :preview-key '(:debounce 0.2 any)
       consult-ripgrep consult-git-grep consult-grep
       consult-bookmark consult-recent-file consult-xref
-      consult--source-file consult--source-project-file consult--source-bookmark
       :preview-key (kbd "M-."))
 
     ;; Optionally configure the narrowing key.
@@ -2335,13 +2376,6 @@ DEFS is a plist associating completion categories to commands."
   (interactive)
   (if (y-or-n-p (format "Are you sure you want to wipe out your changes in %s? " buffer-file-name))
     (magit-file-checkout "HEAD" buffer-file-name)))
-
-;;; Git, magit
-(use-package magit
-  :config
-  (progn
-    (magit-define-popup-switch 'magit-log-popup ?f "first parent" "--first-parent")
-    (setq magit-list-refs-sortby "-creatordate")))
 
 (use-package git-timemachine)
 
@@ -2452,6 +2486,62 @@ DEFS is a plist associating completion categories to commands."
       (add-to-list 'auto-mode-alist '("\\.ledger\\'" . ledger-mode))
       (setq ledger-report-use-native-highlighting t))
     )
+
+  ;; Adding price data into kill-ring
+  (comment progn  ;; Need to fix the API call.
+    (require 'url)
+    (require 'json)
+
+    (defun thing-at-point-date ()
+      "Return the date at point as a string in YYYY-MM-DD format, or nil if none is found."
+      (save-excursion
+	(let ((line (thing-at-point 'line t))
+	      (date-regex "\\(\\([0-9]\\{4\\}[-/]?\\)?[0-9]\\{2\\}[-/]?[0-9]\\{2\\}\\)"))
+	  (when (and line (string-match date-regex line))
+	    (let* ((matched-date (match-string 1 line))
+		   (parts (split-string matched-date "[-/]"))
+		   (year (if (= (length (car parts)) 4)
+			     (car parts)
+			   (format-time-string "%Y")))
+		   (month (if (= (length (car parts)) 4)
+			      (cadr parts)
+			    (car parts)))
+		   (day (if (= (length (car parts)) 4)
+			    (caddr parts)
+			  (cadr parts))))
+	      (format "%s-%02d-%02d"
+		      year
+		      (string-to-number month)
+		      (string-to-number day)))))))
+
+    (put 'date 'thing-at-point 'thing-at-point-date)
+
+    (defun ponelat/fetch-usd-zar-price-for-ledger (date)
+      "Fetch USD to ZAR spot price for DATE and format it for ledger-cli.
+   DATE should be in the format YYYY-MM-DD.
+   If called interactively with no argument, use the date at point.
+   The result is added to the kill-ring for pasting."
+      (interactive (list (or (thing-at-point 'date)
+                             (read-string "Enter date (YYYY-MM-DD): "
+					  (format-time-string "%Y-%m-%d")))))
+      (let* ((url (format "https://api.exchangerate.host/%s?base=USD&symbols=ZAR" date))
+             (buffer (url-retrieve-synchronously url))
+             (json-object-type 'alist)
+             (json-array-type 'list)
+             price 
+             formatted-string )
+	(message (format "Url: %s" url))
+	(with-current-buffer buffer
+	  (goto-char (point-min))
+	  (re-search-forward "^$")
+	  (delete-region (point-min) (point))
+	  (setq price (cdr (assoc 'ZAR (cdr (assoc 'rates (json-read))))))
+	  (message (format "Price? %s" price)))
+	(kill-buffer buffer)
+	(setq formatted-string 
+              (format "P %s 00:00:00 USD R%s" date (format "%.6f" price)))
+	(kill-new formatted-string)
+	(message "Added to kill-ring: %s" formatted-string))))
 
   (defun ponelat/insert-ledger-account-into-string ()
     "Completes and inserts an account from ledger file"
@@ -3459,7 +3549,7 @@ Version 2017-12-27"
 (defvar ponelat:theme-terminal-loaded nil "A flag used to indicate that the Terminal theme got loaded.")
 ;; (defvar ponelat:theme 'gruvbox-dark-medium "The initial theme.")
 ;; (defvar ponelat:theme 'gruvbox-dark-hard "The initial theme.")
-(defvar ponelat:theme 'doom-dracula "The initial theme.")
+(defvar ponelat:theme 'doom-dark+ "The initial theme.")
 
 ;; Due to starting a daemon at the same time as our client
 ;; The follow code exists to ensure that the theme is loaded at the right time.
@@ -3481,9 +3571,9 @@ Version 2017-12-27"
   "Enable or load terminal theme."
   (if ponelat:theme-terminal-loaded
     (progn
-      (enable-theme 'doom-dracula))
+      (enable-theme ponelat:theme))
     (progn
-      (load-theme 'doom-dracula t)
+      (load-theme ponelat:theme t)
       (setq ponelat:theme-terminal-loaded t))))
 
 (defun ponelat/after-make-frame-functions-setup-theme (frame)
@@ -3525,7 +3615,7 @@ Interactively you can choose the FONT-NAME"
     (apply 'set-face-attribute (append '(default nil) font-props))))
 
 ;;; Set default font
-(ponelat/default-font "Normal")
+(ponelat/default-font "Small")
 
 ;;; Cycle through fonts
 (defvar ponelat/default-font-index 1)

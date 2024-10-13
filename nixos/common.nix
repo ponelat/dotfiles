@@ -254,8 +254,14 @@ in {
       enable = true;
       package = with pkgs; (
         (emacsPackagesFor emacs29).emacsWithPackages (
-          epkgs: with epkgs; [
-            vterm pdf-tools
+          epkgs: [
+            epkgs.vterm
+            epkgs.pdf-tools
+            epkgs.treesit-grammars.with-all-grammars
+
+            # Used in LSP mode
+            # pkgs.nodePackages.typescript-language-server
+            pkgs.nodePackages.typescript
           ]
         )
       );
@@ -448,7 +454,10 @@ in {
     unstable.bun
     unstable.deno
     unstable.github-copilot-cli
+
+    # typescript-language-server doesn't play nicely with emacsWithPackages
     pkgs.nodePackages.typescript-language-server
+
     # pkgs.nodePackages.typescript
     pkgs.nodePackages.js-beautify
     pkgs.jdk
