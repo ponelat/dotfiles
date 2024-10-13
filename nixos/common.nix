@@ -75,6 +75,7 @@ in {
     pkgs.corefonts
     pkgs.source-sans-pro
     pkgs.font-awesome
+    pkgs.emacs-all-the-icons-fonts
   ];
 
   # Map capslock => control key
@@ -258,6 +259,9 @@ in {
             epkgs.vterm
             epkgs.pdf-tools
             epkgs.treesit-grammars.with-all-grammars
+            # Consider: https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
+            # pkgs.emacs-lsp-booster
+
 
             # Used in LSP mode
             # pkgs.nodePackages.typescript-language-server

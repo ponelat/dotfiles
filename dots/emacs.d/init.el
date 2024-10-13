@@ -1418,125 +1418,8 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;; Nginx,HAproxy,Caddy Server
 (use-package caddyfile-mode)
 
-;;; LSP, language server protocol, eglot
-(comment use-package lsp-mode
-  :hook
-  '((lsp-mode . lsp-enable-which-key-integration) 
-    (typescript-mode . lsp-deferred))
-  :bind ("C-x C-l" . lsp-command-map)
-  :config
-  ;; (add-to-list 'lsp-language-id-configuration '(".*\\.njk" . "html"))
-
-  ;; Add Deno to the list of LSP clients
-  (add-to-list 'lsp-language-id-configuration '(typescript-mode . "deno"))
-  (add-to-list 'lsp-language-id-configuration '(js-mode . "deno"))
-  (add-to-list 'lsp-language-id-configuration '(js2-mode . "deno"))
-  (add-to-list 'lsp-language-id-configuration '(web-mode . "deno"))
-
-  ;; Optionally disable ts-ls
-  (setq lsp-disabled-clients '(ts-ls))
-
-
-  (setq lsp-idle-delay 2.000
-    lsp-eslint-enable nil
-    lsp-clients-deno-server-command '("deno" "lsp")
-    lsp-enable-suggest-server-download nil
-    ;; lsp-eslint-package-manager "yarn"
-    lsp-eslint-run "onSave")
-
-  :commands (lsp lsp-deferred))
-
-
-(defhydra hydra-lsp (:exit t :hint nil)
-  "
- Buffer^^               Server^^                   Symbol
--------------------------------------------------------------------------------------
- [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
- [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
- [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
-  ("d" lsp-find-declaration)
-  ("D" lsp-ui-peek-find-definitions)
-  ("R" lsp-ui-peek-find-references)
-  ("i" lsp-ui-peek-find-implementation)
-  ("t" lsp-find-type-definition)
-  ("s" lsp-signature-help)
-  ("o" lsp-describe-thing-at-point)
-  ("r" lsp-rename)
-
-  ("f" my/format-buffer)
-  ("m" lsp-ui-imenu)
-  ("x" lsp-execute-code-action)
-
-  ("M-s" lsp-describe-session)
-  ("M-r" lsp-restart-workspace)
-  ("S" lsp-shutdown-workspace))
-
-(defun ponelat/setup-lsp-mode ()
-  (message "my/setup-lsp-mode called")
-  (flycheck-mode 1)
-  (company-mode 1)
-  (yas-minor-mode-on)
-  (flyspell-prog-mode)
-  (lsp-enable-which-key-integration)
-  (lsp-diagnostics-mode 1)
-  (lsp-completion-mode 1)
-  ;; (when (lsp-feature? "textDocument/formatting")
-  ;;   (setq my/format-buffer-function 'lsp-format-buffer)))
-  )
-
-(use-package format-all)
-(defvar-local my/format-buffer-function 'format-all-buffer
-  "Function to call in order to format the current buffer.")
-(defun my/format-buffer ()
-  "Run `my/format-buffer-function' to format the current buffer."
-  (interactive)
-  (funcall my/format-buffer-function))
-(bind-key "C-c f f" 'my/format-buffer)
-
-;; (comment use-package lsp-mode
-;;   :commands lsp
-;;   :config
-;;   (add-to-list 'lsp-language-id-configuration '(typescriptreact-mode . "deno"))
-;;   (setq lsp-disabled-clients '(ts-ls))
-;;   :custom
-;;   (lsp-log-io nil)
-;;   (lsp-print-performance nil)
-;;   (lsp-report-if-no-buffer nil)
-;;   (lsp-keep-workspace-alive nil)
-;;   (lsp-enable-snippet t)
-;;   (lsp-auto-guess-root t)
-;;   (lsp-restart 'iteractive)
-;;  ;(lsp-session-file)
-;;   (lsp-auto-configure nil)
-;;  ;(lsp-document-sync-method)
-;;   (lsp-auto-execute-action nil)
-;;   (lsp-eldoce-render-all nil)
-;;   (lsp-enable-completion-at-point t)
-;;   (lsp-enable-xref t)
-;;   (lsp-diagnostics-provider :flycheck)
-;;   (lsp-enable-indentation t)
-;;   (lsp-enable-on-type-formatting nil)
-;;   (lsp-before-save-edits nil)
-;;   (lsp-imenu-show-container-name t)
-;;   (lsp-imenu-container-name-separator "/")
-;;   (lsp-imenu-sort-methods '(kind name))
-;;   (lsp-response-timeout 5)
-;;   (lsp-enable-file-watchers nil)
-;;   (lsp-server-trace nil)
-;;   (lsp-semantic-highlighting nil)
-;;   (lsp-enable-imenu t)
-;;   (lsp-signature-auto-activate t)
-;;   (lsp-signature-render-documentation nil)
-;;   (lsp-enable-text-document-color nil)
-;;   (lsp-completion-provider :capf)
-;;   (gc-cons-threshold 100000000)
-;;   (read-process-output-max (* 3 1024 1024))
-;;   :hook ((lsp-mode . ponelat/setup-lsp-mode))
-;;   :bind (:map lsp-mode-map
-;;          ("C-c f" . hydra-lsp/body)))
 
 ;;; Corfu completion
-
 (use-package corfu
       :ensure t
       ;; Optional customizations
@@ -1572,8 +1455,8 @@ Will use `projectile-default-project-name' .rest as the file name."
                 nil
                 t))
 
-
-(defun ponelat/typescript-language-server-bin-and-args ()
+;; Use this to figure out if Emacs can reach typescript-language-server (bin) and tsserver (bin)
+(comment progn 
   "This returns a list of the tls bin path and its arguments.
 e.g., (\"../path/bin\" \"--stdio\" \"--tserver-path\" \"../lib\" "
 
@@ -1585,38 +1468,87 @@ e.g., (\"../path/bin\" \"--stdio\" \"--tserver-path\" \"../lib\" "
 	(path-to-typescript-language-server
 	 (executable-find "typescript-language-server")))
 
-     `(,path-to-typescript-language-server
-	"--stdio"
-	"--tsserver-path"
-	,path-to-typescript-lib-dir)))
+    (format
+     "Paths:\n typescript-language-server: %s\nlib-dir: %s"
+     path-to-typescript-language-server
+     path-to-typescript-lib-dir
+     )))
 
-(ponelat/typescript-language-server-bin-and-args)
+;; This is kind of a hack. It's supposed to be (use-package treesit), but we have that in NixOS. But thta package doesn't exist, so using `typescript-ts-mode' on the other side of use-package.
+;; Not sure how it works, but at least we can map to *-ts-mode modes.
+(use-package typescript-ts-mode 
+  :mode (("\\.tsx\\'" . tsx-ts-mode)
+	 ("\\.js\\'"  . typescript-ts-mode)
+	 ("\\.mjs\\'" . typescript-ts-mode)
+	 ("\\.mts\\'" . typescript-ts-mode)
+	 ("\\.cjs\\'" . typescript-ts-mode)
+	 ("\\.ts\\'"  . typescript-ts-mode)
+	 ("\\.jsx\\'" . tsx-ts-mode)
+	 ("\\.json\\'" .  json-ts-mode)
+	 ("\\.Dockerfile\\'" . dockerfile-ts-mode)))
 
+;;; LSP, language server protocol, eglot
+(use-package lsp-mode
+  :ensure t
 
-;;; LSP from ovistoica
-  (use-package lsp-mode
-    :ensure t
-    :hook ((lsp-mode . lsp-diagnostics-mode)
-	   (lsp-mode . lsp-enable-which-key-integration)
-	   ((tsx-ts-mode
-	     typescript-ts-mode
-	     js-ts-mode) . lsp-deferred))
-    :custom
-    (lsp-keymap-prefix "C-c l")           ; Prefix for LSP actions
-    (lsp-completion-provider :none)       ; Using Corfu as the provider
-    :config
-    (comment progn ;; TS-LS
-      (setq
-       lsp-clients-typescript-tls-path (executable-find "typescript-language-server")
-       )
-      )
-    (comment progn ;; Deno. God damn deno vs ts-ls nonsense
-      (setq 
-       lsp-disabled-clients '(ts-ls)
-       lsp-clients-deno-server-command '("deno" "lsp")
-       lsp-enable-suggest-server-download nil)))
+  :hook ((lsp-mode . lsp-diagnostics-mode)
+	 (lsp-mode . lsp-enable-which-key-integration)
+	 ((tsx-ts-mode
+	   typescript-ts-mode
+	   js-ts-mode) . lsp-deferred))
 
-    ;; (comment add-to-list 'lsp-language-id-configuration '(typescript-ts-mode . "deno")))
+  :custom
+  (lsp-keymap-prefix "C-c l")           ; Prefix for LSP actions
+  (lsp-completion-provider :none)       ; Using Corfu as the provider
+  (lsp-diagnostics-provider :flycheck)
+  (lsp-session-file (locate-user-emacs-file ".lsp-session"))
+  (lsp-log-io nil)                      ; IMPORTANT! Use only for debugging! Drastically affects performance
+  (lsp-keep-workspace-alive nil)        ; Close LSP server if all project buffers are closed
+  (lsp-idle-delay 0.5)                  ; Debounce timer for `after-change-function'
+  ;; core
+  (lsp-enable-xref t)                   ; Use xref to find references
+  (lsp-auto-configure t)                ; Used to decide between current active servers
+  (lsp-eldoc-enable-hover t)            ; Display signature information in the echo area
+  (lsp-enable-dap-auto-configure t)     ; Debug support
+  (lsp-enable-file-watchers nil)
+  (lsp-enable-folding nil)              ; I disable folding since I use origami
+  (lsp-enable-imenu t)
+  (lsp-enable-indentation nil)          ; I use prettier
+  (lsp-enable-links nil)                ; No need since we have `browse-url'
+  (lsp-enable-on-type-formatting nil)   ; Prettier handles this
+  (lsp-enable-suggest-server-download t) ; Useful prompt to download LSP providers
+  (lsp-enable-symbol-highlighting t)     ; Shows usages of symbol at point in the current buffer
+  (lsp-enable-text-document-color nil)   ; This is Treesitter's job
+
+  (lsp-ui-sideline-show-hover nil)      ; Sideline used only for diagnostics
+  (lsp-ui-sideline-diagnostic-max-lines 20) ; 20 lines since typescript errors can be quite big
+  ;; completion
+  (lsp-completion-enable t)
+  (lsp-completion-enable-additional-text-edit t) ; Ex: auto-insert an import for a completion candidate
+  (lsp-enable-snippet t)                         ; Important to provide full JSX completion
+  (lsp-completion-show-kind t)                   ; Optional
+  ;; headerline
+  (lsp-headerline-breadcrumb-enable t)  ; Optional, I like the breadcrumbs
+  (lsp-headerline-breadcrumb-enable-diagnostics nil) ; Don't make them red, too noisy
+  (lsp-headerline-breadcrumb-enable-symbol-numbers nil)
+  (lsp-headerline-breadcrumb-icons-enable nil)
+  ;; modeline
+  (lsp-modeline-code-actions-enable nil) ; Modeline should be relatively clean
+  (lsp-modeline-diagnostics-enable nil)  ; Already supported through `flycheck'
+  (lsp-modeline-workspace-status-enable nil) ; Modeline displays "LSP" when lsp-mode is enabled
+  (lsp-signature-doc-lines 1)                ; Don't raise the echo area. It's distracting
+  (lsp-ui-doc-use-childframe t)              ; Show docs for symbol at point
+  (lsp-eldoc-render-all nil)            ; This would be very useful if it would respect `lsp-signature-doc-lines', currently it's distracting
+  ;; lens
+  (lsp-lens-enable nil)                 ; Optional, I don't need it
+  ;; semantic
+  (lsp-semantic-tokens-enable nil)      ; Related to highlighting, and we defer to treesitter
+
+  :config
+  (comment progn ;; TS-LS
+	   (setq lsp-clients-typescript-tls-path (executable-find "typescript-language-server")))
+  (comment progn ;; Deno. God damn deno vs ts-ls nonsense
+	   (setq lsp-disabled-clients '(ts-ls) lsp-clients-deno-server-command '("deno" "lsp") lsp-enable-suggest-server-download nil)))
 
 (use-package lsp-ui
       :ensure t
@@ -1632,9 +1564,6 @@ e.g., (\"../path/bin\" \"--stdio\" \"--tserver-path\" \"../lib\" "
                     lsp-ui-doc-show-with-cursor nil      ; Don't show doc when cursor is over symbol - too distracting
                     lsp-ui-doc-include-signature t       ; Show signature
                     lsp-ui-doc-position 'at-point))
-
-;;; LSP - JavaScript / Typescript
-
 
 ;; Optional Flutter packages
 ;; Flutter dart
@@ -1823,6 +1752,9 @@ module.exports = {
 ;;; Flycheck, syntax, lint
 (use-package flycheck
   :diminish flycheck-mode
+  :bind (:map flycheck-mode-map
+                  ("M-n" . flycheck-next-error) ; optional but recommended error navigation
+                  ("M-p" . flycheck-previous-error))
   :config
     (setq flycheck-highlighting-mode 'lines)
     (global-flycheck-mode))
@@ -3265,6 +3197,10 @@ Version 2017-12-27"
 ; Allow all themes to run arbitrary code without a prompt
 (setq custom-safe-themes t)
 
+;;; Icon fonts
+(use-package all-the-icons
+  :if (display-graphic-p))
+
 ;;; Modeline theme
 ;; (use-package xmlgen)
 ;; (use-package ocodo-svg-modelines)
@@ -3274,8 +3210,6 @@ Version 2017-12-27"
 
 (use-package mood-line
   :config (mood-line-mode))
-
-(use-package all-the-icons)
 
 (use-package doom-themes
   :config
@@ -3328,6 +3262,7 @@ Version 2017-12-27"
       (set-face-attribute 'org-hide nil :foreground bg-color :background bg-color)
       (set-face-attribute 'org-code nil :foreground (face-attribute 'org-formula :foreground))
       (set-face-attribute 'fringe nil :foreground bg-color :background bg-color))))
+
 
 (defun ponelat/add-frame-padding (&optional PREFIX)
   "Add a padding to frame.  Will give options when used with PREFIX.  "
