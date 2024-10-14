@@ -1489,6 +1489,7 @@ e.g., (\"../path/bin\" \"--stdio\" \"--tserver-path\" \"../lib\" "
 
 ;;; LSP, language server protocol, eglot
 (use-package lsp-mode
+  ;; Mostly taken from https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
   :ensure t
 
   :hook ((lsp-mode . lsp-diagnostics-mode)
