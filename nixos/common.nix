@@ -167,6 +167,21 @@ in {
       # };
     };
 
+
+    # Dropbox (home-manager). Per https://nixos.wiki/wiki/Dropbox
+    systemd.user.services.dropbox = {
+      Unit = {
+        Description = "Dropbox service";
+      };
+      Install = {
+        WantedBy = [ "default.target" ];
+      };
+      Service = {
+        ExecStart = "${pkgs.dropbox}/bin/dropbox";
+        Restart = "on-failure";
+      };
+    };
+
     xdg.configFile = {
 
       # "inkscape" = {
@@ -266,6 +281,12 @@ in {
             # Used in LSP mode
             # pkgs.nodePackages.typescript-language-server
             pkgs.nodePackages.typescript
+            pkgs.elixir
+            pkgs.elixir-ls
+            pkgs.rust-analyzer
+            pkgs.python311Packages.python-lsp-server
+            # pkgs.rustup
+            pkgs.nodePackages.bash-language-server
           ]
         )
       );
@@ -307,6 +328,8 @@ in {
             bind yy fish_clipboard_copy
             bind Y fish_clipboard_copy
             bind p fish_clipboard_paste
+            bind -M default k up-or-search 
+            bind -M default j down-or-search 
             # bind -k nul accept-autosuggestion
             # bind -M default \$ end-of-line accept-autosuggestion
         end
@@ -455,9 +478,13 @@ in {
     pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger
     #pdflatex
     pkgs.nodejs-18_x
+    pkgs.cargo
     unstable.bun
     unstable.deno
     unstable.github-copilot-cli
+
+    # Why not..?
+    pkgs.elixir
 
     # typescript-language-server doesn't play nicely with emacsWithPackages
     pkgs.nodePackages.typescript-language-server
@@ -481,7 +508,8 @@ in {
     pkgs.alacritty
 
     # pkgs.firefox
-    pkgs.inkscape pkgs.slack pkgs.dropbox-cli
+    pkgs.inkscape pkgs.slack
+    # pkgs.dropbox-cli
     pkgs.onlyoffice-bin
     # pkgs.skypeforlinux
     # pkgs.teams

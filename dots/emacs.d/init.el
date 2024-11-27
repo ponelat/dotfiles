@@ -287,13 +287,13 @@
     (let ((dir
             (string-trim
               (shell-command-to-string
-                (format "fasd -d -1 %s" str)))))
+                (format "zoxide query %s" str)))))
       (eshell/cd dir)))
 
   (defun eshell/f ()
     "Opens projectile-find-file."
     (interactive)
-    (counsel-projectile-find-file))
+    (projectile-find-file))
 
 
   (defun ponelat/rjs-eshell-prompt-function ()
@@ -351,6 +351,26 @@ Version 2017-03-12"
   (let* ((target (string-trim (executable-find exeFile)))
 	 (path (string-trim (shell-command-to-string (format "nix-store -q %s" target)))))
     (string-join (cons path joins))))
+
+(defun ponelat/execute-buffer-with-escaped-stdin (file)
+  "Pipe the contents of FILE as stdin to execute the current buffer and capture its output in a new buffer.
+The filename is properly escaped to handle spaces and special characters."
+  (interactive "fSelect file to use as stdin: ")
+  (let* ((script-file (buffer-file-name))
+         (escaped-file (shell-quote-argument (expand-file-name file)))
+         (escaped-script (shell-quote-argument (expand-file-name script-file)))
+         (output-buffer (generate-new-buffer "*Execution Output*")))
+    (unless script-file
+      (error "The current buffer must be associated with a file to execute it"))
+    ;; Execute the current buffer file as a script
+    (with-current-buffer output-buffer
+      (let ((exit-code (call-process "/bin/sh" nil t nil "-c"
+                                     (format "cat %s | %s" escaped-file escaped-script))))
+        (if (= exit-code 0)
+            (message "Execution successful; output in %s" (buffer-name output-buffer))
+          (message "Execution failed with exit code %d" exit-code))))
+    ;; Display the output buffer
+    (display-buffer output-buffer)))
 
 (comment defun ponelat/methodpath-to-badge ()
   "It takes an input string and pastes a URL badge into buffer."
@@ -1496,7 +1516,9 @@ e.g., (\"../path/bin\" \"--stdio\" \"--tserver-path\" \"../lib\" "
 	 (lsp-mode . lsp-enable-which-key-integration)
 	 ((tsx-ts-mode
 	   typescript-ts-mode
-	   js-ts-mode) . lsp-deferred))
+	   js-ts-mode) . lsp-deferred)
+	 (elixir-mode . lsp-deferred)
+	 (python-ts-mode . lsp-deferred))
 
   :custom
   (lsp-keymap-prefix "C-c l")           ; Prefix for LSP actions
@@ -1565,6 +1587,38 @@ e.g., (\"../path/bin\" \"--stdio\" \"--tserver-path\" \"../lib\" "
                     lsp-ui-doc-show-with-cursor nil      ; Don't show doc when cursor is over symbol - too distracting
                     lsp-ui-doc-include-signature t       ; Show signature
                     lsp-ui-doc-position 'at-point))
+
+
+;; This got stuck in a cache, need to delete it from the cache and reinstall.
+(use-package combobulate
+    :preface
+    ;; You can customize Combobulate's key prefix here.
+    ;; Note that you may have to restart Emacs for this to take effect!
+    (setq combobulate-key-prefix "C-c o")
+
+    ;; Optional, but recommended.
+    ;;
+    ;; You can manually enable Combobulate with `M-x
+    ;; combobulate-mode'.
+    :hook
+    ((python-ts-mode . combobulate-mode)
+     (js-ts-mode . combobulate-mode)
+     (go-mode . go-ts-mode)
+     (html-ts-mode . combobulate-mode)
+     (css-ts-mode . combobulate-mode)
+     (yaml-ts-mode . combobulate-mode)
+     (typescript-ts-mode . combobulate-mode)
+     (json-ts-mode . combobulate-mode)
+     (tsx-ts-mode . combobulate-mode))
+    ;; Amend this to the directory where you keep Combobulate's source
+    ;; code.
+    :load-path ("~/tmp/combobulate"))
+
+
+;;; Elixir/erlang
+
+(use-package elixir-mode)
+(use-package alchemist)
 
 ;; Optional Flutter packages
 ;; Flutter dart
@@ -2217,12 +2271,11 @@ eg: /one/two => two
       consult-theme
       :preview-key '(:debounce 0.2 any)
       consult-ripgrep consult-git-grep consult-grep
-      consult-bookmark consult-recent-file consult-xref
-      :preview-key (kbd "M-."))
+      consult-bookmark consult-recent-file consult-xref)
 
     ;; Optionally configure the narrowing key.
     ;; Both < and C-+ work reasonably well.
-    (setq consult-narrow-key "<") ;; (kbd "C-+")
+    ;; (setq consult-narrow-key "<") ;; (kbd "C-+")
 
 
     (progn
@@ -3111,7 +3164,8 @@ Version 2019-01-18"
 
 
 ;;; Run current file
-(defun xah/run-this-file-fn (filename)
+(defun xah/run-this-file-fn (filename &optional stdin-file
+				      )
   "Execute FILENAME
 The file can be Emacs Lisp, PHP, Perl, Python, Ruby, JavaScript, TypeScript, Bash, Ocaml, Visual Basic, TeX, Java, Clojure.
 File suffix is used to determine what program to run.
@@ -3138,6 +3192,8 @@ Version 2017-12-27"
            ("rkt" . "racket")
            ("ml" . "ocaml")
            ("vbs" . "cscript")
+           ("exs" . "elixir")
+           ("ex" . "elixir")
            ("tex" . "pdflatex")
            ("latex" . "pdflatex")
            ("java" . "javac")
@@ -3152,22 +3208,23 @@ Version 2017-12-27"
     (setq -fdir (file-name-directory filename))
     (setq -fSuffix (file-name-extension -fname))
     (setq -prog-name (cdr (assoc -fSuffix -suffix-map)))
-    (setq -cmd-str (format "cd %s && %s \"%s\"" -fdir -prog-name -fname))
+    (setq -cat (if stdin-file (format "cat \"%s\" | " stdin-file) ""))
+    (setq -cmd-str (format "cd %s && %s %s \"%s\"" -fdir -cat -prog-name -fname))
     (cond
      ((chatgpt/file-has-shebang-p filename)
       (progn
 	(message "Running with Shebang")
-        (async-shell-command (format "cd %s && \"%s\"" -fdir -fname) "*Run this*" )))
+        (shell-command (format "cd %s && %s \"%s\"" -fdir -cat -fname) "*Run this*" )))
      ((string-equal -fSuffix "el") (load -fname))
      ((string-equal -fSuffix "java")
       (progn
-        (async-shell-command -cmd-str "*Run this*" )
-        (async-shell-command
+        (shell-command -cmd-str "*Run this*" )
+        (shell-command
          (format "java %s" (file-name-sans-extension (file-name-nondirectory -fname))))))
      (t (if -prog-name
             (progn
               (message "Running…")
-              (async-shell-command -cmd-str "*Run this*"))
+              (shell-command -cmd-str "*Run this*"))
           (message "No recognized program file suffix for this file."))))))
 
 
@@ -3183,12 +3240,29 @@ Derived from:
 URL `http://ergoemacs.org/emacs/elisp_run_current_file.html'
 Version 2017-12-27"
   (interactive)
+  (xah/run-this-file-on-buffer)
+
+(defun xah/run-this-file-stdin ()
+  "Execute the current file and pipe in the chosen file as stdin.
+For example, if the current buffer is x.py, then it'll call 「python x.py」 in a shell.
+The file can be Emacs Lisp, PHP, Perl, Python, Ruby, JavaScript, TypeScript, Bash, Ocaml, Visual Basic, TeX, Java, Clojure.
+File suffix is used to determine what program to run.
+
+If the file is modified or not saved, save it automatically before run.
+
+Derived from:
+URL `http://ergoemacs.org/emacs/elisp_run_current_file.html'
+Version 2017-12-27"
+  (interactive)
+  (xah/run-this-file-on-buffer (expand-file-name (read-file-name "Stdin: "))))
+
+(defun xah/run-this-file-on-buffer (&optional stdin-file)
   (progn
     (when (not (buffer-file-name)) (save-buffer))
     (when (buffer-modified-p) (save-buffer))
     (setq -fname (buffer-file-name))
     (if (y-or-n-p (format "Sure you want to run %s" -fname))
-      (xah/run-this-file-fn -fname))))
+      (xah/run-this-file-fn -fname stdin-file))))
 
 ;;; Themes
 ;; Disable previous theme, before enabling new one. Not fool-proof.
@@ -4110,6 +4184,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
      "x"  '(:wk "extra")
      "xx" #'xah/run-this-file
+     "xs" #'xah/run-this-file-stdin
      "xd"  '(:wk "decode")
      "xdb" #'base64-decode-region
      "xdu" #'xah-html-decode-percent-encoded-url
@@ -4122,7 +4197,6 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "xds" #'ponelat/split-lines-in-region
      "xes" #'ponelat/collapse-lines-in-region
 
-    "xs" #'ponelat/toggle-whitespace
 
     "m" #'hydra-volume/body
 

@@ -141,7 +141,8 @@ in {
 
 
 # Open ports in the firewall.
-# networking.firewall.allowedTCPPorts = [ ... ];
+  # 5173 is the default vite port. I needed to expose my local app for my phone
+# networking.firewall.allowedTCPPorts = [ 5173 ];
 # networking.firewall.allowedUDPPorts = [ ... ];
 # Or disable the firewall altogether.
 # networking.firewall.enable = false;
