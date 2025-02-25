@@ -74,6 +74,7 @@ in {
     pkgs.open-sans
     pkgs.corefonts
     pkgs.source-sans-pro
+    pkgs.inconsolata-nerdfont
     pkgs.font-awesome
     pkgs.emacs-all-the-icons-fonts
   ];
@@ -147,11 +148,13 @@ in {
     # stateVersion = "21.11";
 
     home.stateVersion = "21.11";
-    home.packages = with pkgs; [
+    home.packages = [
       # rnix-lsp
-      node2nix
-      playerctl
-      spotify
+      pkgs.node2nix
+      pkgs.playerctl
+      pkgs.spotify
+
+      unstable.signal-desktop
     ];
 
     # xdg.configFile."i3blocks/config".source = ./i3blocks.conf;
@@ -168,6 +171,8 @@ in {
     };
 
 
+
+    # services.dropbox.enable = true;
     # Dropbox (home-manager). Per https://nixos.wiki/wiki/Dropbox
     systemd.user.services.dropbox = {
       Unit = {
@@ -177,6 +182,7 @@ in {
         WantedBy = [ "default.target" ];
       };
       Service = {
+        Environment = [ "DISPLAY=" ];
         ExecStart = "${pkgs.dropbox}/bin/dropbox";
         Restart = "on-failure";
       };
@@ -445,7 +451,10 @@ in {
 
   environment.systemPackages = [
     # Dev stuff
-    pkgs.curl pkgs.wget pkgs.vim pkgs.git pkgs.fasd pkgs.zoxide pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
+    pkgs.curl pkgs.wget pkgs.git pkgs.fasd pkgs.zoxide pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
+
+    # pkgs.vim 
+    pkgs.neovim
 
     # JSON view in cli, like 'less'
     pkgs.jless
@@ -484,7 +493,7 @@ in {
     unstable.github-copilot-cli
 
     # Why not..?
-    pkgs.elixir
+    # pkgs.elixir
 
     # typescript-language-server doesn't play nicely with emacsWithPackages
     pkgs.nodePackages.typescript-language-server
