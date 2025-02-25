@@ -451,7 +451,7 @@ Version 2018-10-26"
   (let ($p1 $p2 $input-str $newStr)
     (if (use-region-p)
         (setq $p1 (region-beginning) $p2 (region-end))
-      (setq $p1 (line-beginning-position) $p2 (line-end-position)))
+      (setq $p1 (line-beginning-position) $p2 (+ 1 (line-end-position)))) ;; The +1 gives it the extra newline that visual lines seem to have
     (setq $input-str (buffer-substring-no-properties $p1 $p2))
     (setq $newStr (apply fn (cons $input-str args)))
     (if (string-equal $newStr $input-str)
@@ -490,6 +490,7 @@ becomes
 -----END CERTIFICATE----- "
   (interactive)
   (ponelat/replace-region #'ponelat/pretty-cert))
+
 
 ;;; URL stuff
 
@@ -542,6 +543,85 @@ becomes
     (setq
       avy-timeout-seconds 0.3
       avy-single-candidate-jump nil)))
+
+;; A function to sort lines based on the first whole number. Using sort-regexp-fields
+
+
+
+(progn
+  (defun ponelat/line-sort (lines)
+    "Sort lines based on fields, with numeric and non-numeric field handling.
+  Fields are prioritized from left to right, with numeric fields sorted numerically."
+    (sort lines #'ponelat/line-compare))
+
+  (defun ponelat/line-compare (line1 line2)
+    "Compare two lines field by field for sorting."
+    (let ((fields1 (ponelat/split-line-into-fields line1))
+          (fields2 (ponelat/split-line-into-fields line2)))
+      (ponelat/compare-fields fields1 fields2)))
+
+  (defun ponelat/split-line-into-fields (line)
+    "Split a line into fields, identifying numeric and non-numeric types."
+    (mapcar #'ponelat/identify-field-type 
+            (split-string line "-" t)))
+
+  (defun ponelat/identify-field-type (field)
+    "Determine if a field is numeric or non-numeric, 
+  and convert numeric fields to numbers for proper sorting."
+    (if (string-match-p "^[0-9]+\\(?:\\.[0-9]+\\)?$" field)
+        (string-to-number field)
+      field))
+
+  (defun ponelat/compare-fields (fields1 fields2)
+    "Recursively compare fields, handling numeric and non-numeric comparisons."
+    (cond 
+     ;; If no more fields, lines are equal
+     ((and (null fields1) (null fields2)) nil)
+     
+     ;; If one line runs out of fields first, it's considered smaller
+     ((null fields1) t)
+     ((null fields2) nil)
+     
+     ;; Compare current fields
+     ((equal (car fields1) (car fields2))
+      ;; If fields are equal, compare next fields
+      (ponelat/compare-fields (cdr fields1) (cdr fields2)))
+     
+     ;; Handle comparison of different field types
+     ((and (numberp (car fields1)) (numberp (car fields2)))
+      ;; Numeric fields: compare numerically
+      (< (car fields1) (car fields2)))
+     
+     ((numberp (car fields1)) t)  ; Numeric fields come before non-numeric
+     ((numberp (car fields2)) nil)
+     
+     ;; Non-numeric fields: lexicographic comparison
+     (t (string< (car fields1) (car fields2)))))
+
+  ;; The main function
+
+  (defun ponelat/sort-region-numbers ()
+    "Sort lines in the current region using a custom sorting method.
+Sorts lines based on numeric and non-numeric field comparisons."
+    (interactive)
+    (let* ((start (region-beginning))
+           (end (region-end))
+           (original-point (point))
+           (lines (buffer-substring-no-properties start end))
+           sorted-lines)
+      ;; Split into lines, sort, and rejoin
+      (setq sorted-lines 
+            (mapconcat 'identity 
+                       (ponelat/line-sort 
+			(split-string lines "\n" t)) 
+                       "\n"))
+      
+      ;; Replace region with sorted lines
+      (delete-region start end)
+      (insert sorted-lines)
+      
+      ;; Attempt to restore point position
+      (goto-char original-point))))
 
 ;;; Strings
 (use-package string-inflection)
@@ -642,7 +722,7 @@ Version 2017-01-11"
 
 ;;; Sound, mixer volume
 
-(defhydra hydra-volume (global-map "C-x -")
+(comment defhydra hydra-volume (global-map "C-x -")
   "Sound / Volume\n"
   ("k" (lambda () (interactive) (shell-command "pamixer -i 5")) "up")
   ("j" (lambda () (interactive) (shell-command "pamixer -d 5")) "down")
@@ -1434,6 +1514,12 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 ;;; JSON
 (use-package json-mode)
+
+;;; For JSONL files
+;; (prog
+;;   (require 'treesit
+;;   (use-package structured-log-mode
+;;   :straight (:host github :repo "lgfang/structured-log-mode"))))
 
 ;;; Nginx,HAproxy,Caddy Server
 (use-package caddyfile-mode)
@@ -3153,7 +3239,24 @@ Version 2019-01-18"
 
 (define-key package-menu-mode-map "a" #'package-menu-find-marks)
 
-(defun chatgpt/file-has-shebang-p (filename)
+
+;; (defvar my-last-command nil
+;;   "Stores the last interactive command with its arguments.")
+
+;; (defun ponelat/save-last-command ()
+;;   "Save the last interactive command and its arguments for reuse."
+;;   (interactive)
+;;   (setq my-last-command (cons last-command this-command-keys))
+;;   (message "Saved command: %s" (car my-last-command)))
+
+;; (defun ponelat/run-saved-command ()
+;;   "Run the saved command."
+;;   (interactive)
+;;   (if my-last-command
+;;       (call-interactively (car my-last-command))
+;;     (message "No command saved yet.")))
+
+(defun ponelat/file-has-shebang-p (filename)
   "Check if the file has a shebang line."
   (when (file-exists-p filename)
     (with-temp-buffer
@@ -3211,7 +3314,7 @@ Version 2017-12-27"
     (setq -cat (if stdin-file (format "cat \"%s\" | " stdin-file) ""))
     (setq -cmd-str (format "cd %s && %s %s \"%s\"" -fdir -cat -prog-name -fname))
     (cond
-     ((chatgpt/file-has-shebang-p filename)
+     ((ponelat/file-has-shebang-p filename)
       (progn
 	(message "Running with Shebang")
         (shell-command (format "cd %s && %s \"%s\"" -fdir -cat -fname) "*Run this*" )))
@@ -3240,7 +3343,7 @@ Derived from:
 URL `http://ergoemacs.org/emacs/elisp_run_current_file.html'
 Version 2017-12-27"
   (interactive)
-  (xah/run-this-file-on-buffer)
+  (xah/run-this-file-on-buffer))
 
 (defun xah/run-this-file-stdin ()
   "Execute the current file and pipe in the chosen file as stdin.
@@ -3876,6 +3979,36 @@ Version 2015-07-24"
 ;;; Template langs, mustache
 (use-package mustache-mode)
 
+(defmacro with-kill-ring-preserved (&rest body)
+  `(let ((kill-ring kill-ring)
+         (kill-ring-yank-pointer kill-ring-yank-pointer))
+     ,@body))
+
+(progn 
+  (defun map-string-line (str f)
+    (let* ((lines (split-string str "\n"))
+	   (lines-mapped (mapcar f lines)))
+      (string-join lines-mapped "\n")))
+
+  (defun ponelat/paste-template ()
+    "Will replace region of lines, with template for each line. Templte is gotten from kill-ring"
+    (interactive)
+    (with-kill-ring-preserved 
+     (let ((template (s-trim-right (car kill-ring))))
+       (ponelat/replace-region
+	(lambda (input-str)
+	  (format "%s\n" 
+		  (map-string-line (s-trim-right input-str) (lambda (line) (format template line))))))))))
+
+
+(defun ponelat/debug/store-region (start end)
+  "A debug functoin to help me figure out why `ponelat/replace-region' was acting strange"
+  (interactive "r")
+  (progn
+    (setq $_start start)
+    (setq $_end end )
+    (setq $_para (buffer-substring-no-properties start end) )
+    (message (format "$_start %s - $_end %s\n$_para:\n\"%s\"" $_start $_end $_para))))
 
  (progn
   ;;; Emacs-Commands.xml, execute project files
@@ -4168,7 +4301,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 ;;; Quit keys
      "q" #'quit-window)
 
-;;; Local leader (comma key) 
+;;; Local leader keys (comma) 
 
   (setq org-trello-current-prefix-keybinding "SPC ro")
 
@@ -4179,8 +4312,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "ii" #'org-narrow-to-subtree
      "io" #'widen
 
-    "aa" #'ponelat/insert-ledger-account-into-string
-    "ar" #'ponelat/insert-ledger-batch-rule
+     "aa" #'ponelat/insert-ledger-account-into-string
+     "ar" #'ponelat/insert-ledger-batch-rule
 
      "x"  '(:wk "extra")
      "xx" #'xah/run-this-file
@@ -4193,6 +4326,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "xeb" #'base64-encode-region
      "xeu" #'xah-html-encode-percent-encoded-url
      "xeU" (lambda () (interactive) (call-interactively 'xah-html-encode-percent-encoded-url))
+
+     "xp" #'ponelat/paste-template
 
      "xds" #'ponelat/split-lines-in-region
      "xes" #'ponelat/collapse-lines-in-region
