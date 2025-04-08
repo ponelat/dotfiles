@@ -35,6 +35,55 @@
 (defvar ponelat/org-roam-dir "~/Dropbox/org/roam" "My base ORG-MODE Roam folder.")
 (defvar ponelat/projects-dir "~/projects" "My base projects folder, used with PROJECTILE and others.")
 
+;;; Multi-Buffer Toggle (like vterm-toggle)
+
+(progn 
+  (require 'multi-buffer-toggle)
+
+  ;; Example 1: Toggle for Downloads folder
+  (mbt-define-toggle 
+   "downloads"
+   "Toggle between current buffer and downloads folder."
+   (lambda (buffer)
+     (when buffer
+       (with-current-buffer buffer
+	 (and (eq major-mode 'dired-mode)
+              (string= (expand-file-name default-directory)
+                       (expand-file-name "~/Downloads/"))))))
+   (lambda () (dired "~/Downloads/"))
+   (lambda (buffer)
+     (with-current-buffer buffer
+       ;; Optional setup, like sorting by date
+       (dired-sort-other "-lt"))))
+
+  ;; Example 4: Toggle for a specific project
+  ;; (mbt-define-toggle 
+  ;;  "project-notes"
+  ;;  "Toggle between current buffer and project notes."
+  ;;  (lambda (buffer)
+  ;;    (when buffer
+  ;;      (with-current-buffer buffer
+  ;; 	 (and (eq major-mode 'org-mode)
+  ;;             (string= (buffer-name) "project-notes.org")))))
+  ;;  (lambda () 
+  ;;    (find-file "~/projects/project-notes.org")))
+  
+
+  ;; Customize options for specific toggles
+  ;; (mbt-set-option "downloads" :fullscreen t)
+  ;; (mbt-set-option "scratch" :hide-method 'bury-buffer)
+
+  ;; Or use a prefix key map
+  ;; (defvar mbt-map (make-sparse-keymap)
+  ;;   "Keymap for multi-buffer-toggle commands.")
+  ;; (global-set-key (kbd "C-c t") mbt-map)
+  ;; (define-key mbt-map (kbd "d") 'mbt-toggle-downloads)
+  ;; (define-key mbt-map (kbd "o") 'mbt-toggle-documents)
+  ;; (define-key mbt-map (kbd "s") 'mbt-toggle-scratch)
+  ;; (define-key mbt-map (kbd "p") 'mbt-toggle-project-notes)
+
+  )
+
 
 (defun fdx/rename-current-buffer-file ()
   "Renames current buffer and file it is visiting. https://kundeveloper.com/blog/buffer-files/#:~:text=File%3A%20%3Dfdx%2Frename%2D,(or%20move%20the%20file)."
@@ -125,6 +174,15 @@
         '(request-message-level -1))
       (message "Tracing Requests disabled"))))
 
+;;; Ponelat Emacs lib (utilities and GPT)
+(comment progn
+  (add-to-list 'load-path (directory-file-name "~/projects/ponelat-emacs"))
+  (require 'ponelat-emacs))
+;; (use-package ponelat-emacs
+;;   :load-path ponelat-emacs-path
+;;   :ensure nil) 
+
+
 ;;; Utilities
 (defun ponelat/capitalize-first-char (&optional string)
   "Capitalize only the first character of the input STRING."
@@ -168,6 +226,11 @@
          (password (funcall (plist-get auth :secret)))
          (user (plist-get auth :user)))
     (list user password)))
+
+(defun ponelat/get-api-key (host)
+  "Return first password for a given host/secret in authinfo."
+  (cadr (ponelat/get-secret host)))
+
 
 (defun ponelat/get-secret-basic (host)
   "Return base64 encoded login:password from HOST in .authinfo."
@@ -311,6 +374,19 @@
   (add-to-list 'auto-mode-alist '("\\.?zshrc\\'" . sh-mode))
   (add-to-list 'auto-mode-alist '("\\.?profile\\'" . sh-mode))
   (add-to-list 'auto-mode-alist '("\\.?aliases\\'" . sh-mode)))
+
+(use-package vterm-toggle
+  :init (progn 
+    (add-hook 'vterm-mode-hook
+              (lambda ()
+		(evil-insert-state)))
+
+    (add-hook 'vterm-toggle-show-hook
+              (lambda ()
+		(when (derived-mode-p 'vterm-mode)
+		  (evil-insert-state))))))
+
+
 
 ;; Colors, CSS
 (defun xah-syntax-color-hex ()
@@ -1423,6 +1499,13 @@ Version 2019-06-11"
 (straight-use-package
   '(openapi-yaml-mode :type git :host github :repo "magoyette/openapi-yaml-mode"))
 
+(defun get-runpod-key () 
+  "Get's the API key inside of my authinfo file."
+  (let ((creds (auth-source-search :host "rest.runpod.io" :require '(:secret))))
+    (when creds
+      (funcall (plist-get (car creds) :secret)))
+    ))
+
 ;; Swagger UI(ish) in Emacs
 (use-package swagg
   :straight (:host github :repo "isamert/swagg.el")
@@ -1435,6 +1518,13 @@ Version 2019-06-11"
      (:name "Petstore3"
 	    :json "https://petstore3.swagger.io/api/v3/openapi.json"
 	    :base "https://petstore3.swagger.io/api/v3")
+     (:name "Ollama (local)"
+	    :json "file:///home/josh/Downloads/ollama-curated.json"
+	    :base "http://localhost:11434/api")
+     (:name "RunPod"
+	    :json "file:///home/josh/Downloads/runpod.openapi.json"
+	    ;; :header (Authorization \"Bearer secret-token\"))
+	    :base "https://rest.runpod.io/v1")
      (:name "SwaggerHub"
 	    :json "https://api.swaggerhub.com/apis/swagger-hub/registry-api/1.0.67"
 	    :base "https://api.swaggerhub.com")
@@ -1526,7 +1616,7 @@ Will use `projectile-default-project-name' .rest as the file name."
 
 
 ;;; Corfu completion
-(use-package corfu
+(comment use-package corfu
       :ensure t
       ;; Optional customizations
       :custom
@@ -1996,9 +2086,13 @@ module.exports = {
 
 ;;; npm
 (require 'json)
+
+;; Alist = [..concells] = '( (a . 1) (b . 2) )
 (defun alist-keys (alist)
   "Return the keys of ALIST."
   (mapcar 'car alist))
+
+(alist-get 'one '((one . 1) (two . 2)))
 
 (defun ponelat/last-dir (path) "
 get the last directory from PATH.
@@ -2284,7 +2378,7 @@ eg: /one/two => two
             ("C-M-#" . consult-register)
             ;; Other custom bindings
             ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-            ("<help> a" . consult-apropos)            ;; orig. apropos-command
+            ;; ("<help> a" . consult-apropos)            ;; orig. apropos-command
             ;; M-g bindings (goto-map)
             ("M-g e" . consult-compile-error)
             ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
@@ -2430,6 +2524,40 @@ DEFS is a plist associating completion categories to commands."
     (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
     (projectile-mode 1)))
 
+(defun ponlat/create-new-project (name)
+  "Create a new project under ~/projects/NAME, initialize git, and add it to Projectile."
+  (interactive "sProject name: ")
+  (let* ((base-dir (expand-file-name "~/projects/"))
+	 (project-path (expand-file-name name base-dir)))
+    (unless (file-directory-p base-dir)
+      (make-directory base-dir t))
+    (unless (file-directory-p project-path)
+      (make-directory project-path t))
+    (unless (file-exists-p (expand-file-name ".git" project-path))
+      (let ((default-directory project-path))
+	(shell-command "git init")
+	))
+    (with-temp-file (expand-file-name ".gitignore" project-path)
+      (insert "# Empty project")
+      ;; Save .gitingore
+      (write-file (expand-file-name ".gitignore" project-path)))
+
+    (with-temp-file (expand-file-name "README.md" project-path)
+      (insert "# Empty project")
+      ;; Save README.md
+      (write-file (expand-file-name "README.md" project-path)))
+
+    ;; Add to known projects and switch to it
+    (projectile-add-known-project project-path)
+    (find-file (expand-file-name "README.md" project-path))
+    ;; (projectile-switch-project-by-name project-path)
+
+
+
+    ))
+
+
+
 ;;; Fuzzy, ido
 (comment use-package counsel-projectile
   :ensure t
@@ -2505,6 +2633,15 @@ DEFS is a plist associating completion categories to commands."
   (add-to-list 'auto-mode-alist '("\\.confluence$" . jira-markup-mode))
   (add-to-list 'auto-mode-alist '("\\.jira" . jira-markup-mode))
   (add-to-list 'auto-mode-alist '("/itsalltext/.*jira.*\\.txt$" . jira-markup-mode)))
+
+;;; AI / GPT
+
+(use-package gptel
+  :ensure t
+  :config
+  (setq gptel-api-key (ponelat/get-api-key "api.openai.com")))
+
+
 
 ;;; GitHub
 (use-package copilot
@@ -3267,7 +3404,7 @@ Version 2019-01-18"
 
 
 ;;; Run current file
-(defun xah/run-this-file-fn (filename &optional stdin-file
+(defun xah/run-this-file-fn (filename &optional args stdin-file
 				      )
   "Execute FILENAME
 The file can be Emacs Lisp, PHP, Perl, Python, Ruby, JavaScript, TypeScript, Bash, Ocaml, Visual Basic, TeX, Java, Clojure.
@@ -3312,12 +3449,13 @@ Version 2017-12-27"
     (setq -fSuffix (file-name-extension -fname))
     (setq -prog-name (cdr (assoc -fSuffix -suffix-map)))
     (setq -cat (if stdin-file (format "cat \"%s\" | " stdin-file) ""))
-    (setq -cmd-str (format "cd %s && %s %s \"%s\"" -fdir -cat -prog-name -fname))
+    (setq -cli-args (if args (format "%s" args) ""))
+    (setq -cmd-str (format "cd %s && %s %s \"%s\" %s" -fdir -cat -prog-name -fname -cli-args))
     (cond
      ((ponelat/file-has-shebang-p filename)
       (progn
 	(message "Running with Shebang")
-        (shell-command (format "cd %s && %s \"%s\"" -fdir -cat -fname) "*Run this*" )))
+        (shell-command (format "cd %s && %s \"%s\" %s" -fdir -cat -fname -cli-args) "*Run this*" )))
      ((string-equal -fSuffix "el") (load -fname))
      ((string-equal -fSuffix "java")
       (progn
@@ -3357,15 +3495,30 @@ Derived from:
 URL `http://ergoemacs.org/emacs/elisp_run_current_file.html'
 Version 2017-12-27"
   (interactive)
-  (xah/run-this-file-on-buffer (expand-file-name (read-file-name "Stdin: "))))
+  (xah/run-this-file-on-buffer nil (expand-file-name (read-file-name "Stdin: "))))
 
-(defun xah/run-this-file-on-buffer (&optional stdin-file)
+
+(defun xah/run-this-file-with-args ()
+  "Execute the current file and applys arguments to it.
+For example, if the current buffer is x.py, then it'll call 「python x.py」 in a shell.
+The file can be Emacs Lisp, PHP, Perl, Python, Ruby, JavaScript, TypeScript, Bash, Ocaml, Visual Basic, TeX, Java, Clojure.
+File suffix is used to determine what program to run.
+
+If the file is modified or not saved, save it automatically before run.
+
+Derived from:
+URL `http://ergoemacs.org/emacs/elisp_run_current_file.html'
+Version 2017-12-27"
+  (interactive)
+  (xah/run-this-file-on-buffer (read-string "Args: ") nil ))
+
+(defun xah/run-this-file-on-buffer (&optional args stdin-file)
   (progn
     (when (not (buffer-file-name)) (save-buffer))
     (when (buffer-modified-p) (save-buffer))
     (setq -fname (buffer-file-name))
     (if (y-or-n-p (format "Sure you want to run %s" -fname))
-      (xah/run-this-file-fn -fname stdin-file))))
+      (xah/run-this-file-fn -fname args stdin-file))))
 
 ;;; Themes
 ;; Disable previous theme, before enabling new one. Not fool-proof.
@@ -3648,6 +3801,10 @@ Version 2017-12-27"
    (enable-theme theme))
 
 ;;; Window stuff / Golden ratio
+
+(progn ;; Set up winner mode, so that you can "Undo" window configurations
+  (winner-mode 1))
+
 (progn
   ;; This will auto-resize windows as you move between them.
   (use-package zoom
@@ -3802,6 +3959,10 @@ Version 2015-07-24"
     "Disable `flycheck-mode'."
     (flycheck-mode -1))
   (add-hook 'emacs-lisp-mode-hook #'ponelat/disable-flycheck-mode))
+
+;;; Direnv (and envrc)
+(use-package envrc
+  :hook (after-init . envrc-global-mode))
 
 (use-package direnv)
 
@@ -4246,7 +4407,10 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "p" #'projectile-command-map
      "w" #'evil-window-map
      "s" #'save-buffer
-     "l" #'avy-goto-line
+     ;; "l" #'ponelat/llm-insert-completion; Found in ponelat-emacs lib
+     "L" #'gptel
+     "u" #'winner-undo
+     "U" #'winner-redo
      "b" #'consult-buffer
      "a" #'consult-ripgrep
      "j" #'execute-extended-command
@@ -4296,7 +4460,9 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      ";" #'delete-other-windows
      "i" #'consult-imenu
      "d" #'dired-jump
-     "e" #'projectile-run-eshell
+     "e" #'vterm-toggle
+     "E" #'vterm-toggle-cd
+     "D" #'mbt-toggle-downloads
 
 ;;; Quit keys
      "q" #'quit-window)
@@ -4317,6 +4483,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 
      "x"  '(:wk "extra")
      "xx" #'xah/run-this-file
+     "xa" #'xah/run-this-file-with-args
      "xs" #'xah/run-this-file-stdin
      "xd"  '(:wk "decode")
      "xdb" #'base64-decode-region
@@ -4466,10 +4633,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "ri" #'org-roam-insert)
 
 ;;; Key go or g
-   (general-define-key
-    :prefix "C-SPC"
-     "ga" '(:wk "avy")
-     "gas" #'avy-goto-char-timer)
+   (general-def 'normal 
+     "s" #'avy-goto-char-timer)
 
    (general-define-key
     :states '(normal visual)
@@ -4511,18 +4676,51 @@ In the root of your project get a file named .emacs-commands.xml with the follow
    :keymaps 'override
    "r" #'evil-replace-with-register))
 
+;;; Help function
+(use-package helpful
+  :config
+  (progn 
+    ;; Note that the built-in `describe-function' includes both functions
+    ;; and macros. `helpful-function' is functions only, so we provide
+    ;; `helpful-callable' as a drop-in replacement.
+    (global-set-key (kbd "C-h f") #'helpful-callable)
+
+    (global-set-key (kbd "C-h v") #'helpful-variable)
+    (global-set-key (kbd "C-h k") #'helpful-key)
+    (global-set-key (kbd "C-h x") #'helpful-command)
+
+    ;; Lookup the current symbol at point. C-c C-d is a common keybinding
+    ;; for this in lisp modes.
+    (global-set-key (kbd "C-c C-d") #'helpful-at-point)
+
+    ;; Look up *F*unctions (excludes macros).
+    ;;
+    ;; By default, C-h F is bound to `Info-goto-emacs-command-node'. Helpful
+    ;; already links to the manual, if a function is referenced there.
+    (global-set-key (kbd "C-h F") #'helpful-function)
+
+    )
+
+  )
+
+;; Enable rich annotations using the Marginalia package
+
 (progn
   (use-package marginalia
     :ensure t
-    :config
-    (marginalia-mode))
+    :bind (:map minibuffer-local-map
+		("M-A" . marginalia-cycle))
+    :init
+    (marginalia-mode 1))
 
   (use-package embark
     :ensure t
 
     :bind
-    (("C-S-a" . embark-act)       ;; pick some comfortable binding
-      ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+    (("C-a" . #'embark-act)       ;; pick some comfortable binding
+     ("M-." . #'embark-dwim)
+     ("C-c C-e" . #'embark-export)
+     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
 
     :init
 
@@ -4545,14 +4743,33 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     ;; if you want to have consult previews as you move around an
     ;; auto-updating embark collect buffer
     :hook
-    (embark-collect-mode . consult-preview-at-point-mode)))
+    (embark-collect-mode . consult-preview-at-point-mode))
+
+
+  )
 
 (use-package nix-mode
+  :after lsp-mode
+  :ensure t
   :general
   (:keymaps 'nix-mode-map
-   "C-c C-c" (lambda () (interactive) (async-shell-command "sudo nixos-rebuild switch" "*NixOS Rebuild*"))
-   "C-c C-r" (lambda () (interactive) (async-shell-command (format "nix eval -f %s" buffer-file-name ) "*NixOS Rebuild*")))
-  :mode ("\\.nix\\'"))
+	    "C-c C-c" (lambda () (interactive) (async-shell-command "sudo nixos-rebuild switch" "*NixOS Rebuild*"))
+	    "C-c C-r" (lambda () (interactive) (async-shell-command (format "nix eval -f %s" buffer-file-name ) "*NixOS Rebuild*")))
+  :hook
+  (nix-mode . lsp-deferred) ;; So that envrc mode will work
+  :custom
+  (lsp-disabled-clients '((nix-mode . nix-nil))) ;; Disable nil so that nixd will be used as lsp-server
+  :config
+  (setq lsp-nix-nixd-server-path "nixd"
+	lsp-nix-nixd-formatting-command [ "nixfmt" ]
+	lsp-nix-nixd-nixpkgs-expr "import <nixpkgs> { }"
+	;; lsp-nix-nixd-nixos-options-expr "(builtins.getFlake \"/home/nb/nixos\").nixosConfigurations.mnd.options"
+	;; lsp-nix-nixd-home-manager-options-expr "(builtins.getFlake \"/home/nb/nixos\").homeConfigurations.\"nb@mnd\".options"
+	))
+
+(add-hook 'nix-mode-hook
+         ;; enable autocompletion with company
+         (setq company-idle-delay 0.1))
 
 ;; (use-package company-nixos-options
 ;;   :config
@@ -4592,9 +4809,137 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1))))
 
 
+;;; Helpers to AI-ify init.el
+
+(progn  
+  (require 'cl-lib)
+
+  (defun parse-init-el ()
+    "Parse the current buffer for top-level forms from an Emacs Lisp file (like init.el).
+Return a list of structures describing each form. Each element is a plist with keys
+like :type (defun/use-package/setq/other) and other relevant info.
+
+Use this function in a buffer visiting your init.el, e.g.:
+  M-x parse-init-el
+Returns a list of form-nodes. In non-interactive use, pass the buffer or
+switch to the target buffer first."
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (let (results)
+	(condition-case nil
+            (while t
+              (let ((form (read (current-buffer)))) ; read next top-level form
+		(push (parse-init-el--analyze-form form) results)))
+          (end-of-file nil))
+	(setq results (nreverse results))
+	(when (called-interactively-p 'any)
+          (message "Parsed %d top-level forms." (length results)))
+	results)))
+
+  (defun parse-init-el--analyze-form (form)
+    "Analyze a single top-level FORM and return a plist describing it.
+
+Examples of returned plist:
+ (:type defun :name foo :args (...) :body (...))
+ (:type use-package :package helm :body (...))
+ (:type setq :vars ((foo 42) (bar 99)))
+ (:type other :form ...)"
+    (cond
+     ;; (defun foo (...) ...)
+     ((and (listp form) (eq (car form) 'defun))
+      (list :type 'defun
+            :name (cadr form)
+            :args (caddr form)
+            :body (cdddr form)))
+
+     ;; (use-package helm :config ...)
+     ((and (listp form) (eq (car form) 'use-package))
+      (list :type 'use-package
+            :package (cadr form)
+            :body (cddr form)))
+
+     ;; (setq foo 42 bar 99)
+     ((and (listp form) (eq (car form) 'setq))
+      (list :type 'setq
+            :vars (cl-loop for (var val) on (cdr form) by #'cddr
+                           collect (list var val))))
+
+     ;; (setq-default foo 42 bar 99)
+     ((and (listp form) (eq (car form) 'setq-default))
+      (list :type 'setq-default
+            :vars (cl-loop for (var val) on (cdr form) by #'cddr
+                           collect (list var val))))
+
+     ;; Everything else
+     (t (list :type 'other
+              :form form)))) 
+
+  (defun print-parsed-forms (parsed-forms)
+    "Print PARSED-FORMS from `parse-init-el' in a human-readable summary."
+    (interactive)
+    (dolist (entry parsed-forms)
+      (let ((type (plist-get entry :type)))
+	(princ (format "Type: %s\n" type))
+	(cl-case type
+          (defun
+              (princ (format "  name: %S\n  args: %S\n  body: %S\n\n"
+                             (plist-get entry :name)
+                             (plist-get entry :args)
+                             (plist-get entry :body))))
+          (use-package
+            (princ (format "  package: %S\n  body: %S\n\n"
+                           (plist-get entry :package)
+                           (plist-get entry :body))))
+          (setq
+           (princ (format "  vars: %S\n\n"
+                          (plist-get entry :vars))))
+          (setq-default
+           (princ (format "  vars: %S\n\n"
+                          (plist-get entry :vars))))
+          (otherwise
+           (princ (format "  form: %S\n\n"
+                          (plist-get entry :form)))))))) []
+
+  (defun visualize-forms-as-dot (parsed-forms)
+    "Generate a .dot-graph string from PARSED-FORMS for approximate visualization.
+You can paste the output into an external 'dot' processor or Graphviz viewer."
+    (interactive)
+    (concat
+     "digraph init_el {\n"
+     "  rankdir=LR;\n"  ;; left-to-right, or remove if you prefer top-down
+     (mapconcat
+      (lambda (entry)
+	(let ((type (plist-get entry :type))
+              ;; Minimal label text
+              (label (pcase (plist-get entry :type)
+                       ('defun (format "defun %s" (plist-get entry :name)))
+                       ('use-package (format "use-package %s" (plist-get entry :package)))
+                       ('setq "setq")
+                       ('setq-default "setq-default")
+                       (_ "other"))))
+          ;; Just output a single node with that label. 
+          ;; A real graph might connect edges, e.g. defun name -> use-package that references it. 
+          (format "  \"%s\";\n" (replace-regexp-in-string "\"" "'" label))))
+      parsed-forms
+      "")
+     "}")) 
+
+;;; Example helper to show the dot string in a new buffer:
+  (defun parse-and-show-dot ()
+    "Parse init.el top-level forms in the current buffer and show a dot-graph in a new buffer."
+    (interactive)
+    (let ((forms (parse-init-el)))
+      (switch-to-buffer-other-window "*InitEl-Dot*")
+      (erase-buffer)
+      (insert (visualize-forms-as-dot forms))
+      (goto-char (point-min))
+      (message "Generated *.dot representation of parsed forms."))))
+
 
 ;;; Custom.el file
 (load custom-file 'noerror)
 (put 'narrow-to-region 'disabled nil)
 ;;; init.el ends here
 (provide 'init)
+ 

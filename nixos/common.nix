@@ -157,6 +157,10 @@ in {
       unstable.signal-desktop
     ];
 
+    home.sessionPath = [
+     "$HOME/bin" 
+    ];
+
     # xdg.configFile."i3blocks/config".source = ./i3blocks.conf;
     #
     #  home.file.".gdbinit".text = ''
@@ -265,7 +269,7 @@ in {
       };
       aliases = {
         aa = "add";
-        cm = "commit -m";
+        cm = "commit -sS -m";
         co = "checkout";
         di = "diff";
       };
@@ -284,6 +288,7 @@ in {
             # pkgs.emacs-lsp-booster
 
 
+
             # Used in LSP mode
             # pkgs.nodePackages.typescript-language-server
             pkgs.nodePackages.typescript
@@ -293,6 +298,7 @@ in {
             pkgs.python311Packages.python-lsp-server
             # pkgs.rustup
             pkgs.nodePackages.bash-language-server
+            pkgs.nixd
           ]
         )
       );
@@ -312,6 +318,7 @@ in {
             # "j" = "fasd_cd -d";
         "cs" = "git status || ls";
         "em" = "emacsclient -c -a ''";
+        "n" = "nvim";
         # Moved the following into shellInit as a function
         # ",," = "nix-shell -p";
       };
@@ -544,6 +551,10 @@ in {
     pkgs.zoom-us
 
   ];
+
+  ## Direnv + Nix
+  programs.direnv.enable = true;
+  programs.direnv.nix-direnv.enable = true;
 
   services.xserver = {
     enable = true;
