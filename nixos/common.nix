@@ -57,10 +57,6 @@ in {
     /home/josh/projects/dotfiles/nixos/zsa-keyboard-flashing.nix
   ];
 
-
-  # Set your time zone. This is best in hardware specific. For when I want servers
-  # time.timeZone = "Africa/Johannesburg";
-
   # This is to set nixos rtc to local time to help with dual booting windows and linux
   # Curtesy of Papa
   time.hardwareClockInLocalTime = true;
@@ -147,6 +143,12 @@ in {
   home-manager.users.josh = { pkgs, ... }: {
     # stateVersion = "21.11";
 
+    # Needed for auto-time zone, but going with manual for now. 
+    # dconf.settings = {
+    #   "org/gnome/desktop/datetime" = { automatic-timezone = true; };
+    #   "org/gnome/system/location" = { enabled = true; };
+    # };
+
     home.stateVersion = "21.11";
     home.packages = [
       # rnix-lsp
@@ -192,6 +194,41 @@ in {
       };
     };
 
+
+    # Emacs (probably need to add in the packages here at some point)
+    programs.emacs = {
+      enable = true;
+      package = with pkgs; (
+        (emacsPackagesFor emacs).emacsWithPackages (
+          epkgs: [
+            epkgs.vterm
+            epkgs.pdf-tools
+            epkgs.treesit-grammars.with-all-grammars
+            # Consider: https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
+            # pkgs.emacs-lsp-booster
+
+            # Used in LSP mode
+            # pkgs.nodePackages.typescript-language-server
+            pkgs.nodePackages.typescript
+            pkgs.elixir
+            pkgs.elixir-ls
+            pkgs.rust-analyzer
+            pkgs.python311Packages.python-lsp-server
+            pkgs.svelte-language-server
+            # pkgs.rustup
+            pkgs.nodePackages.bash-language-server
+            pkgs.nixd
+          ]
+        )
+      );
+    };
+
+    services.emacs = {
+      enable = true;
+      package = pkgs.emacs;
+      defaultEditor = true;
+    };
+
     xdg.configFile = {
 
       # "inkscape" = {
@@ -224,37 +261,39 @@ in {
 
       "alacritty/alacritty.toml" = {
         text =''
-            [colors.bright]
-            black = "0x828bb8"
-            blue = "0x82aaff"
-            cyan = "0xb4f9f8"
-            green = "0xc3e88d"
-            magenta = "0xff966c"
-            red = "0xff98a4"
-            white = "0x5f8787"
-            yellow = "0xffc777"
+	    [colors.bright]
+	    black = "0x828bb8"
+	    blue = "0x82aaff"
+	    cyan = "0xb4f9f8"
+	    green = "0xc3e88d"
+	    magenta = "0xff966c"
+	    red = "0xff98a4"
+	    white = "0x5f8787"
+	    yellow = "0xffc777"
 
-            [colors.cursor]
-            cursor = "0x808080"
-            text = "0x7f85a3"
+	    [colors.cursor]
+	    cursor = "0x808080"
+	    text = "0x7f85a3"
 
-            [colors.normal]
-            black = "0x444a73"
-            blue = "0x3e68d7"
-            cyan = "0x86e1fc"
-            green = "0x4fd6be"
-            magenta = "0xfc7b7b"
-            red = "0xff5370"
-            white = "0xd0d0d0"
-            yellow = "0xffc777"
+	    [colors.normal]
+	    black = "0x444a73"
+	    blue = "0x3e68d7"
+	    cyan = "0x86e1fc"
+	    green = "0x4fd6be"
+	    magenta = "0xfc7b7b"
+	    red = "0xff5370"
+	    white = "0xd0d0d0"
+	    yellow = "0xffc777"
 
-            [colors.primary]
-            background = "0x1e2030"
-            foreground = "0x7f85a3"
+	    [colors.primary]
+	    background = "0x1e2030"
+	    foreground = "0x7f85a3"
 
-            [shell]
-            args = ["tmux", "new-session", "-A", "-s", "general"]
-            program = "/usr/bin/env"
+	    [terminal]
+
+	    [terminal.shell]
+	    args = ["tmux", "new-session", "-A", "-s", "general"]
+	    program = "/usr/bin/env"
         '';
       };
 
@@ -275,40 +314,6 @@ in {
       };
     };
 
-    # Emacs (probably need to add in the packages here at some point)
-    programs.emacs = {
-      enable = true;
-      package = with pkgs; (
-        (emacsPackagesFor emacs29).emacsWithPackages (
-          epkgs: [
-            epkgs.vterm
-            epkgs.pdf-tools
-            epkgs.treesit-grammars.with-all-grammars
-            # Consider: https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
-            # pkgs.emacs-lsp-booster
-
-
-
-            # Used in LSP mode
-            # pkgs.nodePackages.typescript-language-server
-            pkgs.nodePackages.typescript
-            pkgs.elixir
-            pkgs.elixir-ls
-            pkgs.rust-analyzer
-            pkgs.python311Packages.python-lsp-server
-            # pkgs.rustup
-            pkgs.nodePackages.bash-language-server
-            pkgs.nixd
-          ]
-        )
-      );
-    };
-
-    # services.emacs = {
-    #   enable = true;
-    #   package = pinned.emacsPgtkGcc;
-    #   defaultEditor = true;
-    # };
 
     programs.fish = {
       enable = true;
@@ -466,8 +471,15 @@ in {
     # JSON view in cli, like 'less'
     pkgs.jless
 
+    # XAN = CSV cli tool, with power
+    unstable.xan
+
+    # Like sqlite... maybe better for adhoc operations on CSV??
+    pkgs.duckdb
+
     # XF86 window system
     pkgs.xclip
+
 
     # Screenshot. I just can't use it, so frustrating. 
     # pkgs.ksnip
@@ -491,13 +503,13 @@ in {
     # Audio
     pkgs.rnnoise-plugin
 
-    pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger
+    pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger pkgs.hledger
     #pdflatex
-    pkgs.nodejs-18_x
+    pkgs.nodejs_22
     pkgs.cargo
     unstable.bun
     unstable.deno
-    unstable.github-copilot-cli
+    unstable.gh-copilot
 
     # Why not..?
     # pkgs.elixir
@@ -531,6 +543,10 @@ in {
     # pkgs.teams
     unstable.obsidian
     unstable.google-chrome
+
+    # For an agent that can help code
+    unstable.opencode
+    
     pkgs.deluge
     pkgs.obs-studio
     pkgs.vlc
@@ -542,6 +558,7 @@ in {
     # # Gnome Extensions
     # pkgs.gnomeExtensions.forge
     pkgs.gnome.gnome-tweaks
+    unstable.gnome-sound-recorder
 
     # Unstable
     # unstable.gnomeExtensions.pop-shell

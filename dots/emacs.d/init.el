@@ -37,7 +37,7 @@
 
 ;;; Multi-Buffer Toggle (like vterm-toggle)
 
-(progn 
+(progn
   (require 'multi-buffer-toggle)
 
   ;; Example 1: Toggle for Downloads folder
@@ -160,6 +160,7 @@
  gc-cons-threshold (* 100 1024 1024)
  read-process-output-max (* 1024 1024))
 
+
 ;; Disable
 (defun ponelat/toggle-trace-request ()
   "Toggles on/off tracing of HTTP requests."
@@ -265,6 +266,8 @@
 
 ;;; Revert buffer/file reload
 (global-set-key  (kbd "C-x RET RET") (lambda () (interactive) (revert-buffer t t nil)))
+
+
 
 (defun ponelat/copy-file-from-downloads ()
   "It copies a file from ~/Downloads."
@@ -820,14 +823,12 @@ Version 2017-01-11"
   (setq visual-fill-column-width (+ (or visual-fill-column-width 0) 10)))
 
 
-(progn
-  (defhydra hydra-window-resize (global-map "C-x {")
-    "zoom"
-    ("{" shrink-window-horizontally "shrink")
-    ("}" enlarge-window-horizontally "enlarge"))
-  (global-set-key (kbd "C-x }") 'hydra-window-resize/body))
+(defhydra hydra-window-resize (global-map "C-x {")
+	 "zoom"
+	 ("{" shrink-window-horizontally "shrink")
+	 ("}" enlarge-window-horizontally "enlarge"))
 
-(defhydra ponelat/hydra/open-notes (:idle 1.0 :color blue)
+(comment defhydra ponelat/hydra/open-notes (:idle 1.0 :color blue)
   "Org files"
   ("o" (ponelat/open-notes "office.org") "office")
   ("t" (ponelat/open-notes "travel.org") "travel")
@@ -844,7 +845,7 @@ Version 2017-01-11"
   ("e" (ponelat/open-notes "personal.org") "personal")
   ("x" (ponelat/open-notes "phoenix.org") "phoenix coffee"))
 
-(defhydra hydra-string-case (global-map "C-c C-s")
+(comment defhydra hydra-string-case (global-map "C-c C-s")
   "string case"
   ("s" string-inflection-all-cycle "all cycle"))
 
@@ -876,8 +877,7 @@ Version 2017-01-11"
   (global-set-key (kbd "C-c l f") #'edit-file/body)
   (global-set-key (kbd "C-c s") 'hydra-string-case/body))
 
-(use-package diminish
-  )
+(use-package diminish)
 
 ;(comment use-package ace-window
 ;  :bind (("M-p" . ace-window))
@@ -1174,6 +1174,16 @@ Version 2017-01-11"
 ;;; Lisp, paredit
 (use-package elisp-slime-nav
   :config (add-hook 'emacs-lisp-mode-hook 'turn-on-elisp-slime-nav-mode))
+
+(defun ponelat/wrap-sexp ()
+  "Wrap the current s-expression in a new s-expression."
+  (interactive)
+  (paredit-backward-up)
+  (paredit-wrap-sexp)
+  (insert " ")
+  (backward-char)
+  (evil-insert 1)
+  (company-complete))  ; Move to a new line after wrapping.
 
 (use-package racket-mode)
 (use-package pollen-mode)
@@ -1546,6 +1556,7 @@ Will use `projectile-default-project-name' .rest as the file name."
     (find-file scratch-file)))
 
 (use-package company-restclient
+  :after 'company
   :config
   (add-to-list 'company-backends 'company-restclient))
 
@@ -1576,9 +1587,6 @@ Will use `projectile-default-project-name' .rest as the file name."
   (setq web-mode-markup-indent-offset 2
         web-mode-css-indent-offset 2
         web-mode-code-indent-offset 2))
-
-;; aligns annotation to the right hand side
-(setq company-tooltip-align-annotations t)
 
 
 ;;; UML PlantUML
@@ -1614,9 +1622,8 @@ Will use `projectile-default-project-name' .rest as the file name."
 ;;; Nginx,HAproxy,Caddy Server
 (use-package caddyfile-mode)
 
-
 ;;; Corfu completion
-(comment use-package corfu
+(use-package corfu
       :ensure t
       ;; Optional customizations
       :custom
@@ -1630,7 +1637,7 @@ Will use `projectile-default-project-name' .rest as the file name."
       (corfu-on-exact-match nil)      ; Don't auto expand tempel snippets
       ;; Optionally use TAB for cycling, default is `corfu-complete'.
       :bind (:map corfu-map
-                  ("M-SPC"      . corfu-insert-separator)
+                  ("C-SPC"      . corfu-insert-separator)
                   ("TAB"        . corfu-next)
                   ([tab]        . corfu-next)
                   ("S-TAB"      . corfu-previous)
@@ -1991,6 +1998,7 @@ module.exports = {
     (global-flycheck-mode))
 
 ;; So that we can access `./node_modules/.bin/eslint` mostly
+
 (use-package add-node-modules-path
   :init
   (progn
@@ -2047,34 +2055,37 @@ module.exports = {
 ;;   (lambda ()
 ;;     (add-hook 'after-save-hook 'cider-load-buffer nil 'make-it-local)))
 
-;;; Autocomplete, company, snippets, ivy, helm, company, etc
-
 ;;; Git, magit
 (use-package magit)
 
-(use-package company
+(comment 
+ (global-set-key "\t" #'completion-at-point))
 
+;;; Autocomplete, company, snippets, ivy, helm, company, etc
+(comment use-package company
   :config
   (progn
     (setq
       evil-complete-next-func 'company-complete-common-or-cycle
       evil-complete-previous-func 'company-complete-common-or-cycle
-      company-global-modes '(not magit-mode))
+      company-global-modes '(not magit-mode)
+      ;; aligns annotation to the right hand side
+      company-tooltip-align-annotations t)
     (global-company-mode)
-    (define-key company-mode-map (kbd "TAB") 'company-complete)
+    ;; (define-key company-mode-map (kbd "TAB") 'company-complete)
     (define-key company-active-map (kbd "<tab>") 'company-complete-common-or-cycle)
     (define-key company-active-map (kbd "C-n") 'company-select-next-or-abort)
     (define-key company-active-map (kbd "C-s") 'company-search-mode)
     (define-key company-active-map (kbd "C-h") nil)
     (define-key company-active-map (kbd "C-p") 'company-select-previous-or-abort)
-    (define-key company-active-map (kbd "C-s") 'company-filter-candidates)
-
+    ;; (define-key company-active-map (kbd "C-s") 'company-filter-candidates)
     (define-key company-active-map (kbd "C-w") 'nil)
-
-    (define-key company-search-map (kbd "C-n") 'company-select-next-or-abort)
-    (define-key company-search-map (kbd "C-p") 'company-select-previous-or-abort)
-
     (setq company-idle-delay nil)))
+
+;; Conflicts with company-mode
+(use-package cape
+  :ensure t)
+
 
 (use-package yasnippet
   :init (setq yas-snippet-dirs
@@ -2239,30 +2250,39 @@ eg: /one/two => two
   :config
   (global-fasd-mode 1))
 
-
 ;;; Vertico
-(progn
-  (use-package emacs
-    :init
-    ;; Add prompt indicator to `completing-read-multiple'.
-    (defun crm-indicator (args)
-      (cons (concat "[CRM] " (car args)) (cdr args)))
-    (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+(use-package emacs
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  (defun crm-indicator (args)
+    (cons (concat "[CRM] " (car args)) (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
-    ;; Grow and shrink minibuffer
-    (setq resize-mini-windows t)
+  ;; Require emacs 30+
+  ;; (read-extended-command-predicate #'command-completion-default-include-p)
+  ;; Grow and shrink minibuffer
+  (setq resize-mini-windows t)
 
-    ;; Do not allow the cursor in the minibuffer prompt
-    (setq minibuffer-prompt-properties
-      '(read-only t cursor-intangible t face minibuffer-prompt))
-    (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+  ;; May also require v30+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  ;; (tab-always-indent 'complete)
 
-    ;; Enable recursive minibuffers
-    (setq enable-recursive-minibuffers t))
+  ;; Emacs 30 and newer: Disable Ispell completion function.
+  ;; Try `cape-dict' as an alternative.
+  ;; (text-mode-ispell-word-completion nil)
 
-  ;; Persist history over Emacs restarts. Vertico sorts by history position.
-  (use-package savehist :init (savehist-mode))
-  (use-package recentf :init (recentf-mode))
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+	'(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
+
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist :init (savehist-mode))
+(use-package recentf :init (recentf-mode))
 
 (use-package orderless
   :demand t
@@ -2346,161 +2366,164 @@ eg: /one/two => two
         orderless-component-separator #'orderless-escapable-split-on-space ;; allow escaping space with backslash!
         orderless-style-dispatchers '(+orderless-dispatch)))
 
-  ;; Enable vertico
-  (use-package vertico
-    :init
-    (vertico-mode)
-    :bind
-    (:map vertico-map
-      ("C-j" . #'vertico-next)
-      ("C-k" . #'vertico-previous)
-      ("C-y" . #'vertico-save)))
+;; Enable vertico
+(use-package vertico
+  :init
+  (vertico-mode)
+  :bind
+  (:map vertico-map
+	("C-j" . #'vertico-next)
+	("C-k" . #'vertico-previous)
+	("C-y" . #'vertico-save)))
 
-  ;; Example configuration for Consult
-  (use-package consult
-    ;; Replace bindings. Lazily loaded due by `use-package'.
-    :bind (;; C-c bindings (mode-specific-map)
-            ("C-*" . ponelat/swiper-region-or-symbol)
-            ("C-&" . (lambda () (interactive) (rg (thing-at-point-or-mark 'symbol) "*.*" (projectile-project-root))))
-
-            ("C-c h" . consult-history)
-            ("C-c m" . consult-mode-command)
-            ("C-c b" . consult-bookmark)
-            ("C-c k" . consult-kmacro)
-            ;; C-x bindings (ctl-x-map)
-            ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-            ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-            ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
-            ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
-            ;; Custom M-# bindings for fast register access
-            ("M-#" . consult-register-load)
-            ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
-            ("C-M-#" . consult-register)
-            ;; Other custom bindings
-            ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-            ;; ("<help> a" . consult-apropos)            ;; orig. apropos-command
-            ;; M-g bindings (goto-map)
-            ("M-g e" . consult-compile-error)
-            ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
-            ("M-g g" . consult-goto-line)             ;; orig. goto-line
-            ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-            ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
-            ("M-g m" . consult-mark)
-            ("M-g k" . consult-global-mark)
-            ("M-g i" . consult-imenu)
-            ("M-g I" . consult-imenu-multi)
-            ;; M-s bindings (search-map)
-            ("M-s f" . consult-find)
-            ("M-s F" . consult-locate)
-            ("M-s g" . consult-grep)
-            ("M-s G" . consult-git-grep)
-            ("M-s r" . consult-ripgrep)
-            ("C-s" . consult-line)
-            ("M-s L" . consult-line-multi)
-            ("M-s m" . consult-multi-occur)
-            ("M-s k" . consult-keep-lines)
-            ("M-s u" . consult-focus-lines)
-            ;; Isearch integration
-            ("M-s e" . consult-isearch)
-            :map isearch-mode-map
-            ("M-e" . consult-isearch)                 ;; orig. isearch-edit-string
-            ("M-s e" . consult-isearch)               ;; orig. isearch-edit-string
-            ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-            ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
+;;; Try out the "In the middle of the screenbuffer"
+(use-package vertico-posframe
+  :hook (after-init . vertico-posframe-mode))
 
 
-    ;; Enable automatic preview at point in the *Completions* buffer.
-    ;; This is relevant when you use the default completion UI,
-    ;; and not necessary for Vertico, Selectrum, etc.
-    ;; :hook (completion-list-mode . consult-preview-at-point-mode)
+;; Example configuration for Consult
+(use-package consult
+  ;; Replace bindings. Lazily loaded due by `use-package'.
+  :bind (;; C-c bindings (mode-specific-map)
+         ("C-*" . ponelat/swiper-region-or-symbol)
+         ("C-&" . (lambda () (interactive) (rg (thing-at-point-or-mark 'symbol) "*.*" (projectile-project-root))))
 
-    ;; The :init configuration is always executed (Not lazy)
-    :init
+         ("C-c h" . consult-history)
+         ("C-c m" . consult-mode-command)
+         ("C-c b" . consult-bookmark)
+         ("C-c k" . consult-kmacro)
+         ;; C-x bindings (ctl-x-map)
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ;; ("<help> a" . consult-apropos)            ;; orig. apropos-command
+         ;; M-g bindings (goto-map)
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings (search-map)
+         ("M-s f" . consult-find)
+         ("M-s F" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("C-s" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s m" . consult-multi-occur)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch)                 ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch)               ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
 
-    ;; Optionally configure the register formatting. This improves the register
-    ;; preview for `consult-register', `consult-register-load',
-    ;; `consult-register-store' and the Emacs built-ins.
-    (setq register-preview-delay 0
-      register-preview-function #'consult-register-format)
 
-    (setq consult-line-start-from-top t)
+  ;; Enable automatic preview at point in the *Completions* buffer.
+  ;; This is relevant when you use the default completion UI,
+  ;; and not necessary for Vertico, Selectrum, etc.
+  ;; :hook (completion-list-mode . consult-preview-at-point-mode)
 
-    ;; Optionally tweak the register preview window.
-    ;; This adds thin lines, sorting and hides the mode line of the window.
-    (advice-add #'register-preview :override #'consult-register-window)
+  ;; The :init configuration is always executed (Not lazy)
+  :init
 
-    ;; Optionally replace `completing-read-multiple' with an enhanced version.
-    (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+  ;; Optionally configure the register formatting. This improves the register
+  ;; preview for `consult-register', `consult-register-load',
+  ;; `consult-register-store' and the Emacs built-ins.
+  (setq register-preview-delay 0
+	register-preview-function #'consult-register-format)
 
-    ;; Use Consult to select xref locations with preview
-    (setq xref-show-xrefs-function #'consult-xref
-      xref-show-definitions-function #'consult-xref)
+  (setq consult-line-start-from-top t)
 
-    ;; Configure other variables and modes in the :config section,
-    ;; after lazily loading the package.
-    :config
+  ;; Optionally tweak the register preview window.
+  ;; This adds thin lines, sorting and hides the mode line of the window.
+  (advice-add #'register-preview :override #'consult-register-window)
 
-    ;; Optionally configure preview. The default value
-    ;; is 'any, such that any key triggers the preview.
-    ;; (setq consult-preview-key 'any)
-    ;; (setq consult-preview-key (kbd "M-."))
-    ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
-    ;; For some commands and buffer sources it is useful to configure the
-    ;; :preview-key on a per-command basis using the `consult-customize' macro.
-    (consult-customize
-      consult-theme
-      :preview-key '(:debounce 0.2 any)
-      consult-ripgrep consult-git-grep consult-grep
-      consult-bookmark consult-recent-file consult-xref)
+  ;; Optionally replace `completing-read-multiple' with an enhanced version.
+  (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
 
-    ;; Optionally configure the narrowing key.
-    ;; Both < and C-+ work reasonably well.
-    ;; (setq consult-narrow-key "<") ;; (kbd "C-+")
+  ;; Use Consult to select xref locations with preview
+  (setq xref-show-xrefs-function #'consult-xref
+	xref-show-definitions-function #'consult-xref)
+
+  ;; Configure other variables and modes in the :config section,
+  ;; after lazily loading the package.
+  :config
+
+  ;; Optionally configure preview. The default value
+  ;; is 'any, such that any key triggers the preview.
+  ;; (setq consult-preview-key 'any)
+  ;; (setq consult-preview-key (kbd "M-."))
+  ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
+  ;; For some commands and buffer sources it is useful to configure the
+  ;; :preview-key on a per-command basis using the `consult-customize' macro.
+  (consult-customize
+   consult-theme
+   :preview-key '(:debounce 0.2 any)
+   consult-ripgrep consult-git-grep consult-grep
+   consult-bookmark consult-recent-file consult-xref)
+
+  ;; Optionally configure the narrowing key.
+  ;; Both < and C-+ work reasonably well.
+  ;; (setq consult-narrow-key "<") ;; (kbd "C-+")
 
 
-    (progn
-      (defun define-minibuffer-key (key &rest defs)
-	"Define KEY conditionally in the minibuffer.
+  (progn
+    (defun define-minibuffer-key (key &rest defs)
+      "Define KEY conditionally in the minibuffer.
 DEFS is a plist associating completion categories to commands."
-	(define-key minibuffer-local-map key
-		    (list 'menu-item nil defs :filter
-			  (lambda (d)
-			    (plist-get d (completion-metadata-get
-					  (completion-metadata (minibuffer-contents)
-							       minibuffer-completion-table
-							       minibuffer-completion-predicate)
-					  'category))))))
+      (define-key minibuffer-local-map key
+		  (list 'menu-item nil defs :filter
+			(lambda (d)
+			  (plist-get d (completion-metadata-get
+					(completion-metadata (minibuffer-contents)
+							     minibuffer-completion-table
+							     minibuffer-completion-predicate)
+					'category))))))
 
-      (define-minibuffer-key "\C-d" 'file #'find-file))
+    (define-minibuffer-key "\C-d" 'file #'find-file))
 
-    ;; Optionally make narrowing help available in the minibuffer.
-    ;; You may want to use `embark-prefix-help-command' or which-key instead.
-    ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+  ;; Optionally make narrowing help available in the minibuffer.
+  ;; You may want to use `embark-prefix-help-command' or which-key instead.
+  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
 
-    ;; Optionally configure a function which returns the project root directory.
-    ;; There are multiple reasonable alternatives to chose from.
+  ;; Optionally configure a function which returns the project root directory.
+  ;; There are multiple reasonable alternatives to chose from.
   ;;;; 1. project.el (project-roots)
-    (setq consult-project-root-function
-      (lambda ()
-        (when-let (project (project-current))
-          (car (project-roots project)))))
+  (setq consult-project-root-function
+	(lambda ()
+          (when-let (project (project-current))
+            (car (project-roots project)))))
   ;;;; 2. projectile.el (projectile-project-root)
-    ;; (autoload 'projectile-project-root "projectile")
-    ;; (setq consult-project-root-function #'projectile-project-root)
+  ;; (autoload 'projectile-project-root "projectile")
+  ;; (setq consult-project-root-function #'projectile-project-root)
   ;;;; 3. vc.el (vc-root-dir)
-    ;; (setq consult-project-root-function #'vc-root-dir)
+  ;; (setq consult-project-root-function #'vc-root-dir)
   ;;;; 4. locate-dominating-file
-    ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
-    )
-
-  ;; (use-package consult-dir
-  ;;   :straight '(consult-dir :host github :repo "karthink/consult-dir"))
-  ;;   :bind (("C-x C-d" . consult-dir)
-  ;;           :map vertico-map
-  ;;           ("C-x C-d" . consult-dir)
-  ;;           ("C-x C-j" . consult-dir-jump-file)))
-
+  ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
   )
+
+;; (use-package consult-dir
+;;   :straight '(consult-dir :host github :repo "karthink/consult-dir"))
+;;   :bind (("C-x C-d" . consult-dir)
+;;           :map vertico-map
+;;           ("C-x C-d" . consult-dir)
+;;           ("C-x C-j" . consult-dir-jump-file)))
 
 ;;; Swiper
 (defun ponelat/swiper-region-or-symbol ()
@@ -2579,26 +2602,26 @@ DEFS is a plist associating completion categories to commands."
 
 (use-package git-timemachine)
 
-(use-package git-gutter+
-  :init (global-git-gutter+-mode)
-  :config (progn
-            (define-key git-gutter+-mode-map (kbd "C-x n") 'git-gutter+-next-hunk)
-            (define-key git-gutter+-mode-map (kbd "C-x p") 'git-gutter+-previous-hunk)
-            (define-key git-gutter+-mode-map (kbd "C-x v =") 'git-gutter+-show-hunk)
-            (define-key git-gutter+-mode-map (kbd "C-x r") 'git-gutter+-revert-hunks)
-            (define-key git-gutter+-mode-map (kbd "C-x t") 'git-gutter+-stage-hunks)
-            (define-key git-gutter+-mode-map (kbd "C-x c") 'git-gutter+-commit)
-            (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
-            (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
-            (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer)
-            (custom-set-variables
-              '(git-gutter+-window-width 1)
-              '(git-gutter+-added-sign "+")
-              '(git-gutter+-deleted-sign "-")
-              '(git-gutter+-modified-sign "=")
-              '(git-gutter:visual-line t)
-              '(git-gutter+-modified  "yellow")))
-  :diminish (git-gutter+-mode . "+="))
+;; (use-package git-gutter+
+;;   :init (global-git-gutter+-mode)
+;;   :config (progn
+;;             (define-key git-gutter+-mode-map (kbd "C-x n") 'git-gutter+-next-hunk)
+;;             (define-key git-gutter+-mode-map (kbd "C-x p") 'git-gutter+-previous-hunk)
+;;             (define-key git-gutter+-mode-map (kbd "C-x v =") 'git-gutter+-show-hunk)
+;;             (define-key git-gutter+-mode-map (kbd "C-x r") 'git-gutter+-revert-hunks)
+;;             (define-key git-gutter+-mode-map (kbd "C-x t") 'git-gutter+-stage-hunks)
+;;             (define-key git-gutter+-mode-map (kbd "C-x c") 'git-gutter+-commit)
+;;             (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
+;;             (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
+;;             (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer)
+;;             (custom-set-variables
+;;               '(git-gutter+-window-width 1)
+;;               '(git-gutter+-added-sign "+")
+;;               '(git-gutter+-deleted-sign "-")
+;;               '(git-gutter+-modified-sign "=")
+;;               '(git-gutter:visual-line t)
+;;               '(git-gutter+-modified  "yellow")))
+;;   :diminish (git-gutter+-mode . "+="))
 
 ;;; Whitespace, text, ascii
 
@@ -3170,26 +3193,38 @@ is positive, move after, and if negative, move before."
      (match-beginning 0)
       (match-end 0)))))
 
-;;; PDFs / doc view (nix managed)
-(with-eval-after-load 'pdf-tools  ;; Nix manages installation of pdf-tools package
-    (setq doc-view-continuous nil)
-    (evil-define-key
-      'normal doc-view-mode-map "j"
-      (lambda () (interactive) (doc-view-scroll-down-or-previous-page 1)))
-    (evil-set-initial-state 'pdf-view-mode 'normal)
-    ;; open pdfs scaled to fit page
-    (setq-default pdf-view-display-size 'fit-page)
-    ;; automatically annotate highlights
-    (setq pdf-annot-activate-created-annotations t)
-    ;; use normal isearch
-    (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
+
+(comment use-package pdf-tools
+  :load-path "site-lisp/pdf-tools/lisp"
+  :magic ("%PDF" . pdf-view-mode)
+  :config
+  (pdf-tools-install :no-query))
+
+;; ;;; PDFs / doc view (nix managed)
+;; (with-eval-after-load 'doc-view
+;;   (progn 
+;;     (pdf-tools-install nil nil)
+;;     (setq doc-view-continuous nil)
+;;     (message "pfd-tools ran. Josh")
+;;     (evil-define-key
+;;       'normal doc-view-mode-map "j"
+;;       (lambda () (interactive) (doc-view-scroll-down-or-previous-page 1)))
+;;     (evil-set-initial-state 'pdf-view-mode 'normal)
+;;     ;; open pdfs scaled to fit page
+;;     (setq-default pdf-view-display-size 'fit-page)
+;;     ;; use normal isearch
+;;     (define-key doc-view-mode-map (kbd "C-s") 'isearch-forward)
+;;     ;; automatically annotate highlights
+;;     (setq pdf-annot-activate-created-annotations t)
+;;     ;; Return true to end the progn
+;;     t))
 
  ;;; External Org mode, Office, Gmail
-
 (defun ponelat/get-office-data ()
-  (interactive)
-  "Get Office evnets for the week"
-  (shell-command "n use 8.9.1 ~/projects/scripts/microsoft-graph-client/get-event-data.js" "*Import Office365 Events*"))
+    (interactive)
+    "Get Office evnets for the week"
+    (shell-command "n use 8.9.1 ~/projects/scripts/microsoft-graph-client/get-event-data.js" "*Import Office365 Events*"))
+
 (defun ponelat/get-all-data ()
   "Gets all external org data."
   (interactive)
@@ -3802,8 +3837,19 @@ Version 2017-12-27"
 
 ;;; Window stuff / Golden ratio
 
-(progn ;; Set up winner mode, so that you can "Undo" window configurations
-  (winner-mode 1))
+;;; Winner for "undoing" windows, back to the setup before.
+(use-package winner
+  :ensure nil
+  :hook after-init
+  :commands (winner-undo winnner-redo)
+  :custom
+  ;; Boring windows are not restored.
+  (winner-boring-buffers '("*Completions*" "*Help*" "*Apropos*"
+                           "*Buffer List*" "*info*" "*Compile-Log*")))
+
+;;; This distinguishes file buffers from others, so you can see the difference. 
+(use-package solaire-mode
+  :hook (after-init . solaire-global-mode))
 
 (progn
   ;; This will auto-resize windows as you move between them.
@@ -4101,6 +4147,7 @@ Version 2015-07-24"
 ;;   (global-emojify-mode)
 ;;   (global-set-key (kbd "C-x 8 e") 'emojify-insert-emoji))
 
+
 (progn
   ;;; Maybe useful
 
@@ -4385,6 +4432,8 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     )
   (message (format "Whitespace: %s" whitespace-manning-toggle)))
 
+;;; Ponelat Emacs lib (utilities and GPT)
+(require 'ponelat-gpt nil 'noerror)
 
 ;;; General key bindings local and global leader keys
 (progn
@@ -4407,7 +4456,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "p" #'projectile-command-map
      "w" #'evil-window-map
      "s" #'save-buffer
-     ;; "l" #'ponelat/llm-insert-completion; Found in ponelat-emacs lib
+     "l" #'ponelat/invoke-llm-with-context
      "L" #'gptel
      "u" #'winner-undo
      "U" #'winner-redo
@@ -4420,6 +4469,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
      "fm" #'flymake-show-buffer-diagnostics
      "fj" #'consult-flymake
      "ff" #'find-file
+     "fl" #'find-library
      "fw" #'write-file
      ;; "s" #'avy-goto-char-timer
 
@@ -4554,6 +4604,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
     "l c" 'paredit-duplicate-after-point
     "l d" 'kill-sexp
     "l r" 'paredit-raise-sexp
+    "l w" 'ponelat/wrap-sexp
 
       ;; Font size
     "=" '(hydra-zoom/body :wk "size")
@@ -4767,6 +4818,7 @@ In the root of your project get a file named .emacs-commands.xml with the follow
 	;; lsp-nix-nixd-home-manager-options-expr "(builtins.getFlake \"/home/nb/nixos\").homeConfigurations.\"nb@mnd\".options"
 	))
 
+
 (add-hook 'nix-mode-hook
          ;; enable autocompletion with company
          (setq company-idle-delay 0.1))
@@ -4807,134 +4859,6 @@ In the root of your project get a file named .emacs-commands.xml with the follow
   (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
   (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
   (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1))))
-
-
-;;; Helpers to AI-ify init.el
-
-(progn  
-  (require 'cl-lib)
-
-  (defun parse-init-el ()
-    "Parse the current buffer for top-level forms from an Emacs Lisp file (like init.el).
-Return a list of structures describing each form. Each element is a plist with keys
-like :type (defun/use-package/setq/other) and other relevant info.
-
-Use this function in a buffer visiting your init.el, e.g.:
-  M-x parse-init-el
-Returns a list of form-nodes. In non-interactive use, pass the buffer or
-switch to the target buffer first."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (let (results)
-	(condition-case nil
-            (while t
-              (let ((form (read (current-buffer)))) ; read next top-level form
-		(push (parse-init-el--analyze-form form) results)))
-          (end-of-file nil))
-	(setq results (nreverse results))
-	(when (called-interactively-p 'any)
-          (message "Parsed %d top-level forms." (length results)))
-	results)))
-
-  (defun parse-init-el--analyze-form (form)
-    "Analyze a single top-level FORM and return a plist describing it.
-
-Examples of returned plist:
- (:type defun :name foo :args (...) :body (...))
- (:type use-package :package helm :body (...))
- (:type setq :vars ((foo 42) (bar 99)))
- (:type other :form ...)"
-    (cond
-     ;; (defun foo (...) ...)
-     ((and (listp form) (eq (car form) 'defun))
-      (list :type 'defun
-            :name (cadr form)
-            :args (caddr form)
-            :body (cdddr form)))
-
-     ;; (use-package helm :config ...)
-     ((and (listp form) (eq (car form) 'use-package))
-      (list :type 'use-package
-            :package (cadr form)
-            :body (cddr form)))
-
-     ;; (setq foo 42 bar 99)
-     ((and (listp form) (eq (car form) 'setq))
-      (list :type 'setq
-            :vars (cl-loop for (var val) on (cdr form) by #'cddr
-                           collect (list var val))))
-
-     ;; (setq-default foo 42 bar 99)
-     ((and (listp form) (eq (car form) 'setq-default))
-      (list :type 'setq-default
-            :vars (cl-loop for (var val) on (cdr form) by #'cddr
-                           collect (list var val))))
-
-     ;; Everything else
-     (t (list :type 'other
-              :form form)))) 
-
-  (defun print-parsed-forms (parsed-forms)
-    "Print PARSED-FORMS from `parse-init-el' in a human-readable summary."
-    (interactive)
-    (dolist (entry parsed-forms)
-      (let ((type (plist-get entry :type)))
-	(princ (format "Type: %s\n" type))
-	(cl-case type
-          (defun
-              (princ (format "  name: %S\n  args: %S\n  body: %S\n\n"
-                             (plist-get entry :name)
-                             (plist-get entry :args)
-                             (plist-get entry :body))))
-          (use-package
-            (princ (format "  package: %S\n  body: %S\n\n"
-                           (plist-get entry :package)
-                           (plist-get entry :body))))
-          (setq
-           (princ (format "  vars: %S\n\n"
-                          (plist-get entry :vars))))
-          (setq-default
-           (princ (format "  vars: %S\n\n"
-                          (plist-get entry :vars))))
-          (otherwise
-           (princ (format "  form: %S\n\n"
-                          (plist-get entry :form)))))))) []
-
-  (defun visualize-forms-as-dot (parsed-forms)
-    "Generate a .dot-graph string from PARSED-FORMS for approximate visualization.
-You can paste the output into an external 'dot' processor or Graphviz viewer."
-    (interactive)
-    (concat
-     "digraph init_el {\n"
-     "  rankdir=LR;\n"  ;; left-to-right, or remove if you prefer top-down
-     (mapconcat
-      (lambda (entry)
-	(let ((type (plist-get entry :type))
-              ;; Minimal label text
-              (label (pcase (plist-get entry :type)
-                       ('defun (format "defun %s" (plist-get entry :name)))
-                       ('use-package (format "use-package %s" (plist-get entry :package)))
-                       ('setq "setq")
-                       ('setq-default "setq-default")
-                       (_ "other"))))
-          ;; Just output a single node with that label. 
-          ;; A real graph might connect edges, e.g. defun name -> use-package that references it. 
-          (format "  \"%s\";\n" (replace-regexp-in-string "\"" "'" label))))
-      parsed-forms
-      "")
-     "}")) 
-
-;;; Example helper to show the dot string in a new buffer:
-  (defun parse-and-show-dot ()
-    "Parse init.el top-level forms in the current buffer and show a dot-graph in a new buffer."
-    (interactive)
-    (let ((forms (parse-init-el)))
-      (switch-to-buffer-other-window "*InitEl-Dot*")
-      (erase-buffer)
-      (insert (visualize-forms-as-dot forms))
-      (goto-char (point-min))
-      (message "Generated *.dot representation of parsed forms."))))
 
 
 ;;; Custom.el file

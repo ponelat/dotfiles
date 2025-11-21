@@ -29,9 +29,13 @@ in {
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Set your time zone.
-  time.timeZone = "Africa/Johannesburg";
+  # services.automatic-timezoned.enable = true;
+  # time.timeZone = "Africa/Johannesburg";
+  # time.timeZone = "Canada/Atlantic";
+  # time.timeZone = "Canada/Pacific";
   # time.timeZone = "Europe/Dublin";
   # time.timeZone = "America/Los_Angeles";
+
 
   boot = {
     loader = {
@@ -80,7 +84,7 @@ in {
 
 
   # Going with pipewire
-  sound.enable = false;
+  # sound.enable = false;
   hardware.pulseaudio.enable = false;
   hardware.bluetooth.enable = true;
   security.rtkit.enable = true;
