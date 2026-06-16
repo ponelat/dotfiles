@@ -44,7 +44,7 @@ let
 in {
   imports = [
     # Adding cache for nix-community (emacs)
-    /etc/nixos/cachix.nix
+    # /etc/nixos/cachix.nix
 
     # Home Manager
     <home-manager/nixos>
@@ -64,13 +64,16 @@ in {
 
   # See: https://nixos.wiki/wiki/Flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.substitute = true;
+  nix.gc.automatic = true;
 
   fonts.packages = [
     pkgs.noto-fonts
     pkgs.open-sans
+    pkgs.inter
     pkgs.corefonts
     pkgs.source-sans-pro
-    pkgs.inconsolata-nerdfont
+    pkgs.nerd-fonts.inconsolata
     pkgs.font-awesome
     pkgs.emacs-all-the-icons-fonts
   ];
@@ -156,7 +159,8 @@ in {
       pkgs.playerctl
       pkgs.spotify
 
-      unstable.signal-desktop
+      pkgs.signal-desktop
+      pkgs.telegram-desktop
     ];
 
     home.sessionPath = [
@@ -301,16 +305,17 @@ in {
 
     programs.git = {
       enable = true;
-      userName = "Josh Ponelat";
-      userEmail = "jponelat@gmail.com";
-      extraConfig = {
+      lfs.enable = true;
+      settings = {
+        user.name = "Josh Ponelat";
+        user.email = "jponelat@gmail.com";
         push.autoSetupRemote = true; # git config --global --add --bool push.autoSetupRemote true
-      };
-      aliases = {
-        aa = "add";
-        cm = "commit -sS -m";
-        co = "checkout";
-        di = "diff";
+        alias = {
+          aa = "add";
+          cm = "commit -sS -m";
+          co = "checkout";
+          di = "diff";
+        };
       };
     };
 
@@ -323,6 +328,7 @@ in {
             # "j" = "fasd_cd -d";
         "cs" = "git status || ls";
         "em" = "emacsclient -c -a ''";
+        "cat" = "bat --no-pager";
         "n" = "nvim";
         # Moved the following into shellInit as a function
         # ",," = "nix-shell -p";
@@ -458,12 +464,19 @@ in {
   # For Wayland
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
 
+  # GUI password prompt for `sudo -A` across all shells (set session-wide via PAM,
+  # so it's inherited by fish, bash, and non-login/non-TTY shells e.g. Claude Code's `!` shell)
+  environment.sessionVariables.SUDO_ASKPASS = "${pkgs.x11_ssh_askpass}/libexec/x11-ssh-askpass";
+
   # Used for openvpnforticlient. See: https://github.com/adrienverge/openfortivpn/issues/1076#issuecomment-1777003887
   environment.etc."ppp/options".text = "ipcp-accept-remote";
 
   environment.systemPackages = [
+    # Custom flakes 
+    (pkgs.callPackage /home/josh/projects/pico-8/package.nix {})
+
     # Dev stuff
-    pkgs.curl pkgs.wget pkgs.git pkgs.fasd pkgs.zoxide pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gitAndTools.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
+    pkgs.curl pkgs.wget pkgs.git pkgs.fasd pkgs.zoxide pkgs.jq pkgs.sqlite pkgs.unzip pkgs.ripgrep pkgs.xsel pkgs.fd pkgs.visidata pkgs.bind pkgs.zip pkgs.ispell pkgs.tldr pkgs.gh pkgs.direnv pkgs.fzf pkgs.bat pkgs.file pkgs.gnupg pkgs.tmux pkgs.killall
 
     # pkgs.vim 
     pkgs.neovim
@@ -472,7 +485,7 @@ in {
     pkgs.jless
 
     # XAN = CSV cli tool, with power
-    unstable.xan
+    pkgs.xan
 
     # Like sqlite... maybe better for adhoc operations on CSV??
     pkgs.duckdb
@@ -493,23 +506,26 @@ in {
     pkgs.shared-mime-info # For copy/pasting from fish shell
 
     pkgs.openvpn
+    pkgs.remmina # For VNC client, accessing macos screenshare
 
     pkgs.binutils pkgs.gcc pkgs.libgccjit
 
     pkgs.noto-fonts pkgs.open-sans pkgs.corefonts
+    pkgs.inter
 
     pkgs.exfat pkgs.exfatprogs pkgs.nfs-utils pkgs.ntfs3g # I think we only need ntfs3g to access USB drives with > 4gb files.
 
     # Audio
     pkgs.rnnoise-plugin
 
+    pkgs.uv
+    pkgs.alsa-lib
     pkgs.python3 pkgs.gnumake pkgs.pandoc pkgs.ledger pkgs.hledger
     #pdflatex
     pkgs.nodejs_22
     pkgs.cargo
-    unstable.bun
-    unstable.deno
-    unstable.gh-copilot
+    pkgs.bun
+    pkgs.deno
 
     # Why not..?
     # pkgs.elixir
@@ -538,27 +554,35 @@ in {
     # pkgs.firefox
     pkgs.inkscape pkgs.slack
     # pkgs.dropbox-cli
-    pkgs.onlyoffice-bin
+    pkgs.onlyoffice-desktopeditors
     # pkgs.skypeforlinux
     # pkgs.teams
-    unstable.obsidian
-    unstable.google-chrome
+    pkgs.obsidian
+    pkgs.google-chrome
+
+    # Coding agent
+    unstable.codex
+    unstable.claude-code
 
     # For an agent that can help code
-    unstable.opencode
+    # unstable.opencode
     
     pkgs.deluge
     pkgs.obs-studio
     pkgs.vlc
     pkgs.ulauncher
     pkgs.vscode
+    pkgs.ffmpeg-headless
+    pkgs.openssl
 
     pkgs.steam-run # Great for running binaries that aren't NixOS friendly.
 
+    pkgs.x11_ssh_askpass # GUI password prompt for `sudo -A` (NixOS default askpass)
+
     # # Gnome Extensions
     # pkgs.gnomeExtensions.forge
-    pkgs.gnome.gnome-tweaks
-    unstable.gnome-sound-recorder
+    pkgs.gnome-tweaks
+    pkgs.gnome-sound-recorder
 
     # Unstable
     # unstable.gnomeExtensions.pop-shell
@@ -578,15 +602,18 @@ in {
 
     desktopManager = {
       xterm.enable = false;
-      gnome.enable = true; # Gnome 4 in 21.05
     };
+  };
 
-    displayManager = {
-      gdm.enable = true;
-      # sddm.enable = true;
-      gdm.wayland = false;
-    };
+  services.desktopManager.gnome.enable = true; # Gnome 4 in 21.05
 
+  services.displayManager = {
+    gdm.enable = true;
+    # sddm.enable = true;
+    # On 25.11 the GNOME session package only provides Wayland session
+    # desktop entries here, so forcing GDM onto Xorg leaves it with no
+    # available sessions and it aborts at startup.
+    gdm.wayland = true;
   };
 
   # pathsToLink is needed by polkit_gnome
@@ -620,7 +647,7 @@ in {
 
   programs.ssh = {
     # askPassword = true;
-    startAgent = true;
+    # startAgent = true;
   };
 
 }

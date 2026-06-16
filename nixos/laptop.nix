@@ -12,10 +12,54 @@ let
 
 in {
 
-  networking.hostName = "laptop-x1eg2"; # Define your hostname.
+
+  # For mDNS (discoverying .local domains on the LAN)
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;       # enables `.local` lookup
+    publish.enable = true;
+    publish.userServices = true;
+    ipv6 = false;
+    hostName = "leno";
+    allowInterfaces = [ "wlp82s0" ]; # Avoid connecting the docker (and other) interfaces. 
+  };
+
+ # 1. Enable the service and the firewall
+  # services.tailscale.enable = true;
+
+  # networking  = {
+  #   hostName = "leno";
+  #   # Modern 
+  #   nftables.enable = true;
+
+  #   firewall = {
+  #     enable = true;
+  #     # Always allow traffic from your Tailscale network
+  #     trustedInterfaces = [ "tailscale0" ];
+  #     # Allow the Tailscale UDP port through the firewall
+  #     allowedUDPPorts = [
+  #       config.services.tailscale.port
+  #       5353 # for mDNS multicast
+  #     ];
+  #   };
+
+  # };
+
+  # Force tailscaled to use nftables (Critical for clean nftables-only systems)
+  # This avoids the "iptables-compat" translation layer issues.
+  # systemd.services.tailscaled.serviceConfig.Environment = [ 
+  #   "TS_DEBUG_FIREWALL_MODE=nftables" 
+  # ];
+
+  # 3. Optimization: Prevent systemd from waiting for network online 
+  # (Optional but recommended for faster boot with VPNs)
+  systemd.network.wait-online.enable = false; 
+  boot.initrd.systemd.network.wait-online.enable = false;
+
   networking.extraHosts =
     ''
     127.0.0.1 kafka.local
+    127.0.0.1 leno.local
   '';
 
   imports = [
@@ -85,9 +129,23 @@ in {
 
   # Going with pipewire
   # sound.enable = false;
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   hardware.bluetooth.enable = true;
   security.rtkit.enable = true;
+
+  # The rootCA.pem needs to be created with `JAVA_HOME= mkcert -install`
+  # Chrome needs a .crt file, so convert with:
+  # $ openssl x509 -in /home/josh/.local/share/mkcert/rootCA.pem -out /home/josh/.local/share/mkcert/rootCA.crt
+  # You should circulate the rootCA.pem to those devices you want to access your stuff.
+  # To stamp out a cert, run `mkcert leno.local localhost 127.0.0.1 ::1`.
+  # ... then use those files from your server (both key and pem)
+  security.pki.certificateFiles = let
+    caFiles = [
+      # /home/josh/.local/share/mkcert/rootCA.pem # Note, literal files, not strings here.
+      /home/josh/.local/share/mkcert/rootCA.crt
+    ]; in
+    builtins.filter builtins.pathExists caFiles;
+
   services.blueman.enable = true;
   services.pipewire  = {
     enable = true;
