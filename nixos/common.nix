@@ -567,6 +567,10 @@ in {
     unstable.codex
     unstable.claude-code
 
+    # Browser automation CLI for AI agents
+    unstable.agent-browser
+    unstable.supabase-cli
+
     # For an agent that can help code
     # unstable.opencode
     
