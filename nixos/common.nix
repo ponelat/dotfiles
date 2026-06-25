@@ -164,7 +164,10 @@ in {
     ];
 
     home.sessionPath = [
-     "$HOME/bin" 
+     "$HOME/bin"
+     "$HOME/.bun/bin"
+     "$HOME/.fzf/bin"
+     "$HOME/.local/bin"
     ];
 
     # xdg.configFile."i3blocks/config".source = ./i3blocks.conf;
